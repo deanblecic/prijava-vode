@@ -5,7 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
-val serverUrl: String = (findProperty("serverUrl") as String?) ?: "http://65.108.144.242"
+val serverUrl: String = (findProperty("serverUrl") as String?) ?: "https://prijava-vode.duckdns.org"
 
 android {
     namespace = "hr.prijavavode"

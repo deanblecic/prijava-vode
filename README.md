@@ -69,5 +69,4 @@ pita korisnika i šalje ponovno s `potvrdi_manje=true`.
 5. Povijest očitanja.
 
 APK gradi GitHub Actions (artefakt `ocitanje-vode-apk` na svakoj izradi). Adresa servera
-zadaje se svojstvom `serverUrl` u `android/gradle.properties`. Dok server nema HTTPS,
-`res/xml/network_security_config.xml` dopušta nekriptiranu vezu samo prema IP adresi servera.
+(`https://prijava-vode.duckdns.org`) zadaje se svojstvom `serverUrl` u `android/gradle.properties`.
