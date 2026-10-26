@@ -57,3 +57,17 @@ pita korisnika i šalje ponovno s `potvrdi_manje=true`.
 - Razlika veća od `PRAG_SUMNJIVE_RAZLIKE` × prosjek zadnjih 12 mjeseci označava se za provjeru.
 - Jedan aktivni vodomjer po stanu; zamijenjeni ostaju neaktivni radi povijesti.
 - Promjena vlasnika (`servisi.promijeni_vlasnika`) zatvara stara suvlasništva, povijest ostaje.
+
+## Android aplikacija
+
+`android/` – Kotlin, Jetpack Compose, CameraX i ML Kit (OCR na mobitelu).
+
+1. Prijava korisničkim imenom i lozinkom (token se pamti na mobitelu).
+2. Početni zaslon: stan, prethodno stanje i je li očitanje za ovaj mjesec predano.
+3. Kamera s okvirom za brojilo i svjetlom; OCR predlaže broj (`ocr/CitacBrojila.kt`).
+4. Potvrda: slika, prijedlog broja, drugi mogući brojevi i izračunata potrošnja.
+5. Povijest očitanja.
+
+APK gradi GitHub Actions (artefakt `ocitanje-vode-apk` na svakoj izradi). Adresa servera
+zadaje se svojstvom `serverUrl` u `android/gradle.properties`. Dok server nema HTTPS,
+`res/xml/network_security_config.xml` dopušta nekriptiranu vezu samo prema IP adresi servera.
