@@ -178,3 +178,76 @@ class ApiTest(Osnova):
         self.prijavi("ivo")
         r = self.klijent.get("/api/ocitanja/")
         self.assertEqual([o["broj_stana"] for o in r.data], ["4"])
+
+
+class UpravljanjeTest(Osnova):
+    def setUp(self):
+        super().setUp()
+        self.admin = Korisnik.objects.create_user(
+            "dean", password="lozinka-123", uloga=Korisnik.Uloga.ADMINISTRATOR
+        )
+        self.mjesec = timezone.localdate().replace(day=1)
+        self.o = predaj_ocitanje(self.ana, self.v3, "105")
+
+    def test_suvlasnik_ne_vidi_upravljanje(self):
+        self.client.login(username="ana", password="lozinka-123")
+        self.assertEqual(self.client.get("/").status_code, 403)
+
+    def test_neprijavljen_ide_na_prijavu(self):
+        self.assertRedirects(self.client.get("/"), "/prijava/?next=/")
+
+    def test_pregled_prikazuje_sve_stanove(self):
+        self.client.login(username="dean", password="lozinka-123")
+        r = self.client.get("/")
+        self.assertContains(r, "1 / 2")
+        self.assertContains(r, "Ana Horvat")
+        self.assertContains(r, "Nije predano")
+
+    def test_potvrda_i_ispravak(self):
+        self.client.login(username="dean", password="lozinka-123")
+        self.client.post(f"/ocitanje/{self.o.pk}/", {"akcija": "ispravi", "novo_stanje": "104", "napomena": ""})
+        self.o.refresh_from_db()
+        self.assertEqual(self.o.razlika, Decimal("4"))
+        self.client.post(f"/ocitanje/{self.o.pk}/", {"akcija": "potvrdi"})
+        self.o.refresh_from_db()
+        self.assertEqual(self.o.status, Ocitanje.Status.POTVRDENO)
+
+    def test_ispravak_uskladjuje_sljedeci_mjesec(self):
+        rujan = predaj_ocitanje(self.ana, self.v3, "103", datum_ocitanja=trenutak(2020, 9))
+        listopad = predaj_ocitanje(self.ana, self.v3, "106", datum_ocitanja=trenutak(2020, 10))
+        self.client.login(username="dean", password="lozinka-123")
+        self.client.post(f"/ocitanje/{rujan.pk}/", {"akcija": "ispravi", "novo_stanje": "102", "napomena": ""})
+        listopad.refresh_from_db()
+        self.assertEqual(listopad.prethodno_stanje, Decimal("102"))
+        self.assertEqual(listopad.razlika, Decimal("4"))
+
+    def test_promjena_vlasnika_s_novim_korisnikom(self):
+        self.client.login(username="dean", password="lozinka-123")
+        r = self.client.post(f"/stan/{self.stan3.pk}/promjena-vlasnika/", {
+            "od_datuma": timezone.localdate().isoformat(), "ime": "Marko", "prezime": "Marić",
+            "korisnicko_ime": "marko", "lozinka": "Sigurna-lozinka-9", "deaktiviraj_stare": "on",
+        })
+        self.assertRedirects(r, f"/stan/{self.stan3.pk}/")
+        marko = Korisnik.objects.get(username="marko")
+        self.assertEqual(list(marko.aktivni_stanovi()), [self.stan3])
+        self.ana.refresh_from_db()
+        self.assertFalse(self.ana.is_active)
+
+    def test_rucni_unos(self):
+        self.client.login(username="dean", password="lozinka-123")
+        r = self.client.post(f"/stan/{self.stan4.pk}/", {"novo_stanje": "58", "datum_ocitanja": timezone.localdate().isoformat()})
+        self.assertEqual(r.status_code, 302)
+        o = Ocitanje.objects.get(vodomjer=self.v4)
+        self.assertEqual(o.razlika, Decimal("8"))
+
+    def test_izvoz_excel(self):
+        from openpyxl import load_workbook
+
+        self.client.login(username="dean", password="lozinka-123")
+        r = self.client.get(f"/izvoz/?mjesec={self.mjesec:%Y-%m}")
+        self.assertEqual(r.status_code, 200)
+        list_ = load_workbook(BytesIO(r.content)).active
+        self.assertEqual(list_["A2"].value, "3")
+        self.assertEqual(list_["B2"].value, "Ana Horvat")
+        self.assertEqual(list_["F2"].value, 5)
+        self.assertEqual(list_["G3"].value, "Nije predano")

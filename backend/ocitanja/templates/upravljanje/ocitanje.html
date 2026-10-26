@@ -1,0 +1,39 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Stan {{ o.vodomjer.stan.broj_stana }}, {{ o.razdoblje|date:"m/Y" }}{% endblock %}
+{% block sadrzaj %}
+<p><a href="{% url 'pregled' %}?mjesec={{ o.razdoblje|date:'Y-m' }}">&larr; Natrag na {{ o.razdoblje|date:"m/Y" }}</a></p>
+<h1>Stan {{ o.vodomjer.stan.broj_stana }}, očitanje za {{ o.razdoblje|date:"m/Y" }}
+  <span class="oznaka {{ o.status }}">{{ o.get_status_display }}</span></h1>
+{% if o.za_provjeru %}<div class="poruka warning">Označeno za provjeru: {{ o.razlog_provjere }}</div>{% endif %}
+<div class="dvije">
+  <div class="kartica">
+    {% if o.fotografija %}<a href="{{ o.fotografija.url }}"><img class="foto" src="{{ o.fotografija.url }}" alt="Fotografija vodomjera"></a>
+    {% else %}<p class="tiho">Nema fotografije.</p>{% endif %}
+  </div>
+  <div>
+    <div class="kartica">
+      <table style="border:0">
+        <tr><th>Vlasnik</th><td>{% for k in vlasnici %}{{ k.get_full_name|default:k.username }}{% if not forloop.last %}, {% endif %}{% empty %}–{% endfor %}</td></tr>
+        <tr><th>Predao</th><td>{{ o.korisnik.get_full_name|default:o.korisnik.username }}</td></tr>
+        <tr><th>Datum očitanja</th><td>{{ o.datum_ocitanja|date:"d.m.Y. H:i" }}</td></tr>
+        <tr><th>Prethodno stanje</th><td class="broj">{{ o.prethodno_stanje }} m³</td></tr>
+        <tr><th>Novo stanje</th><td class="broj">{{ o.novo_stanje }} m³</td></tr>
+        <tr><th>Razlika</th><td class="broj"><b>{{ o.razlika }} m³</b></td></tr>
+        <tr><th>OCR je pročitao</th><td class="broj">{{ o.ocr_vrijednost|default:"–" }}{% if o.rucno_ispravljeno %} (suvlasnik ispravio){% endif %}</td></tr>
+        {% if o.napomena %}<tr><th>Napomena</th><td>{{ o.napomena }}</td></tr>{% endif %}
+      </table>
+    </div>
+    <div class="kartica alati">
+      <form method="post">{% csrf_token %}<input type="hidden" name="akcija" value="potvrdi"><button class="gumb zeleni">Potvrdi</button></form>
+      <form method="post">{% csrf_token %}<input type="hidden" name="akcija" value="odbij"><button class="gumb crveni">Odbij</button></form>
+    </div>
+    <div class="kartica">
+      <h2 style="margin-top:0">Ispravak</h2>
+      <form method="post">{% csrf_token %}<input type="hidden" name="akcija" value="ispravi">
+        {{ forma.as_p }}
+        <button class="gumb glavni">Spremi ispravak</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Stan {{ stan.broj_stana }}{% endblock %}
+{% block sadrzaj %}
+<p><a href="{% url 'pregled' %}">&larr; Mjesečni pregled</a></p>
+<div class="alati">
+  <h1 style="margin:0">Stan {{ stan.broj_stana }}</h1>
+  <span style="flex:1"></span>
+  <a class="gumb glavni" href="{% url 'promjena_vlasnika' stan.pk %}">Promjena vlasnika</a>
+</div>
+<p class="tiho">Vodomjer: {% if vodomjer %}{{ vodomjer.serijski_broj|default:"bez serijskog broja" }}, početno stanje {{ vodomjer.pocetno_stanje }} m³{% else %}nema aktivnog vodomjera{% endif %}</p>
+
+<h2>Vlasnici</h2>
+<table>
+  <thead><tr><th>Ime i prezime</th><th>Korisničko ime</th><th>Od</th><th>Do</th></tr></thead>
+  <tbody>
+  {% for v in vlasnistva %}
+    <tr><td>{{ v.korisnik.get_full_name }}</td><td>{{ v.korisnik.username }}{% if not v.korisnik.is_active %} <span class="tiho">(neaktivan)</span>{% endif %}</td>
+      <td>{{ v.od_datuma|date:"d.m.Y." }}</td><td>{{ v.do_datuma|date:"d.m.Y."|default:"danas" }}</td></tr>
+  {% empty %}<tr><td colspan="4">Stan nema upisanog vlasnika.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Povijest očitanja</h2>
+<table>
+  <thead><tr><th>Mjesec</th><th>Datum</th><th>Predao</th><th class="broj">Prethodno</th><th class="broj">Novo</th><th class="broj">Razlika</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for o in ocitanja %}
+    <tr><td><a href="{% url 'ocitanje' o.pk %}">{{ o.razdoblje|date:"m/Y" }}</a></td><td>{{ o.datum_ocitanja|date:"d.m.Y." }}</td>
+      <td>{{ o.korisnik.get_full_name|default:o.korisnik.username }}</td>
+      <td class="broj">{{ o.prethodno_stanje }}</td><td class="broj">{{ o.novo_stanje }}</td><td class="broj"><b>{{ o.razlika }}</b></td>
+      <td><span class="oznaka {{ o.status }}">{{ o.get_status_display }}</span></td></tr>
+  {% empty %}<tr><td colspan="7">Još nema očitanja.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+{% if vodomjer %}
+<h2 id="unos">Ručni unos očitanja</h2>
+<div class="kartica" style="max-width:480px">
+  <p class="tiho">Za suvlasnika koji je očitanje poslao drugim putem. Mjesec se određuje prema datumu očitanja.</p>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {{ unos.as_p }}
+    <p><label><input type="checkbox" name="potvrdi_manje" value="1"> Prihvati iako je manje od prethodnog stanja</label></p>
+    <button class="gumb glavni">Spremi očitanje</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

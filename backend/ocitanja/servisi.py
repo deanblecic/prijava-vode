@@ -133,3 +133,48 @@ def promijeni_vlasnika(stan, novi_vlasnici, od_datuma):
         KorisnikStan.objects.create(korisnik=korisnik, stan=stan, od_datuma=od_datuma)
         for korisnik in novi_vlasnici
     ]
+
+
+def uskladi_sljedece(vodomjer, razdoblje):
+    """Nakon ispravka ili odbijanja preračunava prethodno stanje sljedećeg očitanja.
+
+    Potvrđeno sljedeće očitanje se ne dira; tada vraća poruku upozorenja.
+    """
+    sljedece = (
+        vodomjer.ocitanja.filter(razdoblje__gt=razdoblje)
+        .exclude(status=Ocitanje.Status.ODBIJENO)
+        .order_by("razdoblje")
+        .first()
+    )
+    if not sljedece:
+        return None
+    ispravno = prethodno_stanje(vodomjer, sljedece.razdoblje)
+    if sljedece.prethodno_stanje == ispravno:
+        return None
+    if sljedece.status == Ocitanje.Status.POTVRDENO:
+        return (
+            f"Potvrđeno očitanje za {sljedece.razdoblje:%m/%Y} ima prethodno stanje "
+            f"{sljedece.prethodno_stanje}, a sada bi trebalo biti {ispravno}. Provjerite ga."
+        )
+    sljedece.prethodno_stanje = ispravno
+    sljedece.save()
+    return None
+
+
+@transaction.atomic
+def ispravi_ocitanje(ocitanje, novo_stanje, napomena=None):
+    ocitanje.novo_stanje = Decimal(novo_stanje)
+    ocitanje.prethodno_stanje = prethodno_stanje(ocitanje.vodomjer, ocitanje.razdoblje)
+    if napomena is not None:
+        ocitanje.napomena = napomena
+    ocitanje.save()
+    return uskladi_sljedece(ocitanje.vodomjer, ocitanje.razdoblje)
+
+
+@transaction.atomic
+def postavi_status(ocitanje, status):
+    ocitanje.status = status
+    if status == Ocitanje.Status.POTVRDENO:
+        ocitanje.za_provjeru = False
+    ocitanje.save()
+    return uskladi_sljedece(ocitanje.vodomjer, ocitanje.razdoblje)

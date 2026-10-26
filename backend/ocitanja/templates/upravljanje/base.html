@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block naslov %}Očitanja vodomjera{% endblock %}</title>
+<style>
+  :root { --tekst:#1d232b; --tiho:#5d6875; --rub:#d9dee4; --pozadina:#f6f7f9; --plava:#1f6feb; --zelena:#1a7f37; --zuta:#9a6700; --crvena:#cf222e; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--tekst); background:var(--pozadina); }
+  header { background:#fff; border-bottom:1px solid var(--rub); padding:10px 20px; display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
+  header strong { font-size:17px; }
+  header nav { display:flex; gap:16px; flex:1; }
+  a { color:var(--plava); text-decoration:none; } a:hover { text-decoration:underline; }
+  main { max-width:1150px; margin:0 auto; padding:20px; }
+  h1 { font-size:22px; margin:0 0 16px; }
+  h2 { font-size:17px; margin:28px 0 10px; }
+  .kartica { background:#fff; border:1px solid var(--rub); border-radius:8px; padding:16px; margin-bottom:16px; }
+  .sazetak { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+  .sazetak div { background:#fff; border:1px solid var(--rub); border-radius:8px; padding:10px 16px; min-width:150px; }
+  .sazetak b { display:block; font-size:22px; }
+  .sazetak span { color:var(--tiho); font-size:13px; }
+  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--rub); border-radius:8px; overflow:hidden; }
+  th, td { padding:8px 10px; border-bottom:1px solid var(--rub); text-align:left; vertical-align:middle; }
+  th { background:#eef1f4; font-size:13px; color:var(--tiho); font-weight:600; }
+  td.broj, th.broj { text-align:right; font-variant-numeric:tabular-nums; }
+  tr.nedostaje td { color:var(--tiho); background:#fbfbfc; }
+  .oznaka { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; font-weight:600; }
+  .predano { background:#ddf4ff; color:#0969da; } .potvrdeno { background:#dafbe1; color:var(--zelena); }
+  .odbijeno { background:#ffebe9; color:var(--crvena); } .provjera { background:#fff8c5; color:var(--zuta); }
+  .poruka { padding:10px 14px; border-radius:6px; margin-bottom:12px; border:1px solid; }
+  .poruka.success { background:#dafbe1; border-color:#aceebb; } .poruka.info { background:#ddf4ff; border-color:#b6e3ff; }
+  .poruka.warning { background:#fff8c5; border-color:#eed888; } .poruka.error { background:#ffebe9; border-color:#ffcecb; }
+  .gumb { display:inline-block; padding:7px 14px; border-radius:6px; border:1px solid var(--rub); background:#fff; color:var(--tekst); cursor:pointer; font:inherit; }
+  .gumb.glavni { background:var(--plava); border-color:var(--plava); color:#fff; }
+  .gumb.zeleni { background:var(--zelena); border-color:var(--zelena); color:#fff; }
+  .gumb.crveni { color:var(--crvena); }
+  .alati { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:16px; }
+  form p { margin:0 0 12px; } label { display:block; font-size:13px; color:var(--tiho); margin-bottom:3px; }
+  input, select { font:inherit; padding:6px 8px; border:1px solid var(--rub); border-radius:6px; max-width:100%; }
+  .errorlist { color:var(--crvena); margin:4px 0; padding-left:18px; font-size:13px; }
+  .dvije { display:grid; grid-template-columns:1fr 1fr; gap:16px; } @media (max-width:800px) { .dvije { grid-template-columns:1fr; } }
+  img.foto { max-width:100%; border-radius:6px; border:1px solid var(--rub); }
+  .tiho { color:var(--tiho); }
+</style>
+</head>
+<body>
+{% if user.is_authenticated %}
+<header>
+  <strong>Očitanja vodomjera</strong>
+  <nav>
+    <a href="{% url 'pregled' %}">Mjesečni pregled</a>
+    <a href="{% url 'admin:ocitanja_korisnik_changelist' %}">Korisnici</a>
+    <a href="{% url 'admin:ocitanja_stan_changelist' %}">Stanovi i vodomjeri</a>
+  </nav>
+  <span class="tiho">{{ user.get_full_name|default:user.username }}</span>
+  <form method="post" action="{% url 'odjava' %}" style="margin:0">{% csrf_token %}<button class="gumb">Odjava</button></form>
+</header>
+{% endif %}
+<main>
+  {% for m in messages %}<div class="poruka {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% block sadrzaj %}{% endblock %}
+</main>
+</body>
+</html>

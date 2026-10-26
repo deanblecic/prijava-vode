@@ -22,6 +22,18 @@ cd backend
 
 Bez varijable `POSTGRES_DB` koristi se SQLite. Testovi: `../.venv/bin/python manage.py test ocitanja`.
 
+## Web sučelje za administratora
+
+Prijava na `/prijava/` korisnikom s ulogom administrator. Za isprobavanje na praznoj bazi:
+`manage.py primjer_podataka` stvara 21 stan, suvlasnike i tri mjeseca očitanja (admin / probna-lozinka).
+
+- `/` – mjesečni pregled svih stanova, s oznakom tko nije predao i što treba provjeriti
+- `/ocitanje/<id>/` – fotografija, potvrda, odbijanje i ispravak očitanja
+- `/stan/<id>/` – vlasnici, povijest očitanja i ručni unos
+- `/stan/<id>/promjena-vlasnika/` – prodaja stana
+- `/izvoz/?mjesec=2026-10` – Excel tablica za mjesec
+- `/admin/` – dodavanje korisnika, lozinki, stanova i vodomjera
+
 ## API za Android aplikaciju
 
 Sve osim prijave traži zaglavlje `Authorization: Token <token>`.

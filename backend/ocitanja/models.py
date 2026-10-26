@@ -18,6 +18,12 @@ class Korisnik(AbstractUser):
         verbose_name = "korisnik"
         verbose_name_plural = "korisnici"
 
+    def save(self, *args, **kwargs):
+        # Administrator koristi i Django administraciju za korisnike i stanove.
+        if self.uloga == self.Uloga.ADMINISTRATOR:
+            self.is_staff = True
+        super().save(*args, **kwargs)
+
     @property
     def je_administrator(self):
         return self.uloga == self.Uloga.ADMINISTRATOR or self.is_superuser

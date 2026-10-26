@@ -1,0 +1,24 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Promjena vlasnika, stan {{ stan.broj_stana }}{% endblock %}
+{% block sadrzaj %}
+<p><a href="{% url 'stan' stan.pk %}">&larr; Stan {{ stan.broj_stana }}</a></p>
+<h1>Promjena vlasnika stana {{ stan.broj_stana }}</h1>
+<div class="kartica" style="max-width:560px">
+  <p class="tiho">Dosadašnjim vlasnicima suvlasništvo se zatvara dan prije odabranog datuma. Povijest očitanja ostaje uz stan.</p>
+  <form method="post">{% csrf_token %}
+    {{ forma.non_field_errors }}
+    <p>{{ forma.od_datuma.label_tag }}{{ forma.od_datuma }}{{ forma.od_datuma.errors }}</p>
+    <h2>Novi vlasnik je postojeći korisnik</h2>
+    <p>{{ forma.postojeci.label_tag }}{{ forma.postojeci }}{{ forma.postojeci.errors }}</p>
+    <h2>ili novi korisnik</h2>
+    <div class="dvije">
+      <p>{{ forma.ime.label_tag }}{{ forma.ime }}{{ forma.ime.errors }}</p>
+      <p>{{ forma.prezime.label_tag }}{{ forma.prezime }}{{ forma.prezime.errors }}</p>
+      <p>{{ forma.korisnicko_ime.label_tag }}{{ forma.korisnicko_ime }}{{ forma.korisnicko_ime.errors }}</p>
+      <p>{{ forma.lozinka.label_tag }}{{ forma.lozinka }}{{ forma.lozinka.errors }}</p>
+    </div>
+    <p><label>{{ forma.deaktiviraj_stare }} {{ forma.deaktiviraj_stare.label }}</label></p>
+    <button class="gumb glavni">Spremi promjenu</button>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Očitanja {{ mjesec|date:"m/Y" }}{% endblock %}
+{% block sadrzaj %}
+<div class="alati">
+  <a class="gumb" href="?mjesec={{ prethodni|date:'Y-m' }}">&larr; {{ prethodni|date:"m/Y" }}</a>
+  <h1 style="margin:0">Očitanja za {{ mjesec|date:"m/Y" }}</h1>
+  <a class="gumb" href="?mjesec={{ sljedeci|date:'Y-m' }}">{{ sljedeci|date:"m/Y" }} &rarr;</a>
+  <span style="flex:1"></span>
+  <a class="gumb glavni" href="{% url 'izvoz' %}?mjesec={{ mjesec|date:'Y-m' }}">Izvoz u Excel</a>
+</div>
+<div class="sazetak">
+  <div><b>{{ broj_predanih }} / {{ broj_stanova }}</b><span>stanova predalo očitanje</span></div>
+  <div><b>{{ nepotvrdena }}</b><span>čeka vašu potvrdu</span></div>
+  <div><b>{{ za_provjeru }}</b><span>označeno za provjeru</span></div>
+  <div><b>{{ ukupna_razlika|floatformat:3 }} m³</b><span>ukupna potrošnja</span></div>
+</div>
+<table>
+  <thead><tr>
+    <th>Stan</th><th>Ime i prezime</th><th>Datum očitanja</th>
+    <th class="broj">Prethodno</th><th class="broj">Novo</th><th class="broj">Razlika</th>
+    <th>Status</th><th></th>
+  </tr></thead>
+  <tbody>
+  {% for r in redovi %}{% with o=r.ocitanje %}
+    <tr{% if not o %} class="nedostaje"{% endif %}>
+      <td><a href="{% url 'stan' r.stan.pk %}?mjesec={{ mjesec|date:'Y-m' }}">{{ r.stan.broj_stana }}</a></td>
+      <td>{{ r.vlasnici|default:"–" }}</td>
+      {% if o %}
+        <td>{{ o.datum_ocitanja|date:"d.m.Y." }}</td>
+        <td class="broj">{{ o.prethodno_stanje }}</td>
+        <td class="broj">{{ o.novo_stanje }}{% if o.rucno_ispravljeno %} <span class="tiho" title="OCR je pročitao {{ o.ocr_vrijednost }}">✎</span>{% endif %}</td>
+        <td class="broj"><b>{{ o.razlika }}</b></td>
+        <td>
+          <span class="oznaka {{ o.status }}">{{ o.get_status_display }}</span>
+          {% if o.za_provjeru %}<span class="oznaka provjera" title="{{ o.razlog_provjere }}">provjeriti</span>{% endif %}
+        </td>
+        <td><a href="{% url 'ocitanje' o.pk %}">Otvori</a></td>
+      {% else %}
+        <td colspan="5">Nije predano</td>
+        <td><a href="{% url 'stan' r.stan.pk %}?mjesec={{ mjesec|date:'Y-m' }}#unos">Unesi</a></td>
+      {% endif %}
+    </tr>
+  {% endwith %}{% empty %}
+    <tr><td colspan="8">Još nema stanova. Dodajte ih u <a href="{% url 'admin:ocitanja_stan_add' %}">Stanovi i vodomjeri</a>.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "upravljanje/base.html" %}
+{% block sadrzaj %}
+<div class="kartica" style="max-width:380px;margin:60px auto">
+  <h1>Prijava</h1>
+  {% if form.errors %}<div class="poruka error">Pogrešno korisničko ime ili lozinka.</div>{% endif %}
+  <form method="post">{% csrf_token %}
+    <p><label for="id_username">Korisničko ime</label>{{ form.username }}</p>
+    <p><label for="id_password">Lozinka</label>{{ form.password }}</p>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button class="gumb glavni">Prijavi se</button>
+  </form>
+</div>
+{% endblock %}
