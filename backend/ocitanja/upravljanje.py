@@ -1,15 +1,17 @@
 """Web sučelje za administratora: mjesečni pregled, provjera očitanja, stanovi i izvoz."""
 import calendar
 import datetime
+from pathlib import Path
 from decimal import Decimal
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -228,3 +230,13 @@ def izvoz_excel(request):
     odgovor["Content-Disposition"] = f'attachment; filename="ocitanja-{mjesec:%Y-%m}.xlsx"'
     knjiga.save(odgovor)
     return odgovor
+
+
+@samo_administrator
+def fotografija(request, putanja):
+    """Fotografije vodomjera vidi samo administrator, pa ih ne poslužuje izravno web server."""
+    korijen = Path(settings.MEDIA_ROOT).resolve()
+    datoteka = (korijen / putanja).resolve()
+    if not datoteka.is_relative_to(korijen) or not datoteka.is_file():
+        raise Http404
+    return FileResponse(open(datoteka, "rb"))
