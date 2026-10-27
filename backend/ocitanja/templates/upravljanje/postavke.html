@@ -1,0 +1,16 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Podsjetnici{% endblock %}
+{% block sadrzaj %}
+<h1>Podsjetnici za očitanje</h1>
+<div class="kartica" style="max-width:560px">
+  <p class="tiho">Od dana očitanja do kraja mjeseca aplikacija svaki dan u zadani sat podsjeti suvlasnike čiji vodomjer još nije očitan.
+    Zadnji dan u mjesecu navečer popis neočitanih stiže na e-mail.</p>
+  <form method="post">{% csrf_token %}
+    {{ forma.non_field_errors }}
+    {% for polje in forma %}
+    <p>{{ polje.label_tag }}{{ polje }}{{ polje.errors }}<br><span class="tiho" style="font-size:13px">{{ polje.help_text }}</span></p>
+    {% endfor %}
+    <button class="gumb glavni">Spremi</button>
+  </form>
+</div>
+{% endblock %}

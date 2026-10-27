@@ -52,6 +52,7 @@
     <a href="{% url 'pregled' %}">Mjesečni pregled</a>
     <a href="{% url 'admin:ocitanja_korisnik_changelist' %}">Korisnici</a>
     <a href="{% url 'admin:ocitanja_stan_changelist' %}">Stanovi i vodomjeri</a>
+    <a href="{% url 'postavke' %}">Podsjetnici</a>
   </nav>
   <span class="tiho">{{ user.get_full_name|default:user.username }}</span>
   <form method="post" action="{% url 'odjava' %}" style="margin:0">{% csrf_token %}<button class="gumb">Odjava</button></form>

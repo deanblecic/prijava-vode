@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
@@ -140,3 +141,32 @@ class Ocitanje(models.Model):
 
     def __str__(self):
         return f"{self.vodomjer} {self.razdoblje:%m/%Y}: {self.novo_stanje}"
+
+
+class Postavke(models.Model):
+    """Jedan red s postavkama koje administrator mijenja u web sučelju."""
+
+    dan_ocitanja = models.PositiveSmallIntegerField(
+        "dan očitanja", default=26, validators=[MinValueValidator(1), MaxValueValidator(28)],
+        help_text="Od ovog dana do kraja mjeseca aplikacija podsjeća suvlasnike koji još nisu očitali vodomjer.",
+    )
+    sat_podsjetnika = models.PositiveSmallIntegerField(
+        "sat podsjetnika", default=9, validators=[MinValueValidator(0), MaxValueValidator(23)],
+        help_text="U koliko sati (0–23) mobitel prikazuje podsjetnik.",
+    )
+    email_obavijesti = models.CharField(
+        "e-mail za obavijest", max_length=300, blank=True,
+        help_text="Kamo zadnji dan u mjesecu stiže popis neočitanih vodomjera; više adresa odvojite zarezom. "
+                  "Prazno: svim administratorima s upisanim e-mailom.",
+    )
+
+    class Meta:
+        verbose_name = "postavke"
+        verbose_name_plural = "postavke"
+
+    @classmethod
+    def ucitaj(cls):
+        return cls.objects.get_or_create(pk=1)[0]
+
+    def __str__(self):
+        return "Postavke"

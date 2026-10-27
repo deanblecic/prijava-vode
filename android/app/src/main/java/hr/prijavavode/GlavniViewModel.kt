@@ -12,7 +12,10 @@ import hr.prijavavode.podaci.Ja
 import hr.prijavavode.podaci.Ocitanje
 import hr.prijavavode.podaci.Repozitorij
 import hr.prijavavode.podaci.Rezultat
+import hr.prijavavode.podaci.Sef
 import hr.prijavavode.podaci.Vodomjer
+import hr.prijavavode.podsjetnik.Podsjetnik
+import hr.prijavavode.ui.Biometrija
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,8 +36,9 @@ sealed interface Ekran {
     data object Povijest : Ekran
 }
 
-class GlavniViewModel(app: Application) : AndroidViewModel(app) {
+class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
     private val repo = Repozitorij(app)
+    private val sef = Sef(app)
 
     var ekran by mutableStateOf<Ekran>(Ekran.Ucitavanje)
         private set
@@ -49,11 +53,40 @@ class GlavniViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var poruka by mutableStateOf<String?>(null)
 
+    /** Prijava otiskom prsta ili licem je uključena i mobitel je podržava. */
+    val biometrija: Boolean = sef.biometrija && Biometrija.dostupna(app)
+    /** Ekran prijave odmah pita za otisak prsta; samo jednom, pri pokretanju. */
+    var pitajBiometriju by mutableStateOf(biometrija)
+    val zapamcenoIme: String get() = sef.ime.orEmpty()
+    val zapamcenaLozinka: String get() = sef.lozinka.orEmpty()
+    val zapamceno: Boolean get() = sef.zapamceno
+    val biometrijaUkljucena: Boolean get() = sef.biometrija
+
     init {
-        if (repo.token == null) ekran = Ekran.Prijava else osvjezi()
+        // Uz biometriju i prijavljen korisnik prvo vidi ekran prijave, koji otključava otiskom prsta.
+        if (repo.token == null || biometrija) ekran = Ekran.Prijava else osvjezi()
     }
 
-    fun prijava(ime: String, lozinka: String) = posao {
+    fun prijava(ime: String, lozinka: String, zapamti: Boolean, biometrija: Boolean) = posao {
+        when (val r = repo.prijava(ime, lozinka)) {
+            is Rezultat.Uspjeh -> {
+                if (zapamti) sef.zapamti(ime.trim(), lozinka) else sef.zaboravi()
+                sef.biometrija = zapamti && biometrija
+                osvjeziSada()
+            }
+            is Rezultat.Neuspjeh -> greska = r.poruka
+        }
+    }
+
+    /** Otisak prsta je potvrđen: nastavlja postojeću prijavu ili se prijavljuje zapamćenom lozinkom. */
+    fun biometrijaPotvrdena() = posao {
+        if (repo.token != null) return@posao osvjeziSada()
+        val ime = sef.ime
+        val lozinka = sef.lozinka
+        if (ime == null || lozinka == null) {
+            greska = "Zapamćena lozinka nije dostupna. Upišite je ponovno."
+            return@posao
+        }
         when (val r = repo.prijava(ime, lozinka)) {
             is Rezultat.Uspjeh -> osvjeziSada()
             is Rezultat.Neuspjeh -> greska = r.poruka
@@ -62,8 +95,17 @@ class GlavniViewModel(app: Application) : AndroidViewModel(app) {
 
     fun odjava() = posao {
         repo.odjava()
+        Podsjetnik.otkazi(app)
+        repo.satPodsjetnika = -1
         ja = null
         ekran = Ekran.Prijava
+    }
+
+    /** Na Androidu 13+ dozvolu za obavijesti tražimo jednom, s početnog ekrana. */
+    fun trebaTrazitiObavijesti(): Boolean {
+        if (repo.obavijestiTrazene) return false
+        repo.obavijestiTrazene = true
+        return true
     }
 
     fun osvjezi() = posao { osvjeziSada() }
@@ -73,6 +115,9 @@ class GlavniViewModel(app: Application) : AndroidViewModel(app) {
             is Rezultat.Uspjeh -> {
                 ja = r.podaci
                 ekran = Ekran.Pocetna
+                val sat = r.podaci.podsjetnik.sat
+                Podsjetnik.zakazi(app, sat, zamijeni = sat != repo.satPodsjetnika)
+                repo.satPodsjetnika = sat
             }
             is Rezultat.Neuspjeh -> obradiGresku(r)
         }
@@ -107,6 +152,7 @@ class GlavniViewModel(app: Application) : AndroidViewModel(app) {
         when (r) {
             is Rezultat.Uspjeh -> {
                 poruka = "Očitanje je poslano. Potrošnja ovaj mjesec: ${r.podaci.razlika} m³."
+                Podsjetnik.ukloniObavijest(app)
                 osvjeziSada()
             }
             is Rezultat.Neuspjeh ->

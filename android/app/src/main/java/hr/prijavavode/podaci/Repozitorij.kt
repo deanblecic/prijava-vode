@@ -28,6 +28,16 @@ class Repozitorij(context: Context) {
         get() = postavke.getString("token", null)
         private set(vrijednost) = postavke.edit().putString("token", vrijednost).apply()
 
+    /** Sat za koji je zakazan podsjetnik; -1 znači da nije zakazan. */
+    var satPodsjetnika: Int
+        get() = postavke.getInt("sat_podsjetnika", -1)
+        set(vrijednost) = postavke.edit().putInt("sat_podsjetnika", vrijednost).apply()
+
+    /** Dozvola za obavijesti traži se samo jednom; poslije je korisnik može uključiti u postavkama mobitela. */
+    var obavijestiTrazene: Boolean
+        get() = postavke.getBoolean("obavijesti_trazene", false)
+        set(vrijednost) = postavke.edit().putBoolean("obavijesti_trazene", vrijednost).apply()
+
     private val api: Api by lazy {
         val klijent = OkHttpClient.Builder()
             .connectTimeout(20, TimeUnit.SECONDS)
