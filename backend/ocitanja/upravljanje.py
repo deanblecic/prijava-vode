@@ -74,7 +74,8 @@ def redovi_mjeseca(mjesec):
         for o in Ocitanje.objects.filter(razdoblje=mjesec).select_related("vodomjer__stan", "korisnik")
     }
     redovi = []
-    for stan in Stan.objects.prefetch_related("vlasnistva__korisnik"):
+    # Stanovi bez aktivnog vodomjera (npr. Grad Rijeka) ne očitavaju se, pa nisu u pregledu.
+    for stan in Stan.objects.filter(vodomjeri__aktivan=True).distinct().prefetch_related("vlasnistva__korisnik"):
         redovi.append({
             "stan": stan,
             "vlasnici": ", ".join(k.get_full_name() or k.username for k in vlasnici_u_mjesecu(stan, mjesec)),

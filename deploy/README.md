@@ -56,6 +56,7 @@ kopirati i izvan servera.
 ## Uvoz stanova i suvlasnika iz Excela
 
 Tablica ima tri stupca bez zaglavlja: broj stana, "Prezime Ime" i zadnje stanje vodomjera (m³).
+Ta stanja postaju početna stanja vodomjera; prvo očitanje u aplikaciji računa razliku od njih.
 Vlasnik bez stanja (npr. Grad Rijeka) dobiva stan bez vodomjera i račun bez prijave.
 
 ```bash

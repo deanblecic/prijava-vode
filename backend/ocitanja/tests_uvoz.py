@@ -64,3 +64,11 @@ class UvozStanovaTest(TestCase):
         with self.assertRaises(CommandError):
             self.uvezi()
         self.assertEqual(Stan.objects.count(), 6)
+
+    def test_stanovi_bez_vodomjera_nisu_u_pregledu(self):
+        self.uvezi()
+        Korisnik.objects.create_user("dean", password="lozinka-123", uloga=Korisnik.Uloga.ADMINISTRATOR)
+        self.client.login(username="dean", password="lozinka-123")
+        r = self.client.get("/")
+        self.assertContains(r, "0 / 4")
+        self.assertNotContains(r, "Grad Rijeka")
