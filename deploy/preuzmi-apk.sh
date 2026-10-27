@@ -14,6 +14,8 @@ trap 'rm -rf "$PRIVREMENO"' EXIT
 gh run download "$RUN" -R "$REPO" -n ocitanje-vode-apk -D "$PRIVREMENO"
 APK=$(find "$PRIVREMENO" -name '*.apk' | head -1)
 mkdir -p apk
+# Docker stvara mapu kao root ako je još nema pri pokretanju; vrati je korisniku.
+[ -w apk ] || sudo chown "$USER" apk
 cp "$APK" apk/ocitanje-vode.apk.novo
 mv apk/ocitanje-vode.apk.novo apk/ocitanje-vode.apk
 echo "APK iz izrade $RUN je postavljen na /aplikacija/."

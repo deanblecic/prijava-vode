@@ -58,3 +58,26 @@ preuzimaju APK i vide upute za instalaciju. APK se preuzima iz zadnje uspješne 
 
 Kopije se čuvaju 30 dana u `/var/backups/prijava-vode`. Preporuka je povremeno ih
 kopirati i izvan servera.
+
+## Uvoz stanova i suvlasnika iz Excela
+
+Tablica ima tri stupca bez zaglavlja: broj stana, "Prezime Ime" i zadnje stanje vodomjera (m³).
+Ta stanja postaju početna stanja vodomjera; prvo očitanje u aplikaciji računa razliku od njih.
+Vlasnik bez stanja (npr. Grad Rijeka) dobiva stan bez vodomjera i račun bez prijave.
+
+```bash
+# na svom računalu:
+scp "Voda početno.xlsx" dean@65.108.144.242:/opt/prijava-vode/voda.xlsx
+# na serveru:
+cd /opt/prijava-vode
+sudo docker compose cp voda.xlsx web:/tmp/voda.xlsx
+sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --suho   # provjera
+sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --pristupni-podaci /tmp/pristupni-podaci.xlsx
+sudo docker compose cp web:/tmp/pristupni-podaci.xlsx .
+sudo docker compose exec web rm /tmp/voda.xlsx /tmp/pristupni-podaci.xlsx
+# na svom računalu:
+scp dean@65.108.144.242:/opt/prijava-vode/pristupni-podaci.xlsx .
+```
+
+`pristupni-podaci.xlsx` sadrži korisnička imena i lozinke za podjelu suvlasnicima. Nakon
+podjele obrišite ga sa servera (`rm pristupni-podaci.xlsx voda.xlsx`).
