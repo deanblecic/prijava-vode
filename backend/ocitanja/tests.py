@@ -251,3 +251,23 @@ class UpravljanjeTest(Osnova):
         self.assertEqual(list_["B2"].value, "Ana Horvat")
         self.assertEqual(list_["F2"].value, 5)
         self.assertEqual(list_["G3"].value, "Nije predano")
+
+
+class FotografijaTest(Osnova):
+    def setUp(self):
+        super().setUp()
+        Korisnik.objects.create_user("dean", password="lozinka-123", uloga=Korisnik.Uloga.ADMINISTRATOR)
+        self.o = predaj_ocitanje(self.ana, self.v3, "105", fotografija=slika())
+
+    def test_samo_administrator_vidi_fotografiju(self):
+        url = self.o.fotografija.url
+        self.client.login(username="ana", password="lozinka-123")
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.client.login(username="dean", password="lozinka-123")
+        r = self.client.get(url)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r["Content-Type"], "image/jpeg")
+
+    def test_izlazak_iz_mape_nije_moguc(self):
+        self.client.login(username="dean", password="lozinka-123")
+        self.assertEqual(self.client.get("/media/../../config/settings.py").status_code, 404)
