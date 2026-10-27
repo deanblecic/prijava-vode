@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledIconButton
@@ -41,6 +43,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,11 +59,14 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import hr.prijavavode.ocr.Prepoznavanje
 import hr.prijavavode.podaci.Vodomjer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun EkranKamere(
     vodomjer: Vodomjer,
-    onSnimljeno: (Vodomjer, Bitmap) -> Unit,
+    onSnimljeno: (Vodomjer, Bitmap, Boolean) -> Unit,
     onNatrag: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -72,6 +78,25 @@ fun EkranKamere(
     val trazi = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { dozvola = it }
     LaunchedEffect(Unit) { if (!dozvola) trazi.launch(Manifest.permission.CAMERA) }
 
+    // Fotografija vodomjera snimljena ranije; Android-ov birač slika ne traži dozvolu.
+    val opseg = rememberCoroutineScope()
+    var ucitava by remember { mutableStateOf(false) }
+    var greskaGalerije by remember { mutableStateOf<String?>(null) }
+    val galerija = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        ucitava = true
+        opseg.launch {
+            val slika = withContext(Dispatchers.IO) { runCatching { Prepoznavanje.izGalerije(context, uri) } }
+            ucitava = false
+            slika.onSuccess { onSnimljeno(vodomjer, it, true) }
+                .onFailure { greskaGalerije = "Slika se ne može otvoriti. Odaberite drugu." }
+        }
+    }
+    val otvoriGaleriju = {
+        greskaGalerije = null
+        galerija.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    }
+
     if (!dozvola) {
         Column(
             Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp),
@@ -82,6 +107,10 @@ fun EkranKamere(
             Button(onClick = { trazi.launch(Manifest.permission.CAMERA) }, Modifier.padding(top = 16.dp)) {
                 Text("Dopusti kameru")
             }
+            Button(onClick = otvoriGaleriju, enabled = !ucitava, modifier = Modifier.padding(top = 8.dp)) {
+                Text("Odaberi sliku iz galerije")
+            }
+            greskaGalerije?.let { Text(it, Modifier.padding(top = 8.dp)) }
             Button(onClick = onNatrag, Modifier.padding(top = 8.dp)) { Text("Natrag") }
         }
         return
@@ -150,28 +179,43 @@ fun EkranKamere(
         ) {
             Text("Prethodno stanje: ${hr(vodomjer.prethodnoStanje)} m³", color = Color.White,
                 modifier = Modifier.padding(bottom = 16.dp))
-            FilledIconButton(
-                onClick = {
-                    snima = true
-                    snimanje.takePicture(ContextCompat.getMainExecutor(context),
-                        object : ImageCapture.OnImageCapturedCallback() {
-                            override fun onCaptureSuccess(slika: ImageProxy) {
-                                val bitmap = Prepoznavanje.okreni(slika.toBitmap(), slika.imageInfo.rotationDegrees)
-                                slika.close()
-                                kamera?.cameraControl?.enableTorch(false)
-                                onSnimljeno(vodomjer, bitmap)
-                            }
+            greskaGalerije?.let { Text(it, color = Color.White, modifier = Modifier.padding(bottom = 8.dp)) }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Lijevo galerija, u sredini okidač; desno prazno mjesto iste širine radi simetrije.
+                FilledIconButton(
+                    onClick = otvoriGaleriju,
+                    enabled = !snima && !ucitava,
+                    modifier = Modifier.size(56.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White.copy(alpha = 0.85f)),
+                ) {
+                    if (ucitava) CircularProgressIndicator(Modifier.size(24.dp))
+                    else Icon(Icons.Filled.PhotoLibrary, "Odaberi sliku iz galerije", tint = Color.Black)
+                }
+                Box(Modifier.size(32.dp))
+                FilledIconButton(
+                    onClick = {
+                        snima = true
+                        snimanje.takePicture(ContextCompat.getMainExecutor(context),
+                            object : ImageCapture.OnImageCapturedCallback() {
+                                override fun onCaptureSuccess(slika: ImageProxy) {
+                                    val bitmap = Prepoznavanje.okreni(slika.toBitmap(), slika.imageInfo.rotationDegrees)
+                                    slika.close()
+                                    kamera?.cameraControl?.enableTorch(false)
+                                    onSnimljeno(vodomjer, bitmap, false)
+                                }
 
-                            override fun onError(greska: ImageCaptureException) {
-                                snima = false
-                            }
-                        })
-                },
-                enabled = !snima,
-                modifier = Modifier.size(76.dp),
-                colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White),
-            ) {
-                if (snima) CircularProgressIndicator() else Box(Modifier.size(60.dp))
+                                override fun onError(greska: ImageCaptureException) {
+                                    snima = false
+                                }
+                            })
+                    },
+                    enabled = !snima && !ucitava,
+                    modifier = Modifier.size(76.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(containerColor = Color.White),
+                ) {
+                    if (snima) CircularProgressIndicator() else Box(Modifier.size(60.dp))
+                }
+                Box(Modifier.size(88.dp))
             }
         }
     }
