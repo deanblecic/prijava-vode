@@ -49,21 +49,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Testovi
         run: ./gradlew --no-daemon testDebugUnitTest
-      - name: Ključ za potpis
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-        if: env.KEYSTORE_BASE64 != ''
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/prijava-vode.jks"
-          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/prijava-vode.jks" >> "$GITHUB_ENV"
       - name: Izrada APK-a
-        env:
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          if [ -n "$ANDROID_KEYSTORE_PATH" ]; then ZADATAK=assembleRelease; else ZADATAK=assembleDebug; fi
-          ./gradlew --no-daemon $ZADATAK -PversionCode=${{ github.run_number }}
+        run: ./gradlew --no-daemon assembleRelease -PversionCode=${{ github.run_number }}
       - uses: actions/upload-artifact@v4
         with:
           name: ocitanje-vode-apk

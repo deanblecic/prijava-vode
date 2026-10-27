@@ -17,8 +17,10 @@ services:
       POSTGRES_HOST: db
       DJANGO_STATIC_ROOT: /app/static
       DJANGO_MEDIA_ROOT: /data/media
+      APK_DATOTEKA: /data/apk/ocitanje-vode.apk
     volumes:
       - media:/data/media
+      - ./apk:/data/apk:ro
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:

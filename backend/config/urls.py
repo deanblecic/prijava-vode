@@ -17,6 +17,8 @@ urlpatterns = [
     path("stan/<int:pk>/promjena-vlasnika/", upravljanje.promjena_vlasnika, name="promjena_vlasnika"),
     path("izvoz/", upravljanje.izvoz_excel, name="izvoz"),
     path("media/<path:putanja>", upravljanje.fotografija, name="fotografija"),
+    path("aplikacija/", upravljanje.aplikacija, name="aplikacija"),
+    path("aplikacija/ocitanje-vode.apk", upravljanje.aplikacija_apk, name="aplikacija_apk"),
     path("admin/", admin.site.urls),
     path("api/", include("ocitanja.urls")),
 ]
