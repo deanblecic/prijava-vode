@@ -3,6 +3,7 @@ import shutil
 import tempfile
 from decimal import Decimal
 from io import BytesIO
+from pathlib import Path
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
@@ -271,3 +272,20 @@ class FotografijaTest(Osnova):
     def test_izlazak_iz_mape_nije_moguc(self):
         self.client.login(username="dean", password="lozinka-123")
         self.assertEqual(self.client.get("/media/../../config/settings.py").status_code, 404)
+
+
+class AplikacijaTest(TestCase):
+    def test_bez_apk_datoteke(self):
+        with override_settings(APK_DATOTEKA=Path(MEDIA) / "nema.apk"):
+            self.assertContains(self.client.get("/aplikacija/"), "još nije postavljena")
+            self.assertEqual(self.client.get("/aplikacija/ocitanje-vode.apk").status_code, 404)
+
+    def test_preuzimanje_bez_prijave(self):
+        apk = Path(MEDIA) / "ocitanje-vode.apk"
+        apk.parent.mkdir(parents=True, exist_ok=True)
+        apk.write_bytes(b"PK" + b"0" * 2000)
+        with override_settings(APK_DATOTEKA=apk):
+            self.assertContains(self.client.get("/aplikacija/"), "Preuzmi aplikaciju")
+            r = self.client.get("/aplikacija/ocitanje-vode.apk")
+            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r["Content-Type"], "application/vnd.android.package-archive")

@@ -21,22 +21,22 @@ android {
     }
 
     signingConfigs {
-        // Ključ za potpis dolazi iz GitHub tajni; bez njega se gradi samo debug verzija.
-        val keystore = System.getenv("ANDROID_KEYSTORE_PATH")
-        if (keystore != null) {
-            create("release") {
-                storeFile = file(keystore)
-                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
-                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
-            }
+        // Stalni ključ iz (privatnog) repozitorija: svaka nova izrada instalira se preko stare.
+        create("stalni") {
+            storeFile = file("kljuc-za-potpis.jks")
+            storePassword = "prijava-vode"
+            keyAlias = "prijava-vode"
+            keyPassword = "prijava-vode"
         }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("stalni")
+        }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.findByName("release")
+            signingConfig = signingConfigs.getByName("stalni")
         }
     }
 

@@ -42,6 +42,10 @@ KRAJ
     echo "Stvoren .env s nasumičnim lozinkama."
 fi
 
+echo "== Android aplikacija za preuzimanje"
+mkdir -p apk
+bash deploy/preuzmi-apk.sh || echo "APK nije preuzet; pokrenite kasnije: bash deploy/preuzmi-apk.sh"
+
 echo "== Pokretanje aplikacije"
 sudo docker compose up -d --build
 

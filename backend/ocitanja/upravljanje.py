@@ -240,3 +240,23 @@ def fotografija(request, putanja):
     if not datoteka.is_relative_to(korijen) or not datoteka.is_file():
         raise Http404
     return FileResponse(open(datoteka, "rb"))
+
+
+def aplikacija(request):
+    """Javna stranica s koje suvlasnici preuzimaju Android aplikaciju."""
+    apk = settings.APK_DATOTEKA
+    return render(request, "upravljanje/aplikacija.html", {
+        "dostupna": apk.is_file(),
+        "velicina_mb": round(apk.stat().st_size / 1_000_000, 1) if apk.is_file() else None,
+    })
+
+
+def aplikacija_apk(request):
+    if not settings.APK_DATOTEKA.is_file():
+        raise Http404
+    return FileResponse(
+        open(settings.APK_DATOTEKA, "rb"),
+        as_attachment=True,
+        filename="ocitanje-vode.apk",
+        content_type="application/vnd.android.package-archive",
+    )
