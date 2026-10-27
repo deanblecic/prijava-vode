@@ -27,6 +27,8 @@ sealed interface Ekran {
         val vodomjer: Vodomjer,
         val fotografija: Bitmap,
         val kandidati: List<BigDecimal>,
+        /** Slika iz galerije: brojilo ne mora biti u sredini, pa se ne izrezuje. */
+        val izGalerije: Boolean = false,
     ) : Ekran
     data object Povijest : Ekran
 }
@@ -81,15 +83,15 @@ class GlavniViewModel(app: Application) : AndroidViewModel(app) {
         ekran = Ekran.Kamera(vodomjer)
     }
 
-    fun snimljeno(vodomjer: Vodomjer, slika: Bitmap) = posao {
+    fun snimljeno(vodomjer: Vodomjer, slika: Bitmap, izGalerije: Boolean) = posao {
         val prethodno = vodomjer.prethodnoStanje.toBigDecimalOrNull()
         val kandidati = runCatching {
-            Prepoznavanje.procitaj(slika, prethodno)
+            Prepoznavanje.procitaj(slika, prethodno, izrezi = !izGalerije)
         }.getOrElse { emptyList() }
         if (kandidati.isEmpty()) {
             poruka = "Broj nije prepoznat. Upišite ga ručno ili snimite ponovno."
         }
-        ekran = Ekran.Potvrda(vodomjer, slika, kandidati)
+        ekran = Ekran.Potvrda(vodomjer, slika, kandidati, izGalerije)
     }
 
     fun posalji(potvrda: Ekran.Potvrda, novoStanje: BigDecimal, potvrdiManje: Boolean = false) = posao {

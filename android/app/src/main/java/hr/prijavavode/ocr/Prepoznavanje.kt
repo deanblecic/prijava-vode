@@ -1,7 +1,12 @@
 package hr.prijavavode.ocr
 
+import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
 import android.graphics.Matrix
+import android.net.Uri
+import android.os.Build
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -13,7 +18,8 @@ import java.math.BigDecimal
 object Prepoznavanje {
     private val prepoznavac by lazy { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
 
-    suspend fun procitaj(slika: Bitmap, prethodno: BigDecimal?): List<BigDecimal> {
+    suspend fun procitaj(slika: Bitmap, prethodno: BigDecimal?, izrezi: Boolean = true): List<BigDecimal> {
+        if (!izrezi) return CitacBrojila.kandidati(linije(slika), prethodno)
         val izrez = izrezSredine(slika)
         val izIzreza = CitacBrojila.kandidati(linije(izrez), prethodno)
         if (izIzreza.isNotEmpty()) return izIzreza
@@ -32,6 +38,30 @@ object Prepoznavanje {
         val x = (slika.width - sirina) / 2
         val y = (slika.height - visina) / 2
         return Bitmap.createBitmap(slika, x, y, sirina, visina)
+    }
+
+    /** Fotografija iz galerije, uspravna i najviše 3000 px po duljoj strani. */
+    fun izGalerije(context: Context, uri: Uri): Bitmap {
+        val najvise = 3000
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val izvor = ImageDecoder.createSource(context.contentResolver, uri)
+            return ImageDecoder.decodeBitmap(izvor) { dekoder, info, _ ->
+                // Softverska slika: ML Kit i izrezivanje trebaju pristup pikselima.
+                dekoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                val dulja = maxOf(info.size.width, info.size.height)
+                if (dulja > najvise) {
+                    val omjer = najvise.toFloat() / dulja
+                    dekoder.setTargetSize((info.size.width * omjer).toInt(), (info.size.height * omjer).toInt())
+                }
+            }
+        }
+        val granice = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        context.contentResolver.openInputStream(uri).use { BitmapFactory.decodeStream(it, null, granice) }
+        var korak = 1
+        while (maxOf(granice.outWidth, granice.outHeight) / korak > najvise) korak *= 2
+        val opcije = BitmapFactory.Options().apply { inSampleSize = korak }
+        return context.contentResolver.openInputStream(uri).use { BitmapFactory.decodeStream(it, null, opcije) }
+            ?: error("Slika se ne može otvoriti")
     }
 
     fun okreni(slika: Bitmap, stupnjevi: Int): Bitmap {

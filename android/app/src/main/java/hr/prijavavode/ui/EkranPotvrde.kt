@@ -53,7 +53,9 @@ fun EkranPotvrde(potvrda: Ekran.Potvrda, vm: GlavniViewModel) {
     var unos by remember(potvrda) { mutableStateOf(potvrda.kandidati.firstOrNull()?.toPlainString()?.let(::hr) ?: "") }
     val broj = unos.trim().replace(',', '.').toBigDecimalOrNull()
     val razlika = if (broj != null && prethodno != null) broj - prethodno else null
-    val izrez = remember(potvrda) { Prepoznavanje.izrezSredine(potvrda.fotografija).asImageBitmap() }
+    val izrez = remember(potvrda) {
+        (if (potvrda.izGalerije) potvrda.fotografija else Prepoznavanje.izrezSredine(potvrda.fotografija)).asImageBitmap()
+    }
 
     Column(
         Modifier.fillMaxSize().safeDrawingPadding().imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
@@ -63,7 +65,7 @@ fun EkranPotvrde(potvrda: Ekran.Potvrda, vm: GlavniViewModel) {
             IconButton(onClick = vm::natrag) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Natrag") }
             Text("Provjerite broj", style = MaterialTheme.typography.titleLarge)
         }
-        Image(izrez, "Snimljeno brojilo", Modifier.fillMaxWidth().height(140.dp), contentScale = ContentScale.Fit)
+        Image(izrez, "Snimljeno brojilo", Modifier.fillMaxWidth().height(if (potvrda.izGalerije) 240.dp else 140.dp), contentScale = ContentScale.Fit)
         vm.poruka?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(
             if (potvrda.kandidati.isEmpty()) "Upišite stanje sa slike."
