@@ -15,6 +15,7 @@ urlpatterns = [
     path("ocitanje/<int:pk>/", upravljanje.ocitanje_detalj, name="ocitanje"),
     path("stan/<int:pk>/", upravljanje.stan_detalj, name="stan"),
     path("stan/<int:pk>/promjena-vlasnika/", upravljanje.promjena_vlasnika, name="promjena_vlasnika"),
+    path("postavke/", upravljanje.postavke, name="postavke"),
     path("izvoz/", upravljanje.izvoz_excel, name="izvoz"),
     path("media/<path:putanja>", upravljanje.fotografija, name="fotografija"),
     path("aplikacija/", upravljanje.aplikacija, name="aplikacija"),

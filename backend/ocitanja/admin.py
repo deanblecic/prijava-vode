@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 
-from .models import Korisnik, KorisnikStan, Ocitanje, Stan, Vodomjer
+from .models import Korisnik, KorisnikStan, Ocitanje, Postavke, Stan, Vodomjer
 
 
 class KorisnikStanInline(admin.TabularInline):
@@ -66,3 +66,6 @@ class OcitanjeAdmin(admin.ModelAdmin):
         if not obj.fotografija:
             return "–"
         return format_html('<a href="{0}"><img src="{0}" style="max-height:300px"></a>', obj.fotografija.url)
+
+
+admin.site.register(Postavke)

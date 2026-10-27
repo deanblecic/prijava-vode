@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 
-from .models import Korisnik
+from .models import Korisnik, Postavke
 
 
 class IspravakForm(forms.Form):
@@ -50,3 +50,15 @@ class PromjenaVlasnikaForm(forms.Form):
         if not novi and not podaci.get("postojeci"):
             raise forms.ValidationError("Odaberite postojećeg korisnika ili upišite novog.")
         return podaci
+
+
+class PostavkeForm(forms.ModelForm):
+    class Meta:
+        model = Postavke
+        fields = ["dan_ocitanja", "sat_podsjetnika", "email_obavijesti"]
+
+    def clean_email_obavijesti(self):
+        adrese = [a.strip() for a in self.cleaned_data["email_obavijesti"].split(",") if a.strip()]
+        for adresa in adrese:
+            forms.EmailField().clean(adresa)
+        return ", ".join(adrese)

@@ -18,8 +18,8 @@ from django.utils import timezone
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
-from .forms import IspravakForm, PromjenaVlasnikaForm, RucniUnosForm
-from .models import Korisnik, Ocitanje, Stan
+from .forms import IspravakForm, PostavkeForm, PromjenaVlasnikaForm, RucniUnosForm
+from .models import Korisnik, Ocitanje, Postavke, Stan
 from .servisi import (
     GreskaOcitanja,
     ispravi_ocitanje,
@@ -261,3 +261,13 @@ def aplikacija_apk(request):
         filename="ocitanje-vode.apk",
         content_type="application/vnd.android.package-archive",
     )
+
+
+@samo_administrator
+def postavke(request):
+    forma = PostavkeForm(request.POST or None, instance=Postavke.ucitaj())
+    if request.method == "POST" and forma.is_valid():
+        forma.save()
+        messages.success(request, "Postavke su spremljene. Mobiteli ih preuzimaju pri sljedećem otvaranju aplikacije.")
+        return redirect("postavke")
+    return render(request, "upravljanje/postavke.html", {"forma": forma})

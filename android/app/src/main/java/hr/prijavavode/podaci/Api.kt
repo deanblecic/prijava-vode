@@ -61,12 +61,17 @@ data class Stan(
     val vodomjeri: List<Vodomjer>,
 )
 
+/** Od kojeg dana u mjesecu i u koliko sati mobitel podsjeća na očitanje; postavlja administrator. */
+@Serializable
+data class PostavkePodsjetnika(val dan: Int = 26, val sat: Int = 9)
+
 @Serializable
 data class Ja(
     @SerialName("korisnicko_ime") val korisnickoIme: String,
     val ime: String,
     val prezime: String,
     val stanovi: List<Stan>,
+    val podsjetnik: PostavkePodsjetnika = PostavkePodsjetnika(),
 )
 
 interface Api {

@@ -59,6 +59,26 @@ preuzimaju APK i vide upute za instalaciju. APK se preuzima iz zadnje uspješne 
 Kopije se čuvaju 30 dana u `/var/backups/prijava-vode`. Preporuka je povremeno ih
 kopirati i izvan servera.
 
+## Podsjetnici i e-mail o neočitanim vodomjerima
+
+U web sučelju, pod **Podsjetnici**, administrator postavlja dan očitanja (zadano 26.), sat
+podsjetnika (zadano 9) i e-mail za obavijest. Od dana očitanja do kraja mjeseca aplikacija
+svaki dan u taj sat podsjeti suvlasnike čiji vodomjer još nije očitan. Zadnji dan u mjesecu u
+20 h server pošalje popis neočitanih stanova na upisani e-mail (ako je prazan, administratorima).
+
+Za slanje e-maila u `.env` dopišite podatke SMTP poslužitelja, npr. za Gmail
+(lozinka aplikacije: Google račun → Sigurnost → Potvrda u dva koraka → Lozinke aplikacija):
+
+```
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=vas.racun@gmail.com
+EMAIL_HOST_PASSWORD=lozinka-aplikacije
+```
+
+Zatim `sudo docker compose up -d` i probno slanje:
+`sudo docker compose exec web python manage.py obavijest_neocitani --odmah`.
+
 ## Uvoz stanova i suvlasnika iz Excela
 
 Tablica ima tri stupca bez zaglavlja: broj stana, "Prezime Ime" i zadnje stanje vodomjera (m³).

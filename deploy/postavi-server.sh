@@ -64,8 +64,8 @@ if [[ ! "$DOMENA" =~ ^[0-9.]+$ ]]; then
     fi
 fi
 
-echo "== Noćna sigurnosna kopija u 3:15"
-( sudo crontab -l 2>/dev/null | grep -v kopija.sh; echo "15 3 * * * $MAPA/deploy/kopija.sh >> /var/log/prijava-vode-kopija.log 2>&1" ) | sudo crontab -
+echo "== Noćna sigurnosna kopija u 3:15 i obavijest o neočitanim vodomjerima"
+bash "$MAPA/deploy/zakazi.sh"
 
 echo
 echo "Gotovo. Stvorite administratora:"

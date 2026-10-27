@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import Ocitanje
+from .models import Ocitanje, Postavke
 from .serializers import (
     OcitanjeSerializer,
     PredajaOcitanjaSerializer,
@@ -43,11 +43,13 @@ def odjava(request):
 def ja(request):
     korisnik = request.user
     context = {"request": request, "sada": timezone.now()}
+    postavke = Postavke.ucitaj()
     return Response({
         "korisnicko_ime": korisnik.username,
         "ime": korisnik.first_name,
         "prezime": korisnik.last_name,
         "stanovi": StanSerializer(korisnik.aktivni_stanovi(), many=True, context=context).data,
+        "podsjetnik": {"dan": postavke.dan_ocitanja, "sat": postavke.sat_podsjetnika},
     })
 
 
