@@ -41,11 +41,17 @@ U `/admin/`:
 1. **Stanovi**: dodajte 21 stan i svakome vodomjer s početnim stanjem (zadnje stanje iz Excela).
 2. **Korisnici**: za svakog suvlasnika korisničko ime, lozinka, ime i prezime, a u dnu stan.
 
+## Aplikacija za suvlasnike
+
+Suvlasnicima pošaljite link `https://prijava-vode.duckdns.org/aplikacija/`. Na toj stranici
+preuzimaju APK i vide upute za instalaciju. APK se preuzima iz zadnje uspješne izrade na GitHubu.
+
 ## Održavanje
 
 | Što | Naredba |
 | --- | --- |
-| Nova verzija s GitHuba | `bash deploy/azuriraj.sh` |
+| Nova verzija s GitHuba (server i APK) | `bash deploy/azuriraj.sh` |
+| Samo nova verzija APK-a | `bash deploy/preuzmi-apk.sh` |
 | Zapisi aplikacije | `sudo docker compose logs -f web` |
 | Ručna kopija | `sudo deploy/kopija.sh` |
 | Vraćanje baze | `gunzip -c /var/backups/prijava-vode/baza-DATUM.sql.gz \| sudo docker compose exec -T db psql -U voda voda` |
