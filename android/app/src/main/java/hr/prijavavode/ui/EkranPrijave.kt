@@ -61,7 +61,7 @@ fun EkranPrijave(vm: GlavniViewModel) {
     ) {
         Icon(Icons.Filled.WaterDrop, null, Modifier.height(56.dp), tint = MaterialTheme.colorScheme.primary)
         Text("Očitanje vode", style = MaterialTheme.typography.headlineMedium)
-        Text("Prijavite se podacima koje ste dobili od upravitelja zgrade.",
+        Text("Prijavite se podacima koje ste dobili od ovlaštenog predstavnika suvlasnika.",
             style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp, bottom = 24.dp))
         OutlinedTextField(
             value = ime, onValueChange = { ime = it }, label = { Text("Korisničko ime") },

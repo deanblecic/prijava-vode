@@ -56,7 +56,7 @@ fun EkranPocetna(vm: GlavniViewModel) {
         when {
             vm.radi && ja == null -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
             ja == null -> Button(onClick = vm::osvjezi) { Text("Pokušaj ponovno") }
-            ja.stanovi.isEmpty() -> Text("Niste upisani kao vlasnik nijednog stana. Javite se upravitelju zgrade.")
+            ja.stanovi.isEmpty() -> Text("Niste upisani kao vlasnik nijednog stana. Javite se ovlaštenom predstavniku suvlasnika.")
             else -> ja.stanovi.forEach { KarticaStana(it, vm) }
         }
         if (ja != null) {
@@ -76,7 +76,7 @@ private fun KarticaStana(stan: Stan, vm: GlavniViewModel) {
             Text("Stan ${stan.brojStana}", style = MaterialTheme.typography.titleLarge)
             val vodomjer = stan.vodomjeri.firstOrNull()
             if (vodomjer == null) {
-                Text("Stan nema upisan vodomjer. Javite se upravitelju zgrade.")
+                Text("Stan nema upisan vodomjer. Javite se ovlaštenom predstavniku suvlasnika.")
                 return@Column
             }
             Text("Prethodno stanje: ${hr(vodomjer.prethodnoStanje)} m³")

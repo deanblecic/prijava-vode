@@ -117,7 +117,7 @@ fun EkranPotvrde(potvrda: Ekran.Potvrda, vm: GlavniViewModel) {
         AlertDialog(
             onDismissRequest = vm::odustaniOdManjeg,
             title = { Text("Jeste li sigurni?") },
-            text = { Text("$tekst\n\nAko je broj točan (npr. vodomjer je zamijenjen), pošaljite ga i upravitelj će ga provjeriti.") },
+            text = { Text("$tekst\n\nAko je broj točan (npr. vodomjer je zamijenjen), pošaljite ga i ovlašteni predstavnik suvlasnika će ga provjeriti.") },
             confirmButton = {
                 TextButton(onClick = { broj?.let { vm.posalji(potvrda, it, potvrdiManje = true) } }) {
                     Text("Pošalji svejedno")

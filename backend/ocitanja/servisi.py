@@ -82,7 +82,7 @@ def predaj_ocitanje(
     if postojece and postojece.status == Ocitanje.Status.POTVRDENO:
         raise GreskaOcitanja(
             "vec_potvrdeno",
-            "Očitanje za ovaj mjesec je već potvrđeno. Za ispravak se javite upravitelju.",
+            "Očitanje za ovaj mjesec je već potvrđeno. Za ispravak se javite ovlaštenom predstavniku suvlasnika.",
         )
 
     prethodno = prethodno_stanje(vodomjer, razdoblje)
