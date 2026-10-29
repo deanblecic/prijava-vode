@@ -280,6 +280,17 @@ class AplikacijaTest(TestCase):
             self.assertContains(self.client.get("/aplikacija/"), "još nije postavljena")
             self.assertEqual(self.client.get("/aplikacija/ocitanje-vode.apk").status_code, 404)
 
+    def test_verzija_u_api_ja(self):
+        apk = Path(MEDIA) / "verzija" / "ocitanje-vode.apk"
+        apk.parent.mkdir(parents=True, exist_ok=True)
+        ana = Korisnik.objects.create_user("ana", password="lozinka-123")
+        api = APIClient()
+        api.force_authenticate(ana)
+        with override_settings(APK_DATOTEKA=apk, APK_VERZIJA=apk.with_name("verzija.txt")):
+            self.assertEqual(api.get("/api/ja/").data["aplikacija"], {"verzija": None})
+            apk.with_name("verzija.txt").write_text("17\n")
+            self.assertEqual(api.get("/api/ja/").data["aplikacija"], {"verzija": 17})
+
     def test_preuzimanje_bez_prijave(self):
         apk = Path(MEDIA) / "ocitanje-vode.apk"
         apk.parent.mkdir(parents=True, exist_ok=True)

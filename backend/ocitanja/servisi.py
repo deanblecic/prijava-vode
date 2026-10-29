@@ -16,6 +16,14 @@ class GreskaOcitanja(Exception):
         self.poruka = poruka
 
 
+def verzija_aplikacije():
+    """Broj verzije APK-a na serveru ili None ako ga nema."""
+    try:
+        return int(settings.APK_VERZIJA.read_text().strip())
+    except (OSError, ValueError):
+        return None
+
+
 def prvi_u_mjesecu(trenutak):
     datum = timezone.localtime(trenutak).date() if hasattr(trenutak, "hour") else trenutak
     return datum.replace(day=1)

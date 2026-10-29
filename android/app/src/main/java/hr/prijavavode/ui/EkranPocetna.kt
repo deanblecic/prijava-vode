@@ -15,10 +15,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -27,6 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import hr.prijavavode.BuildConfig
 import hr.prijavavode.GlavniViewModel
 import hr.prijavavode.podaci.Stan
 
@@ -53,6 +57,7 @@ fun EkranPocetna(vm: GlavniViewModel) {
                 }
             }
         }
+        if (vm.novaVerzija) KarticaNadogradnje(vm)
         when {
             vm.radi && ja == null -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
             ja == null -> Button(onClick = vm::osvjezi) { Text("Pokušaj ponovno") }
@@ -66,6 +71,12 @@ fun EkranPocetna(vm: GlavniViewModel) {
                 Text("Povijest očitanja")
             }
         }
+        Text(
+            "Verzija ${BuildConfig.VERSION_NAME}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+        )
     }
 }
 
@@ -104,5 +115,34 @@ private fun KarticaStana(stan: Stan, vm: GlavniViewModel) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun KarticaNadogradnje(vm: GlavniViewModel) {
+    val nova = vm.ja?.aplikacija?.verzija
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.SystemUpdate, null, tint = MaterialTheme.colorScheme.primary)
+                Text("Dostupna je nova verzija aplikacije (1.$nova).", Modifier.padding(start = 12.dp))
+            }
+            val postotak = vm.preuzimanje
+            if (postotak != null) {
+                Text("Preuzimanje… $postotak %")
+                LinearProgressIndicator(progress = { postotak / 100f }, modifier = Modifier.fillMaxWidth())
+            } else {
+                Button(onClick = vm::nadogradi, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text("Nadogradi") }
+            }
+        }
+    }
+    if (vm.ponudiNadogradnju) {
+        AlertDialog(
+            onDismissRequest = { vm.ponudiNadogradnju = false },
+            title = { Text("Nova verzija") },
+            text = { Text("Dostupna je nova verzija aplikacije Očitanje vode. Želite li je sada instalirati? Vaša prijava i podaci ostaju.") },
+            confirmButton = { TextButton(onClick = vm::nadogradi) { Text("Nadogradi") } },
+            dismissButton = { TextButton(onClick = { vm.ponudiNadogradnju = false }) { Text("Kasnije") } },
+        )
     }
 }

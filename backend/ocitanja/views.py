@@ -12,7 +12,7 @@ from .serializers import (
     PredajaOcitanjaSerializer,
     StanSerializer,
 )
-from .servisi import GreskaOcitanja, predaj_ocitanje
+from .servisi import GreskaOcitanja, predaj_ocitanje, verzija_aplikacije
 
 
 @api_view(["POST"])
@@ -50,6 +50,8 @@ def ja(request):
         "prezime": korisnik.last_name,
         "stanovi": StanSerializer(korisnik.aktivni_stanovi(), many=True, context=context).data,
         "podsjetnik": {"dan": postavke.dan_ocitanja, "sat": postavke.sat_podsjetnika},
+        # Aplikacija uspoređuje sa svojom verzijom i nudi nadogradnju.
+        "aplikacija": {"verzija": verzija_aplikacije()},
     })
 
 

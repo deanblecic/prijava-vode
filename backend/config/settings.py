@@ -122,6 +122,8 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 15 * 1024 * 1024
 
 # APK Android aplikacije koji server nudi suvlasnicima na /aplikacija/ (puni ga deploy/preuzmi-apk.sh).
 APK_DATOTEKA = Path(os.environ.get("APK_DATOTEKA", BASE_DIR / "apk" / "ocitanje-vode.apk"))
+# Broj verzije (versionCode) tog APK-a; uz njega ga sprema deploy/preuzmi-apk.sh.
+APK_VERZIJA = APK_DATOTEKA.with_name("verzija.txt")
 
 # Razlika veća od ovoliko puta prosjeka stana označava se za provjeru.
 PRAG_SUMNJIVE_RAZLIKE = float(os.environ.get("PRAG_SUMNJIVE_RAZLIKE", "3"))

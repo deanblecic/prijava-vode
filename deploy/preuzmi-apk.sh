@@ -5,6 +5,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 REPO=deanblecic/prijava-vode
 RUN=$(gh run list -R "$REPO" -b main -w CI -s success -L 1 --json databaseId -q '.[0].databaseId')
+# Broj izrade je i versionCode APK-a (vidi ci.yml); aplikacija po njemu prepoznaje novu verziju.
+BROJ=$(gh run list -R "$REPO" -b main -w CI -s success -L 1 --json number -q '.[0].number')
 if [ -z "$RUN" ]; then
     echo "Nema uspješne izrade na grani main." >&2
     exit 1
@@ -18,4 +20,5 @@ mkdir -p apk
 [ -w apk ] || sudo chown "$USER" apk
 cp "$APK" apk/ocitanje-vode.apk.novo
 mv apk/ocitanje-vode.apk.novo apk/ocitanje-vode.apk
-echo "APK iz izrade $RUN je postavljen na /aplikacija/."
+echo "$BROJ" > apk/verzija.txt
+echo "APK verzije 1.$BROJ (izrada $RUN) je postavljen na /aplikacija/."
