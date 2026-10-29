@@ -5,6 +5,7 @@
   <h1>Očitanje vode za Android</h1>
   {% if dostupna %}
     <p><a class="gumb glavni" style="font-size:17px;padding:12px 20px" href="{% url 'aplikacija_apk' %}">Preuzmi aplikaciju ({{ velicina_mb }} MB)</a></p>
+    {% if verzija %}<p class="tiho">Verzija 1.{{ verzija }}</p>{% endif %}
     <ol>
       <li>Kliknite gumb iznad na svom Android mobitelu.</li>
       <li>Otvorite preuzetu datoteku <b>ocitanje-vode.apk</b>.</li>

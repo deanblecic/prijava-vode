@@ -26,6 +26,7 @@ from .servisi import (
     postavi_status,
     predaj_ocitanje,
     promijeni_vlasnika,
+    verzija_aplikacije,
 )
 
 
@@ -249,6 +250,7 @@ def aplikacija(request):
     return render(request, "upravljanje/aplikacija.html", {
         "dostupna": apk.is_file(),
         "velicina_mb": round(apk.stat().st_size / 1_000_000, 1) if apk.is_file() else None,
+        "verzija": verzija_aplikacije(),
     })
 
 

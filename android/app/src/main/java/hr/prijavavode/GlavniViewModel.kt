@@ -9,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import hr.prijavavode.ocr.Prepoznavanje
 import hr.prijavavode.podaci.Ja
+import hr.prijavavode.podaci.Nadogradnja
 import hr.prijavavode.podaci.Ocitanje
 import hr.prijavavode.podaci.Repozitorij
 import hr.prijavavode.podaci.Rezultat
@@ -61,6 +62,15 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
     val zapamcenaLozinka: String get() = sef.lozinka.orEmpty()
     val zapamceno: Boolean get() = sef.zapamceno
     val biometrijaUkljucena: Boolean get() = sef.biometrija
+
+    /** Na serveru je novija verzija aplikacije. */
+    val novaVerzija: Boolean get() = Nadogradnja.dostupna(ja)
+    /** Postotak preuzimanja nove verzije; null kad se ne preuzima. */
+    var preuzimanje by mutableStateOf<Int?>(null)
+        private set
+    /** Prozor s prijedlogom nadogradnje; pokazuje se jednom po pokretanju aplikacije. */
+    var ponudiNadogradnju by mutableStateOf(false)
+    private var nadogradnjaPonudena = false
 
     init {
         // Uz biometriju i prijavljen korisnik prvo vidi ekran prijave, koji otključava otiskom prsta.
@@ -115,11 +125,37 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
             is Rezultat.Uspjeh -> {
                 ja = r.podaci
                 ekran = Ekran.Pocetna
+                if (Nadogradnja.dostupna(r.podaci) && !nadogradnjaPonudena) {
+                    nadogradnjaPonudena = true
+                    ponudiNadogradnju = true
+                }
                 val sat = r.podaci.podsjetnik.sat
                 Podsjetnik.zakazi(app, sat, zamijeni = sat != repo.satPodsjetnika)
                 repo.satPodsjetnika = sat
             }
             is Rezultat.Neuspjeh -> obradiGresku(r)
+        }
+    }
+
+    fun nadogradi() {
+        ponudiNadogradnju = false
+        if (preuzimanje != null) return
+        if (!Nadogradnja.smijeInstalirati(app)) {
+            poruka = "Uključite „Dopusti iz ovog izvora”, vratite se tipkom Natrag i ponovno dodirnite Nadogradi."
+            Nadogradnja.otvoriDopustenje(app)
+            return
+        }
+        viewModelScope.launch {
+            preuzimanje = 0
+            try {
+                val apk = Nadogradnja.preuzmi(app) { preuzimanje = it }
+                poruka = null
+                Nadogradnja.instaliraj(app, apk)
+            } catch (e: Exception) {
+                greska = "Nova verzija se nije mogla preuzeti. Provjerite internet i pokušajte ponovno."
+            } finally {
+                preuzimanje = null
+            }
         }
     }
 

@@ -65,6 +65,10 @@ data class Stan(
 @Serializable
 data class PostavkePodsjetnika(val dan: Int = 26, val sat: Int = 9)
 
+/** Verzija APK-a na serveru (versionCode); null ako server još nema APK. */
+@Serializable
+data class VerzijaAplikacije(val verzija: Int? = null)
+
 @Serializable
 data class Ja(
     @SerialName("korisnicko_ime") val korisnickoIme: String,
@@ -72,6 +76,7 @@ data class Ja(
     val prezime: String,
     val stanovi: List<Stan>,
     val podsjetnik: PostavkePodsjetnika = PostavkePodsjetnika(),
+    val aplikacija: VerzijaAplikacije = VerzijaAplikacije(),
 )
 
 interface Api {

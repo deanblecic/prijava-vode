@@ -15,8 +15,10 @@ android {
         applicationId = "hr.prijavavode"
         minSdk = 26
         targetSdk = 35
-        versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 1
-        versionName = "1.0"
+        // versionCode je broj izrade na GitHubu; po njemu aplikacija prepoznaje novu verziju na serveru.
+        val izrada = (findProperty("versionCode") as String?)?.toInt() ?: 1
+        versionCode = izrada
+        versionName = "1.$izrada"
         buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
     }
 
