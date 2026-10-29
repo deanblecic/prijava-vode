@@ -33,8 +33,8 @@ object Prepoznavanje {
 
     /** Okvir na zaslonu pokriva sredinu slike; izrez je malo veći da brojilo sigurno stane. */
     fun izrezSredine(slika: Bitmap): Bitmap {
-        val sirina = (slika.width * 0.9f).toInt()
-        val visina = minOf((sirina * 0.45f).toInt(), slika.height)
+        val sirina = (slika.width * 0.96f).toInt()
+        val visina = minOf((sirina * 0.8f).toInt(), slika.height)
         val x = (slika.width - sirina) / 2
         val y = (slika.height - visina) / 2
         return Bitmap.createBitmap(slika, x, y, sirina, visina)

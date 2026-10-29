@@ -147,8 +147,8 @@ fun EkranKamere(
 
         // Okvir u koji korisnik smjesti brojilo; odgovara izrezu u Prepoznavanje.izrezSredine.
         Canvas(Modifier.fillMaxSize()) {
-            val sirina = size.width * 0.85f
-            val visina = sirina * 0.4f
+            val sirina = size.width * 0.92f
+            val visina = sirina * 0.75f
             val vrh = Offset((size.width - sirina) / 2, (size.height - visina) / 2)
             drawRect(Color.Black.copy(alpha = 0.45f), size = Size(size.width, vrh.y))
             drawRect(Color.Black.copy(alpha = 0.45f), topLeft = Offset(0f, vrh.y + visina),

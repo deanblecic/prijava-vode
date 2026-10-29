@@ -65,7 +65,7 @@ fun EkranPotvrde(potvrda: Ekran.Potvrda, vm: GlavniViewModel) {
             IconButton(onClick = vm::natrag) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Natrag") }
             Text("Provjerite broj", style = MaterialTheme.typography.titleLarge)
         }
-        Image(izrez, "Snimljeno brojilo", Modifier.fillMaxWidth().height(if (potvrda.izGalerije) 240.dp else 140.dp), contentScale = ContentScale.Fit)
+        Image(izrez, "Snimljeno brojilo", Modifier.fillMaxWidth().height(if (potvrda.izGalerije) 240.dp else 220.dp), contentScale = ContentScale.Fit)
         vm.poruka?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(
             if (potvrda.kandidati.isEmpty()) "Upišite stanje sa slike."
