@@ -40,7 +40,9 @@ od 21 stana, suvlasnike i tri mjeseca očitanja (admin / probna-lozinka).
 - `/stan/<id>/` – vlasnici, povijest očitanja i ručni unos
 - `/stan/<id>/promjena-vlasnika/` – prodaja stana
 - `/izvoz/?mjesec=2026-10` – Excel tablica za mjesec
-- `/admin/` – samo superadministrator: zgrade, administratori zgrada, korisnici, stanovi i vodomjeri
+- Django administracija (skrivena adresa, poveznica Sustav) – samo superadministrator
+- `/stanovi/`, `/korisnici/`, `/administratori/`, `/zapisnik/` – stanovi, računi, spajanje istoimenih računa, administratori zgrade i trag radnji
+- `/prijava/` → `/prijava/kod/` – lozinka pa kod iz Google Authenticatora (prvi put postavljanje)
 
 ## API za Android aplikaciju
 

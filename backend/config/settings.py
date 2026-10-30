@@ -2,6 +2,7 @@
 
 Sve što se razlikuje između razvoja i produkcije čita se iz varijabli okoline.
 """
+import hashlib
 import os
 from pathlib import Path
 
@@ -31,11 +32,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "ocitanja.sigurnost.SigurnosnaZaglavlja",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "ocitanja.sigurnost.ZastitaPrijave",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -85,8 +88,38 @@ AUTH_USER_MODEL = "ocitanja.Korisnik"
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
+    {"NAME": "ocitanja.sigurnost.DuljaLozinkaAdministratora", "OPTIONS": {"min_length": 12}},
+    # Popis od 20 000 najčešćih lozinki iz procurjelih baza.
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# Argon2 za nove lozinke; postojeće se prebacuju same kod sljedeće prijave.
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+]
+
+# Nakon ovoliko neuspjelih prijava za isto korisničko ime (ili s iste adrese) prijava je blokirana BLOKADA_MINUTA.
+BLOKADA_POKUSAJA = int(os.environ.get("BLOKADA_POKUSAJA", "5"))
+BLOKADA_POKUSAJA_ADRESA = int(os.environ.get("BLOKADA_POKUSAJA_ADRESA", "20"))
+BLOKADA_MINUTA = int(os.environ.get("BLOKADA_MINUTA", "15"))
+
+# Web sesija administratora istječe nakon 30 minuta neaktivnosti.
+SESSION_COOKIE_AGE = 30 * 60
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+CSRF_COOKIE_HTTPONLY = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "same-origin"
+
+# Prijava u Android aplikaciji istječe nakon ovoliko dana nekorištenja.
+TOKEN_ISTEK_DANA = int(os.environ.get("TOKEN_ISTEK_DANA", "90"))
+
+# Django administracija (samo superadministrator) nije na pogodivoj adresi /admin/.
+ADMIN_PUTANJA = os.environ.get("DJANGO_ADMIN_PUTANJA") or (
+    "sustav-" + hashlib.sha256(f"admin:{SECRET_KEY}".encode()).hexdigest()[:12] + "/"
+)
 
 LANGUAGE_CODE = "hr"
 TIME_ZONE = "Europe/Zagreb"
@@ -110,7 +143,7 @@ LOGIN_REDIRECT_URL = "pregled"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "ocitanja.sigurnost.TokenSIstekom",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -145,3 +178,8 @@ if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = os.environ.get("DJANGO_SECURE_COOKIES", "1") == "1"
     CSRF_COOKIE_SECURE = SESSION_COOKIE_SECURE
+    if SESSION_COOKIE_SECURE:
+        # Preglednik nakon prvog posjeta godinu dana stranicu otvara samo preko HTTPS-a.
+        SECURE_SSL_REDIRECT = True
+        SECURE_HSTS_SECONDS = 365 * 24 * 3600
+        SECURE_HSTS_INCLUDE_SUBDOMAINS = False

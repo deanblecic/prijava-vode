@@ -8,9 +8,11 @@ from openpyxl import Workbook, load_workbook
 
 from .management.commands.uvoz_stanova import korisnicko_ime, razdvoji_ime
 from .models import AdministratorZgrade, Korisnik, Stan, Zgrada
+from .tests import Klijent
 
 
 class UvozStanovaTest(TestCase):
+    client_class = Klijent
     def setUp(self):
         self.zgrada = Zgrada.objects.create(
             oznaka="RI-ALB-2", ulica="Moše Albaharija", kucni_broj="2", postanski_broj="51000", grad="Rijeka"

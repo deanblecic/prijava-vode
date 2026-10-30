@@ -1,8 +1,9 @@
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from ocitanja import korisnici, upravljanje
+from ocitanja import korisnici, prijava, upravljanje
 
 admin.site.site_header = "Očitanja vodomjera"
 admin.site.site_title = "Očitanja vodomjera"
@@ -21,7 +22,9 @@ urlpatterns = [
     path("stan/<int:pk>/vodomjer/", korisnici.zamjena_vodomjera, name="zamjena_vodomjera"),
     path("zapisnik/", korisnici.zapisnik, name="zapisnik"),
     path("zapisnik/<int:pk>/ponisti/", korisnici.ponisti, name="ponisti_spajanje"),
-    path("prijava/", upravljanje.Prijava.as_view(), name="prijava"),
+    path("prijava/", prijava.Prijava.as_view(), name="prijava"),
+    path("prijava/kod/", prijava.prijava_kod, name="prijava_kod"),
+    path("lozinka/", prijava.promjena_lozinke, name="promjena_lozinke"),
     path("odjava/", auth_views.LogoutView.as_view(next_page="prijava"), name="odjava"),
     path("ocitanje/<int:pk>/", upravljanje.ocitanje_detalj, name="ocitanje"),
     path("stan/<int:pk>/", upravljanje.stan_detalj, name="stan"),
@@ -31,6 +34,6 @@ urlpatterns = [
     path("media/<path:putanja>", upravljanje.fotografija, name="fotografija"),
     path("aplikacija/", upravljanje.aplikacija, name="aplikacija"),
     path("aplikacija/ocitanje-vode.apk", upravljanje.aplikacija_apk, name="aplikacija_apk"),
-    path("admin/", admin.site.urls),
+    path(settings.ADMIN_PUTANJA, admin.site.urls),
     path("api/", include("ocitanja.urls")),
 ]

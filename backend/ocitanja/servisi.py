@@ -59,9 +59,9 @@ def prosjecna_razlika(vodomjer, razdoblje, broj_mjeseci=12):
     return Ocitanje.objects.filter(id__in=list(ids)).aggregate(p=Avg("razlika"))["p"]
 
 
-def korisnik_smije_ocitati(korisnik, vodomjer):
-    """Vlasnik stana, administrator zgrade u kojoj je stan ili superadministrator."""
-    if korisnik.zgrade_za_upravljanje().filter(pk=vodomjer.stan.zgrada_id).exists():
+def korisnik_smije_ocitati(korisnik, vodomjer, samo_vlasnik=False):
+    """Vlasnik stana; na webu i administrator zgrade u kojoj je stan ili superadministrator."""
+    if not samo_vlasnik and korisnik.zgrade_za_upravljanje().filter(pk=vodomjer.stan.zgrada_id).exists():
         return True
     return korisnik.aktivni_stanovi().filter(pk=vodomjer.stan_id).exists()
 
@@ -77,15 +77,17 @@ def predaj_ocitanje(
     fotografija=None,
     napomena="",
     potvrdi_manje=False,
+    samo_vlasnik=False,
 ):
     """Sprema ili ispravlja očitanje za mjesec u kojem je snimljeno.
 
+    Aplikacija šalje samo_vlasnik=True: tamo i administrator očitava samo svoje stanove.
     Diže GreskaOcitanja kad korisnik nema pravo na vodomjer, kad je očitanje
     već potvrđeno ili kad je novo stanje manje od prethodnog bez potvrde.
     """
     if not vodomjer.aktivan:
         raise GreskaOcitanja("vodomjer_neaktivan", "Ovaj vodomjer više nije aktivan.")
-    if not korisnik_smije_ocitati(korisnik, vodomjer):
+    if not korisnik_smije_ocitati(korisnik, vodomjer, samo_vlasnik):
         raise GreskaOcitanja("nema_prava", "Nemate pravo predati očitanje za ovaj vodomjer.")
 
     novo_stanje = Decimal(novo_stanje)

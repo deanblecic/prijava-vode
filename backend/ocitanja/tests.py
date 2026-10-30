@@ -7,7 +7,7 @@ from pathlib import Path
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 from PIL import Image
 from rest_framework.test import APIClient
@@ -16,6 +16,20 @@ from .models import AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje, Stan,
 from .servisi import GreskaOcitanja, predaj_ocitanje, promijeni_vlasnika
 
 MEDIA = tempfile.mkdtemp()
+
+
+class Klijent(Client):
+    """Testni preglednik čija prijava preskače drugi korak (kod iz Authenticatora); taj se testira u tests_sigurnost."""
+
+    def login(self, **podaci):
+        from .sigurnost import SESIJA_DVA_KORAKA
+
+        uspjeh = super().login(**podaci)
+        if uspjeh:
+            sesija = self.session
+            sesija[SESIJA_DVA_KORAKA] = True
+            sesija.save()
+        return uspjeh
 
 
 def trenutak(godina, mjesec, dan=5):
@@ -30,6 +44,7 @@ def slika():
 
 @override_settings(MEDIA_ROOT=MEDIA)
 class Osnova(TestCase):
+    client_class = Klijent
     @classmethod
     def tearDownClass(cls):
         super().tearDownClass()
@@ -281,6 +296,7 @@ class FotografijaTest(Osnova):
 
 
 class AplikacijaTest(TestCase):
+    client_class = Klijent
     def test_bez_apk_datoteke(self):
         with override_settings(APK_DATOTEKA=Path(MEDIA) / "nema.apk"):
             self.assertContains(self.client.get("/aplikacija/"), "još nije postavljena")

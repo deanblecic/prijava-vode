@@ -22,6 +22,7 @@ from .racuni import (
     spoji_racune,
     ukloni_administratora,
 )
+from .sigurnost import ponisti_dva_koraka
 from .upravljanje import KLJUC_ZGRADE, kljuc_stana, samo_administrator, za_zgradu
 
 
@@ -125,6 +126,13 @@ def administratori(request):
     forma = NoviAdministratorForm(request.POST or None, zgrada=zgrada)
     if request.method == "POST":
         akcija = request.POST.get("akcija")
+        if akcija == "ponisti_kod" and request.user.is_superuser:
+            korisnik = get_object_or_404(zgrada.administratori, pk=request.POST.get("korisnik"))
+            ponisti_dva_koraka(korisnik)
+            Zapisnik.upisi(Zapisnik.Radnja.DVA_KORAKA, f"Poništen Google Authenticator za {opis(korisnik)}",
+                           request=request, zgrada=zgrada, korisnik_id=korisnik.pk)
+            messages.success(request, f"{korisnik} kod sljedeće prijave ponovno postavlja Google Authenticator.")
+            return redirect("administratori")
         if akcija == "ukloni":
             korisnik = get_object_or_404(zgrada.administratori, pk=request.POST.get("korisnik"))
             try:

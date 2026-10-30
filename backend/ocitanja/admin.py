@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.contrib.auth.views import redirect_to_login
+from django.urls import reverse
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 
@@ -6,6 +8,8 @@ from .models import AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje, Posta
 
 # Django administracija ne zna za zgrade, pa je smije koristiti samo superadministrator.
 admin.site.has_permission = lambda request: request.user.is_active and request.user.is_superuser
+# Prijava ide kroz zajedničku stranicu s drugim korakom, nikad kroz Djangovu.
+admin.site.login = lambda request, extra_context=None: redirect_to_login(request.get_full_path(), reverse("prijava"))
 
 
 class KorisnikStanInline(admin.TabularInline):

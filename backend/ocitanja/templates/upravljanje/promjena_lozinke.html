@@ -1,0 +1,15 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Promjena lozinke{% endblock %}
+{% block sadrzaj %}
+<div class="kartica" style="max-width:420px;margin:40px auto">
+  <h1>Nova lozinka</h1>
+  {% if user.mora_promijeniti_lozinku %}<div class="poruka info">Lozinku vam je postavio drugi administrator. Prije nastavka upišite svoju.</div>{% endif %}
+  <form method="post">{% csrf_token %}
+    {{ forma.non_field_errors }}
+    <p>{{ forma.new_password1.label_tag }}{{ forma.new_password1 }}{{ forma.new_password1.errors }}</p>
+    <p>{{ forma.new_password2.label_tag }}{{ forma.new_password2 }}{{ forma.new_password2.errors }}</p>
+    <p class="tiho" style="font-size:13px">Barem 12 znakova. Ne smije biti česta lozinka ni slična korisničkom imenu.</p>
+    <button class="gumb glavni">Spremi lozinku</button>
+  </form>
+</div>
+{% endblock %}

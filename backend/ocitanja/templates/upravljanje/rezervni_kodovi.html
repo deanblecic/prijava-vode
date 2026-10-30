@@ -1,0 +1,13 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Rezervni kodovi{% endblock %}
+{% block sadrzaj %}
+<div class="kartica" style="max-width:480px;margin:40px auto">
+  <h1>Rezervni kodovi</h1>
+  <p>Google Authenticator je postavljen. Ako izgubite mobitel, prijavite se jednim od ovih kodova umjesto šest brojki.
+    Svaki vrijedi samo jednom.</p>
+  <pre style="font-size:18px;line-height:1.7;background:#f6f7f9;padding:12px 16px;border-radius:6px">{% for k in kodovi %}{{ k }}
+{% endfor %}</pre>
+  <div class="poruka warning">Kodovi se prikazuju samo sada. Ispišite ih ili zapišite i čuvajte odvojeno od mobitela.</div>
+  <a class="gumb glavni" href="{% url 'pregled' %}">Spremio sam kodove</a>
+</div>
+{% endblock %}

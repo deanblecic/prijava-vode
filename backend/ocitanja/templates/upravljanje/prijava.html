@@ -2,7 +2,8 @@
 {% block sadrzaj %}
 <div class="kartica" style="max-width:380px;margin:60px auto">
   <h1>Prijava</h1>
-  {% if samo_aplikacija %}
+  {% if blokada %}<div class="poruka error">{{ blokada }}</div>
+  {% elif samo_aplikacija %}
   <div class="poruka info">Web stranica služi samo administratorima zgrada. Očitanje vodomjera unosite u
     <a href="{% url 'aplikacija' %}">aplikaciji za mobitel</a>.</div>
   {% elif form.errors %}<div class="poruka error">Pogrešno korisničko ime ili lozinka.</div>{% endif %}

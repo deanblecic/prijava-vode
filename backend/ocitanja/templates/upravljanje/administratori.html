@@ -3,16 +3,21 @@
 {% block sadrzaj %}
 <h1>Administratori zgrade</h1>
 <table style="max-width:700px">
-  <thead><tr><th>Ime i prezime</th><th>Korisničko ime</th><th></th></tr></thead>
+  <thead><tr><th>Ime i prezime</th><th>Korisničko ime</th><th>Google Authenticator</th><th></th></tr></thead>
   <tbody>
   {% for k in administratori %}
     <tr><td>{{ k.get_full_name|default:"–" }}</td><td>{{ k.username }}</td>
+      <td>{% if k.totp_tajna %}postavljen{% else %}<span class="tiho">postavlja kod prve prijave</span>{% endif %}
+        {% if user.is_superuser and k.totp_tajna %}
+        <form method="post" style="display:inline;margin:0" onsubmit="return confirm('Poništiti Google Authenticator? Kod sljedeće prijave postavlja ga ponovno.')">{% csrf_token %}
+          <input type="hidden" name="akcija" value="ponisti_kod"><input type="hidden" name="korisnik" value="{{ k.pk }}">
+          <button class="gumb">Poništi</button></form>{% endif %}</td>
       <td>{% if administratori|length > 1 %}
         <form method="post" style="margin:0" onsubmit="return confirm('Ukloniti {{ k.get_full_name|default:k.username|escapejs }} iz administratora zgrade?')">{% csrf_token %}
           <input type="hidden" name="akcija" value="ukloni"><input type="hidden" name="korisnik" value="{{ k.pk }}">
           <button class="gumb crveni">Ukloni</button>
         </form>{% endif %}</td></tr>
-  {% empty %}<tr><td colspan="3">Zgrada još nema administratora.</td></tr>{% endfor %}
+  {% empty %}<tr><td colspan="4">Zgrada još nema administratora.</td></tr>{% endfor %}
   </tbody>
 </table>
 <h2>Dodaj administratora</h2>

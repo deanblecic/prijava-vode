@@ -68,6 +68,10 @@ class Korisnik(AbstractUser):
         "mora promijeniti lozinku", default=False,
         help_text="Lozinku je postavio administrator, pa je korisnik mijenja kod sljedeće prijave.",
     )
+    # Prijava u dva koraka (Google Authenticator) za administratore.
+    totp_tajna = models.CharField(max_length=64, blank=True, editable=False)
+    totp_zadnji_korak = models.BigIntegerField(null=True, blank=True, editable=False)
+    rezervni_kodovi = models.JSONField(default=list, blank=True, editable=False)
 
     class Meta:
         verbose_name = "korisnik"

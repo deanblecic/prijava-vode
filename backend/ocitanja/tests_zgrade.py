@@ -9,6 +9,7 @@ from django.core.management import call_command
 from django.db import IntegrityError, connection, transaction
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase
+from django.urls import reverse
 from openpyxl import Workbook
 from rest_framework.test import APIClient
 
@@ -105,8 +106,9 @@ class OdvajanjeZgradaTest(DvijeZgrade):
         api.force_authenticate(self.admin_b)
         r = api.post("/api/ocitanja/", {"vodomjer": self.v4.pk, "novo_stanje": "60"})
         self.assertEqual(r.status_code, 403)
+        # U aplikaciji i administrator predaje samo za svoje stanove; ručni unos za zgradu radi na webu.
         r = api.post("/api/ocitanja/", {"vodomjer": self.vb3.pk, "novo_stanje": "13"})
-        self.assertEqual(r.status_code, 201)
+        self.assertEqual(r.status_code, 403)
 
     def test_obavijest_ide_administratorima_svake_zgrade(self):
         self.admin_a.email = "a@example.com"
@@ -144,10 +146,12 @@ class SuperadministratorTest(DvijeZgrade):
         self.assertEqual(self.client.get(self.o_b.fotografija.url).status_code, 200)
 
     def test_samo_superadministrator_ulazi_u_django_administraciju(self):
+        url = reverse("admin:ocitanja_stan_changelist")
+        self.assertNotIn("/admin/", url)
         self.prijava("admin_a")
-        self.assertNotEqual(self.client.get("/admin/ocitanja/stan/").status_code, 200)
+        self.assertNotEqual(self.client.get(url).status_code, 200)
         self.prijava("dean")
-        self.assertEqual(self.client.get("/admin/ocitanja/stan/").status_code, 200)
+        self.assertEqual(self.client.get(url).status_code, 200)
 
 
 class AdministratorViseZgradaTest(DvijeZgrade):
@@ -170,9 +174,10 @@ class WebPrijavaTest(DvijeZgrade):
         self.assertContains(r, "samo administratorima")
         self.assertNotIn("_auth_user_id", self.client.session)
 
-    def test_administrator_se_prijavljuje(self):
+    def test_administrator_nakon_lozinke_upisuje_kod(self):
         r = self.client.post("/prijava/", {"username": "admin_b", "password": "lozinka-123"})
-        self.assertRedirects(r, "/")
+        self.assertRedirects(r, "/prijava/kod/")
+        self.assertNotIn("_auth_user_id", self.client.session)
 
 
 class ViseStanovaUViseZgradaTest(DvijeZgrade):

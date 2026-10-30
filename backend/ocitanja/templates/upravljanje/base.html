@@ -68,8 +68,9 @@
     <a href="{% url 'postavke' %}">Podsjetnici</a>
     <a href="{% url 'zapisnik' %}">Zapisnik</a>
     {% endif %}
+    {% if user.is_superuser %}<a href="{% url 'admin:index' %}">Sustav</a>{% endif %}
   </nav>
-  <span class="tiho">{{ user.get_full_name|default:user.username }}</span>
+  <a class="tiho" href="{% url 'promjena_lozinke' %}" title="Promijeni lozinku">{{ user.get_full_name|default:user.username }}</a>
   <form method="post" action="{% url 'odjava' %}" style="margin:0">{% csrf_token %}<button class="gumb">Odjava</button></form>
 </header>
 {% endif %}

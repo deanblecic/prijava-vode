@@ -11,7 +11,6 @@ from functools import wraps
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Q
@@ -90,17 +89,6 @@ def kontekst(request):
         "zgrada": getattr(request, "zgrada", None) or trenutna_zgrada(request),
         "moje_zgrade": zgrade if request.user.is_superuser or len(zgrade) > 1 else [],
     }
-
-
-class Prijava(auth_views.LoginView):
-    template_name = "upravljanje/prijava.html"
-    redirect_authenticated_user = True
-
-    def form_valid(self, form):
-        # Web je za sada samo za administratore; suvlasnici očitanje unose u aplikaciji.
-        if not form.get_user().je_administrator:
-            return self.render_to_response(self.get_context_data(form=form, samo_aplikacija=True))
-        return super().form_valid(form)
 
 
 @samo_administrator
