@@ -1,4 +1,5 @@
-"""Pravila za predaju očitanja, zajednička API-ju i web sučelju."""
+"""Pravila za predaju očitanja i upravljanje računima, zajednička API-ju i web sučelju."""
+import secrets
 from decimal import Decimal
 
 from django.conf import settings
@@ -7,6 +8,14 @@ from django.db.models import Avg
 from django.utils import timezone
 
 from .models import Ocitanje, Vodomjer
+
+
+SLOVA_LOZINKE = "abcdefghjkmnpqrstuvwxyz23456789"
+
+
+def nova_lozinka():
+    """Lozinka za podjelu na papiru: bez slova i brojki koje se lako zamijene (l/1, o/0)."""
+    return "-".join("".join(secrets.choice(SLOVA_LOZINKE) for _ in range(4)) for _ in range(3))
 
 
 class GreskaOcitanja(Exception):

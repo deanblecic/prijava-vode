@@ -9,7 +9,6 @@ u drugoj zgradi dobiva novi račun i napomenu u izvještaju; spajanje je odluka 
 
 Lozinke se stvaraju na serveru i spremaju samo u izlaznu tablicu pristupnih podataka.
 """
-import secrets
 import unicodedata
 from decimal import Decimal
 
@@ -19,9 +18,7 @@ from django.db import transaction
 from openpyxl import Workbook, load_workbook
 
 from ocitanja.models import Korisnik, KorisnikStan, Stan, Vodomjer, Zgrada
-
-SLOVA_LOZINKE = "abcdefghjkmnpqrstuvwxyz23456789"
-
+from ocitanja.servisi import nova_lozinka
 
 def korisnicko_ime(puno_ime):
     ascii_ime = unicodedata.normalize("NFKD", puno_ime.replace("đ", "dj").replace("Đ", "Dj"))
@@ -35,10 +32,6 @@ def razdvoji_ime(puno_ime):
     if len(dijelovi) == 1:
         return "", dijelovi[0]
     return dijelovi[-1], " ".join(dijelovi[:-1])
-
-
-def nova_lozinka():
-    return "-".join("".join(secrets.choice(SLOVA_LOZINKE) for _ in range(4)) for _ in range(3))
 
 
 class Command(BaseCommand):

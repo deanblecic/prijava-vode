@@ -1,0 +1,34 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Administratori{% endblock %}
+{% block sadrzaj %}
+<h1>Administratori zgrade</h1>
+<table style="max-width:700px">
+  <thead><tr><th>Ime i prezime</th><th>Korisničko ime</th><th></th></tr></thead>
+  <tbody>
+  {% for k in administratori %}
+    <tr><td>{{ k.get_full_name|default:"–" }}</td><td>{{ k.username }}</td>
+      <td>{% if administratori|length > 1 %}
+        <form method="post" style="margin:0" onsubmit="return confirm('Ukloniti {{ k.get_full_name|default:k.username|escapejs }} iz administratora zgrade?')">{% csrf_token %}
+          <input type="hidden" name="akcija" value="ukloni"><input type="hidden" name="korisnik" value="{{ k.pk }}">
+          <button class="gumb crveni">Ukloni</button>
+        </form>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="3">Zgrada još nema administratora.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<h2>Dodaj administratora</h2>
+<div class="kartica" style="max-width:560px">
+  <form method="post">{% csrf_token %}
+    {{ forma.non_field_errors }}
+    <p>{{ forma.postojeci.label_tag }}{{ forma.postojeci }}{{ forma.postojeci.errors }}</p>
+    <h2>ili nova osoba</h2>
+    <div class="dvije">
+      <p>{{ forma.ime.label_tag }}{{ forma.ime }}{{ forma.ime.errors }}</p>
+      <p>{{ forma.prezime.label_tag }}{{ forma.prezime }}{{ forma.prezime.errors }}</p>
+      <p>{{ forma.korisnicko_ime.label_tag }}{{ forma.korisnicko_ime }}{{ forma.korisnicko_ime.errors }}</p>
+      <p>{{ forma.email.label_tag }}{{ forma.email }}{{ forma.email.errors }}</p>
+    </div>
+    <p class="tiho">Novoj osobi aplikacija stvara privremenu lozinku. Kod prve prijave postavlja svoju lozinku i Google Authenticator.</p>
+    <button class="gumb glavni">Dodaj</button>
+  </form>
+</div>
+{% endblock %}

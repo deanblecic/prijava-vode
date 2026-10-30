@@ -62,12 +62,11 @@
   <nav>
     {% if zgrada %}
     <a href="{% url 'pregled' %}">Mjesečni pregled</a>
+    <a href="{% url 'stanovi' %}">Stanovi</a>
+    <a href="{% url 'korisnici' %}">Korisnici</a>
+    <a href="{% url 'administratori' %}">Administratori</a>
     <a href="{% url 'postavke' %}">Podsjetnici</a>
-    {% endif %}
-    {% if user.is_superuser %}
-    <a href="{% url 'admin:ocitanja_korisnik_changelist' %}">Korisnici</a>
-    <a href="{% url 'admin:ocitanja_stan_changelist' %}">Stanovi i vodomjeri</a>
-    <a href="{% url 'admin:ocitanja_zgrada_changelist' %}">Zgrade</a>
+    <a href="{% url 'zapisnik' %}">Zapisnik</a>
     {% endif %}
   </nav>
   <span class="tiho">{{ user.get_full_name|default:user.username }}</span>

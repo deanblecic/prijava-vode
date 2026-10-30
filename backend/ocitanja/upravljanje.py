@@ -23,7 +23,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 
 from .forms import IspravakForm, PostavkeForm, PromjenaVlasnikaForm, RucniUnosForm
-from .models import Korisnik, Ocitanje, Postavke, Stan
+from .models import Korisnik, Ocitanje, Postavke, Stan, Zapisnik
 from .servisi import (
     GreskaOcitanja,
     ispravi_ocitanje,
@@ -220,6 +220,14 @@ def ocitanje_detalj(request, pk):
                 messages.success(request, "Očitanje je ispravljeno.")
             else:
                 return render(request, "upravljanje/ocitanje.html", {"o": ocitanje, "forma": forma})
+        if akcija in ("potvrdi", "odbij", "ispravi"):
+            ocitanje.refresh_from_db()
+            Zapisnik.upisi(
+                Zapisnik.Radnja.OCITANJE,
+                f"Stan {ocitanje.vodomjer.stan.oznaka}, {ocitanje.razdoblje:%m/%Y}: {ocitanje.get_status_display().lower()}, "
+                f"stanje {ocitanje.novo_stanje}",
+                request=request, zgrada=request.zgrada, ocitanje=ocitanje.pk, akcija=akcija,
+            )
         if upozorenje:
             messages.warning(request, upozorenje)
         return redirect(f"{reverse('pregled')}?mjesec={ocitanje.razdoblje:%Y-%m}")
@@ -250,6 +258,10 @@ def stan_detalj(request, pk):
             except GreskaOcitanja as greska:
                 messages.error(request, greska.poruka)
             else:
+                Zapisnik.upisi(
+                    Zapisnik.Radnja.OCITANJE, f"Ručni unos za stan {stan.oznaka}: {d['novo_stanje']}",
+                    request=request, zgrada=request.zgrada,
+                )
                 messages.success(request, "Očitanje je spremljeno.")
                 return redirect(f"{reverse('pregled')}?mjesec={trenutak:%Y-%m}")
     return render(request, "upravljanje/stan.html", {
@@ -272,8 +284,10 @@ def promjena_vlasnika(request, pk):
         stari = vlasnici_u_mjesecu(stan, timezone.localdate().replace(day=1))
         novi = list(d["postojeci"])
         if d["korisnicko_ime"]:
+            # Lozinku je upisao administrator, pa je suvlasnik mijenja kod prve prijave.
             novi.append(Korisnik.objects.create_user(
                 d["korisnicko_ime"], password=d["lozinka"], first_name=d["ime"], last_name=d["prezime"],
+                mora_promijeniti_lozinku=True,
             ))
         promijeni_vlasnika(stan, novi, d["od_datuma"])
         if d["deaktiviraj_stare"]:
@@ -284,6 +298,10 @@ def promjena_vlasnika(request, pk):
                     korisnik.is_active = False
                     korisnik.save(update_fields=["is_active"])
         imena = ", ".join(k.get_full_name() or k.username for k in novi)
+        Zapisnik.upisi(
+            Zapisnik.Radnja.STAN, f"Stan {stan.oznaka} od {d['od_datuma']:%d.%m.%Y.} pripada: {imena}",
+            request=request, zgrada=request.zgrada, stan=str(stan.uid), korisnici=[k.pk for k in novi],
+        )
         messages.success(request, f"Stan {stan.broj_stana} od {d['od_datuma']:%d.%m.%Y.} pripada: {imena}.")
         return redirect("stan", pk=stan.pk)
     return render(request, "upravljanje/promjena_vlasnika.html", {"stan": stan, "forma": forma})

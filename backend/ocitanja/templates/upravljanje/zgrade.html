@@ -1,7 +1,11 @@
 {% extends "upravljanje/base.html" %}
 {% block naslov %}Zgrade{% endblock %}
 {% block sadrzaj %}
-<h1>Zgrade</h1>
+<div class="alati">
+  <h1 style="margin:0">Zgrade</h1>
+  <span style="flex:1"></span>
+  {% if user.is_superuser %}<a class="gumb glavni" href="{% url 'nova_zgrada' %}">Nova zgrada</a>{% endif %}
+</div>
 <table>
   <thead><tr>
     <th>Oznaka</th><th>Adresa</th><th class="broj">Stanova</th>
@@ -22,7 +26,7 @@
       </td>
     </tr>
   {% empty %}
-    <tr><td colspan="5">Još nema zgrada.{% if user.is_superuser %} Dodajte je u <a href="{% url 'admin:ocitanja_zgrada_add' %}">Zgrade</a>.{% endif %}</td></tr>
+    <tr><td colspan="5">Još nema zgrada.{% if user.is_superuser %} <a href="{% url 'nova_zgrada' %}">Dodajte prvu</a>.{% endif %}</td></tr>
   {% endfor %}
   </tbody>
 </table>

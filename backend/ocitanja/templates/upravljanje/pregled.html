@@ -41,7 +41,7 @@
       {% endif %}
     </tr>
   {% endwith %}{% empty %}
-    <tr><td colspan="8">Još nema stanova.{% if user.is_superuser %} Dodajte ih u <a href="{% url 'admin:ocitanja_stan_add' %}">Stanovi i vodomjeri</a>.{% endif %}</td></tr>
+    <tr><td colspan="8">Još nema stanova. Dodajte ih na stranici <a href="{% url 'stanovi' %}">Stanovi</a>.</td></tr>
   {% endfor %}
   </tbody>
 </table>

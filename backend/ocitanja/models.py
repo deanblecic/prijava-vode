@@ -64,6 +64,10 @@ class Korisnik(AbstractUser):
     """
 
     telefon = models.CharField(max_length=30, blank=True)
+    mora_promijeniti_lozinku = models.BooleanField(
+        "mora promijeniti lozinku", default=False,
+        help_text="Lozinku je postavio administrator, pa je korisnik mijenja kod sljedeće prijave.",
+    )
 
     class Meta:
         verbose_name = "korisnik"
@@ -259,3 +263,53 @@ class Postavke(models.Model):
 
     def __str__(self):
         return f"Postavke – {self.zgrada}"
+
+
+def ip_klijenta(request):
+    """Adresa posjetitelja; nginx je dopisuje kao zadnju u X-Forwarded-For, prethodne može lažirati klijent."""
+    proslijedjeno = request.META.get("HTTP_X_FORWARDED_FOR", "")
+    if proslijedjeno:
+        return proslijedjeno.split(",")[-1].strip() or None
+    return request.META.get("REMOTE_ADDR")
+
+
+class Zapisnik(models.Model):
+    """Trag važnih radnji: tko je, kada i u kojoj zgradi što napravio."""
+
+    class Radnja(models.TextChoices):
+        PRIJAVA = "prijava", "Prijava"
+        NEUSPJELA_PRIJAVA = "neuspjela_prijava", "Neuspjela prijava"
+        NOVA_LOZINKA = "nova_lozinka", "Nova lozinka"
+        PROMJENA_LOZINKE = "promjena_lozinke", "Promjena lozinke"
+        SPAJANJE = "spajanje", "Spajanje računa"
+        PONISTENO_SPAJANJE = "ponisteno_spajanje", "Poništeno spajanje"
+        ADMINISTRATOR = "administrator", "Administrator zgrade"
+        ZGRADA = "zgrada", "Zgrada"
+        STAN = "stan", "Stan i vodomjer"
+        OCITANJE = "ocitanje", "Očitanje"
+        DVA_KORAKA = "dva_koraka", "Prijava u dva koraka"
+
+    vrijeme = models.DateTimeField(default=timezone.now, db_index=True)
+    korisnik = models.ForeignKey(Korisnik, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")
+    zgrada = models.ForeignKey(Zgrada, null=True, blank=True, on_delete=models.SET_NULL, related_name="zapisi")
+    radnja = models.CharField(max_length=30, choices=Radnja.choices)
+    opis = models.CharField(max_length=500)
+    podaci = models.JSONField(default=dict, blank=True)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "zapis"
+        verbose_name_plural = "zapisnik"
+        ordering = ["-vrijeme"]
+
+    @classmethod
+    def upisi(cls, radnja, opis, *, request=None, korisnik=None, zgrada=None, **podaci):
+        if request is not None and korisnik is None and request.user.is_authenticated:
+            korisnik = request.user
+        return cls.objects.create(
+            radnja=radnja, opis=opis[:500], korisnik=korisnik, zgrada=zgrada, podaci=podaci,
+            ip=ip_klijenta(request) if request is not None else None,
+        )
+
+    def __str__(self):
+        return f"{self.vrijeme:%d.%m.%Y. %H:%M} {self.opis}"

@@ -1,0 +1,10 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Novi vodomjer, stan {{ stan.broj_stana }}{% endblock %}
+{% block sadrzaj %}
+<p><a href="{% url 'stan' stan.pk %}">&larr; Stan {{ stan.broj_stana }}</a></p>
+<h1>Novi vodomjer u stanu {{ stan.broj_stana }}</h1>
+<div class="kartica" style="max-width:480px">
+  <p class="tiho">Stari vodomjer postaje neaktivan i ostaje u povijesti. Sljedeće očitanje računa razliku od stanja novog vodomjera kod ugradnje.</p>
+  <form method="post">{% csrf_token %}{{ forma.as_p }}<button class="gumb glavni">Spremi</button></form>
+</div>
+{% endblock %}
