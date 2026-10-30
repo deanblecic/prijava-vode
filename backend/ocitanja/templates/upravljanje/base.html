@@ -45,14 +45,30 @@
 </style>
 </head>
 <body>
-{% if user.is_authenticated %}
+{% if user.is_authenticated and user.je_administrator %}
 <header>
   <strong>Očitanja vodomjera</strong>
+  {% if moje_zgrade %}
+  <form method="post" action="{% url 'odaberi_zgradu' %}" style="margin:0">{% csrf_token %}
+    <select name="zgrada" aria-label="Zgrada" onchange="this.form.submit()">
+      <option value="">Sve zgrade</option>
+      {% for z in moje_zgrade %}<option value="{{ z.pk }}"{% if z.pk == zgrada.pk %} selected{% endif %}>{{ z.ulica }} {{ z.kucni_broj }}, {{ z.grad }}</option>{% endfor %}
+    </select>
+    <noscript><button class="gumb">Odaberi</button></noscript>
+  </form>
+  {% elif zgrada %}
+  <span>{{ zgrada.ulica }} {{ zgrada.kucni_broj }}, {{ zgrada.grad }}</span>
+  {% endif %}
   <nav>
+    {% if zgrada %}
     <a href="{% url 'pregled' %}">Mjesečni pregled</a>
+    <a href="{% url 'postavke' %}">Podsjetnici</a>
+    {% endif %}
+    {% if user.is_superuser %}
     <a href="{% url 'admin:ocitanja_korisnik_changelist' %}">Korisnici</a>
     <a href="{% url 'admin:ocitanja_stan_changelist' %}">Stanovi i vodomjeri</a>
-    <a href="{% url 'postavke' %}">Podsjetnici</a>
+    <a href="{% url 'admin:ocitanja_zgrada_changelist' %}">Zgrade</a>
+    {% endif %}
   </nav>
   <span class="tiho">{{ user.get_full_name|default:user.username }}</span>
   <form method="post" action="{% url 'odjava' %}" style="margin:0">{% csrf_token %}<button class="gumb">Odjava</button></form>

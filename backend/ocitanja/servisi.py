@@ -51,7 +51,8 @@ def prosjecna_razlika(vodomjer, razdoblje, broj_mjeseci=12):
 
 
 def korisnik_smije_ocitati(korisnik, vodomjer):
-    if korisnik.je_administrator:
+    """Vlasnik stana, administrator zgrade u kojoj je stan ili superadministrator."""
+    if korisnik.zgrade_za_upravljanje().filter(pk=vodomjer.stan.zgrada_id).exists():
         return True
     return korisnik.aktivni_stanovi().filter(pk=vodomjer.stan_id).exists()
 

@@ -6,11 +6,12 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
-from .models import Ocitanje, Postavke
+from .models import Ocitanje, Zgrada
 from .serializers import (
     OcitanjeSerializer,
     PredajaOcitanjaSerializer,
     StanSerializer,
+    ZgradaSerializer,
 )
 from .servisi import GreskaOcitanja, predaj_ocitanje, verzija_aplikacije
 
@@ -43,13 +44,17 @@ def odjava(request):
 def ja(request):
     korisnik = request.user
     context = {"request": request, "sada": timezone.now()}
-    postavke = Postavke.ucitaj()
+    stanovi = korisnik.aktivni_stanovi().select_related("zgrada")
+    zgrade = Zgrada.objects.filter(stanovi__in=stanovi).distinct()
+    # Aplikacije starije od podrške za više zgrada znaju samo za jedan podsjetnik.
+    prvi = ZgradaSerializer(zgrade[0]).data["podsjetnik"] if zgrade else {"dan": 26, "sat": 9}
     return Response({
         "korisnicko_ime": korisnik.username,
         "ime": korisnik.first_name,
         "prezime": korisnik.last_name,
-        "stanovi": StanSerializer(korisnik.aktivni_stanovi(), many=True, context=context).data,
-        "podsjetnik": {"dan": postavke.dan_ocitanja, "sat": postavke.sat_podsjetnika},
+        "zgrade": ZgradaSerializer(zgrade, many=True).data,
+        "stanovi": StanSerializer(stanovi, many=True, context=context).data,
+        "podsjetnik": prvi,
         # Aplikacija uspoređuje sa svojom verzijom i nudi nadogradnju.
         "aplikacija": {"verzija": verzija_aplikacije()},
     })

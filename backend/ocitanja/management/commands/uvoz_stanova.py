@@ -4,17 +4,21 @@ Tablica ima tri stupca bez zaglavlja: broj stana, "Prezime Ime" vlasnika i stanj
 vodomjera u m³. Suvlasniku s više stanova stvara se jedan račun. Vlasnik bez
 stanja (npr. Grad Rijeka) dobiva stan bez vodomjera i račun bez prijave.
 
+Stanovi se uvoze u jednu zgradu, zadanu oznakom ili jedinstvenim ID-jem. Ime koje već postoji
+u drugoj zgradi dobiva novi račun i napomenu u izvještaju; spajanje je odluka superadministratora.
+
 Lozinke se stvaraju na serveru i spremaju samo u izlaznu tablicu pristupnih podataka.
 """
 import secrets
 import unicodedata
 from decimal import Decimal
 
+from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from openpyxl import Workbook, load_workbook
 
-from ocitanja.models import Korisnik, KorisnikStan, Stan, Vodomjer
+from ocitanja.models import Korisnik, KorisnikStan, Stan, Vodomjer, Zgrada
 
 SLOVA_LOZINKE = "abcdefghjkmnpqrstuvwxyz23456789"
 
@@ -42,13 +46,16 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("tablica", help="Excel datoteka: broj stana, Prezime Ime, stanje (m³)")
+        parser.add_argument("--zgrada", required=True, help="Oznaka zgrade (npr. RI-ALB-2) ili njezin jedinstveni ID")
         parser.add_argument(
             "--pristupni-podaci", default="pristupni-podaci.xlsx",
             help="Kamo spremiti korisnička imena i lozinke za podjelu suvlasnicima",
         )
         parser.add_argument("--suho", action="store_true", help="Samo prikaži što bi se uvezlo")
 
-    def handle(self, tablica, pristupni_podaci, suho, **opcije):
+    def handle(self, tablica, zgrada, pristupni_podaci, suho, **opcije):
+        self.zgrada = self.nadji_zgradu(zgrada)
+        self.stdout.write(f"Zgrada: {self.zgrada.adresa} ({self.zgrada.oznaka})")
         redovi = self.procitaj(tablica)
         if suho:
             for broj, vlasnik, stanje in redovi:
@@ -61,6 +68,23 @@ class Command(BaseCommand):
             f"Uvezeno {len(redovi)} stanova i {len(podaci)} korisnika. "
             f"Pristupni podaci: {pristupni_podaci}"
         ))
+        for p in podaci:
+            if p["isto_ime_drugdje"]:
+                self.stdout.write(self.style.WARNING(
+                    f"{p['korisnik']} ({p['korisnik'].username}): isto ime postoji i u zgradi "
+                    f"{', '.join(p['isto_ime_drugdje'])}. Ako je to ista osoba, superadministrator može spojiti račune."
+                ))
+
+    def nadji_zgradu(self, oznaka_ili_uid):
+        zgrada = Zgrada.objects.filter(oznaka=oznaka_ili_uid.strip().upper()).first()
+        if zgrada is None:
+            try:
+                zgrada = Zgrada.objects.filter(uid=oznaka_ili_uid.strip()).first()
+            except ValidationError:
+                zgrada = None
+        if zgrada is None:
+            raise CommandError(f"Zgrada '{oznaka_ili_uid}' ne postoji. Prvo je dodajte u administraciji.")
+        return zgrada
 
     def procitaj(self, tablica):
         redovi = []
@@ -81,9 +105,9 @@ class Command(BaseCommand):
         brojevi = [r[0] for r in redovi]
         if len(set(brojevi)) != len(brojevi):
             raise CommandError("Isti broj stana pojavljuje se više puta.")
-        postojeci = Stan.objects.filter(broj_stana__in=brojevi).values_list("broj_stana", flat=True)
+        postojeci = self.zgrada.stanovi.filter(broj_stana__in=brojevi).values_list("broj_stana", flat=True)
         if postojeci:
-            raise CommandError(f"Ovi stanovi već postoje u bazi: {', '.join(postojeci)}. Uvoz se ne ponavlja.")
+            raise CommandError(f"Ovi stanovi već postoje u zgradi: {', '.join(postojeci)}. Uvoz se ne ponavlja.")
         return redovi
 
     def uvezi(self, redovi):
@@ -94,19 +118,33 @@ class Command(BaseCommand):
             if korisnik is None:
                 korisnik, lozinka = self.novi_korisnik(vlasnik, moze_prijavu=stanje is not None)
                 korisnici[vlasnik] = korisnik
-                podaci.append({"korisnik": korisnik, "lozinka": lozinka, "stanovi": []})
+                podaci.append({
+                    "korisnik": korisnik, "lozinka": lozinka, "stanovi": [],
+                    "isto_ime_drugdje": self.isto_ime_drugdje(korisnik),
+                })
             elif stanje is not None and not korisnik.has_usable_password():
                 lozinka = nova_lozinka()
                 korisnik.set_password(lozinka)
                 korisnik.is_active = True
                 korisnik.save()
                 next(p for p in podaci if p["korisnik"] == korisnik)["lozinka"] = lozinka
-            stan = Stan.objects.create(broj_stana=broj)
+            stan = Stan.objects.create(zgrada=self.zgrada, broj_stana=broj)
             KorisnikStan.objects.create(korisnik=korisnik, stan=stan)
             if stanje is not None:
                 Vodomjer.objects.create(stan=stan, pocetno_stanje=stanje)
             next(p for p in podaci if p["korisnik"] == korisnik)["stanovi"].append(broj)
         return podaci
+
+    def isto_ime_drugdje(self, korisnik):
+        """Oznake drugih zgrada u kojima je suvlasnik netko s istim imenom i prezimenom."""
+        if not korisnik.is_active:
+            return []
+        return sorted(set(
+            Stan.objects.filter(
+                vlasnistva__korisnik__first_name__iexact=korisnik.first_name,
+                vlasnistva__korisnik__last_name__iexact=korisnik.last_name,
+            ).exclude(zgrada=self.zgrada).values_list("zgrada__oznaka", flat=True)
+        ))
 
     def novi_korisnik(self, puno_ime, moze_prijavu):
         # Ustanova bez vodomjera (npr. "Grad Rijeka") zadržava naziv kakav jest.

@@ -1,18 +1,68 @@
+import unicodedata
+import uuid
+
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
 
+def kljuc_adrese(ulica, kucni_broj, grad):
+    """Ulica, kućni broj i grad bez kvačica, točaka, velikih slova i viška razmaka."""
+    tekst = f"{ulica}|{kucni_broj}|{grad}".replace("đ", "dj").replace("Đ", "Dj")
+    tekst = unicodedata.normalize("NFKD", tekst).encode("ascii", "ignore").decode().lower()
+    return "|".join(" ".join(dio.replace(".", " ").split()) for dio in tekst.split("|"))
+
+
+class Zgrada(models.Model):
+    """Zgradu ljudi prepoznaju po adresi, a sve veze u bazi idu preko id-a i uid-a koji se ne mijenjaju."""
+
+    uid = models.UUIDField("jedinstveni ID", default=uuid.uuid4, unique=True, editable=False)
+    oznaka = models.CharField(
+        "oznaka", max_length=20, unique=True, help_text="Kratka oznaka za ljude, npr. RI-ALB-2"
+    )
+    ulica = models.CharField("ulica", max_length=150)
+    kucni_broj = models.CharField("kućni broj", max_length=20)
+    postanski_broj = models.CharField("poštanski broj", max_length=10)
+    grad = models.CharField("grad", max_length=100)
+    kljuc_adrese = models.CharField(max_length=300, unique=True, editable=False)
+    aktivna = models.BooleanField("aktivna", default=True)
+    administratori = models.ManyToManyField(
+        "Korisnik", through="AdministratorZgrade", related_name="administrirane_zgrade", blank=True
+    )
+
+    class Meta:
+        verbose_name = "zgrada"
+        verbose_name_plural = "zgrade"
+        ordering = ["grad", "ulica", "kucni_broj"]
+
+    def clean(self):
+        kljuc = kljuc_adrese(self.ulica, self.kucni_broj, self.grad)
+        if Zgrada.objects.filter(kljuc_adrese=kljuc).exclude(pk=self.pk).exists():
+            raise ValidationError("Zgrada s tom ulicom, kućnim brojem i gradom već postoji.")
+
+    def save(self, *args, **kwargs):
+        self.kljuc_adrese = kljuc_adrese(self.ulica, self.kucni_broj, self.grad)
+        self.oznaka = self.oznaka.strip().upper()
+        super().save(*args, **kwargs)
+
+    @property
+    def adresa(self):
+        return f"{self.ulica} {self.kucni_broj}, {self.postanski_broj} {self.grad}"
+
+    def __str__(self):
+        return self.adresa
+
+
 class Korisnik(AbstractUser):
-    """Suvlasnik ili administrator. Ime i prezime su polja first_name i last_name."""
+    """Suvlasnik ili administrator. Ime i prezime su polja first_name i last_name.
 
-    class Uloga(models.TextChoices):
-        SUVLASNIK = "suvlasnik", "Suvlasnik"
-        ADMINISTRATOR = "administrator", "Administrator"
+    Superadministrator je is_superuser; administrator zgrade ima red u AdministratorZgrade.
+    Zgrade u kojima je netko suvlasnik izvode se iz njegovih stanova.
+    """
 
-    uloga = models.CharField(max_length=20, choices=Uloga.choices, default=Uloga.SUVLASNIK)
     telefon = models.CharField(max_length=30, blank=True)
 
     class Meta:
@@ -20,14 +70,18 @@ class Korisnik(AbstractUser):
         verbose_name_plural = "korisnici"
 
     def save(self, *args, **kwargs):
-        # Administrator koristi i Django administraciju za korisnike i stanove.
-        if self.uloga == self.Uloga.ADMINISTRATOR:
-            self.is_staff = True
+        # Django administraciju (/admin/) koristi samo superadministrator; ona ne zna za zgrade.
+        self.is_staff = self.is_superuser
         super().save(*args, **kwargs)
 
     @property
     def je_administrator(self):
-        return self.uloga == self.Uloga.ADMINISTRATOR or self.is_superuser
+        return self.is_superuser or self.administrirane_zgrade.exists()
+
+    def zgrade_za_upravljanje(self):
+        if self.is_superuser:
+            return Zgrada.objects.all()
+        return self.administrirane_zgrade.all()
 
     def aktivni_stanovi(self, na_dan=None):
         na_dan = na_dan or timezone.localdate()
@@ -42,8 +96,26 @@ class Korisnik(AbstractUser):
         return self.get_full_name() or self.username
 
 
+class AdministratorZgrade(models.Model):
+    korisnik = models.ForeignKey(Korisnik, on_delete=models.CASCADE, related_name="uloge_u_zgradama")
+    zgrada = models.ForeignKey(Zgrada, on_delete=models.CASCADE, related_name="uloge_administratora")
+    od = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "administrator zgrade"
+        verbose_name_plural = "administratori zgrada"
+        constraints = [
+            models.UniqueConstraint(fields=["korisnik", "zgrada"], name="jedan_administrator_jednom_po_zgradi"),
+        ]
+
+    def __str__(self):
+        return f"{self.korisnik} – {self.zgrada}"
+
+
 class Stan(models.Model):
-    broj_stana = models.CharField(max_length=10, unique=True)
+    uid = models.UUIDField("jedinstveni ID", default=uuid.uuid4, unique=True, editable=False)
+    zgrada = models.ForeignKey(Zgrada, on_delete=models.PROTECT, related_name="stanovi")
+    broj_stana = models.CharField(max_length=10)
     kat = models.SmallIntegerField(null=True, blank=True)
     napomena = models.CharField(max_length=200, blank=True)
     korisnici = models.ManyToManyField(Korisnik, through="KorisnikStan", related_name="stanovi")
@@ -51,7 +123,22 @@ class Stan(models.Model):
     class Meta:
         verbose_name = "stan"
         verbose_name_plural = "stanovi"
-        ordering = ["broj_stana"]
+        ordering = ["zgrada_id", "broj_stana"]
+        constraints = [
+            models.UniqueConstraint(fields=["zgrada", "broj_stana"], name="broj_stana_jedinstven_u_zgradi"),
+        ]
+
+    def save(self, *args, **kwargs):
+        # Stan se nikad ne premješta u drugu zgradu; krivo upisan stan zamjenjuje se novim.
+        if self.pk:
+            prije = Stan.objects.filter(pk=self.pk).values_list("zgrada_id", flat=True).first()
+            if prije is not None and prije != self.zgrada_id:
+                raise ValidationError("Stan se ne može premjestiti u drugu zgradu.")
+        super().save(*args, **kwargs)
+
+    @property
+    def oznaka(self):
+        return f"{self.zgrada.oznaka}/{self.broj_stana}"
 
     def __str__(self):
         return f"Stan {self.broj_stana}"
@@ -99,7 +186,7 @@ class Vodomjer(models.Model):
 def putanja_fotografije(ocitanje, ime_datoteke):
     ekstenzija = ime_datoteke.rsplit(".", 1)[-1].lower() if "." in ime_datoteke else "jpg"
     return (
-        f"ocitanja/{ocitanje.razdoblje:%Y-%m}/"
+        f"ocitanja/zgrada-{ocitanje.vodomjer.stan.zgrada_id}/{ocitanje.razdoblje:%Y-%m}/"
         f"stan-{ocitanje.vodomjer.stan.broj_stana}-vodomjer-{ocitanje.vodomjer_id}.{ekstenzija}"
     )
 
@@ -144,7 +231,9 @@ class Ocitanje(models.Model):
 
 
 class Postavke(models.Model):
-    """Jedan red s postavkama koje administrator mijenja u web sučelju."""
+    """Postavke podsjetnika jedne zgrade koje administrator mijenja u web sučelju."""
+
+    zgrada = models.OneToOneField(Zgrada, on_delete=models.CASCADE, related_name="postavke")
 
     dan_ocitanja = models.PositiveSmallIntegerField(
         "dan očitanja", default=26, validators=[MinValueValidator(1), MaxValueValidator(28)],
@@ -157,7 +246,7 @@ class Postavke(models.Model):
     email_obavijesti = models.CharField(
         "e-mail za obavijest", max_length=300, blank=True,
         help_text="Kamo zadnji dan u mjesecu stiže popis neočitanih vodomjera; više adresa odvojite zarezom. "
-                  "Prazno: svim administratorima s upisanim e-mailom.",
+                  "Prazno: svim administratorima zgrade s upisanim e-mailom.",
     )
 
     class Meta:
@@ -165,8 +254,8 @@ class Postavke(models.Model):
         verbose_name_plural = "postavke"
 
     @classmethod
-    def ucitaj(cls):
-        return cls.objects.get_or_create(pk=1)[0]
+    def ucitaj(cls, zgrada):
+        return cls.objects.get_or_create(zgrada=zgrada)[0]
 
     def __str__(self):
-        return "Postavke"
+        return f"Postavke – {self.zgrada}"

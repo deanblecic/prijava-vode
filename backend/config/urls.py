@@ -10,6 +10,8 @@ admin.site.index_title = "Administracija"
 
 urlpatterns = [
     path("", upravljanje.pregled, name="pregled"),
+    path("zgrade/", upravljanje.zgrade, name="zgrade"),
+    path("zgrade/odaberi/", upravljanje.odaberi_zgradu, name="odaberi_zgradu"),
     path("prijava/", upravljanje.Prijava.as_view(), name="prijava"),
     path("odjava/", auth_views.LogoutView.as_view(next_page="prijava"), name="odjava"),
     path("ocitanje/<int:pk>/", upravljanje.ocitanje_detalj, name="ocitanje"),

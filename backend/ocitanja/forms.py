@@ -20,7 +20,7 @@ class PromjenaVlasnikaForm(forms.Form):
     od_datuma = forms.DateField(label="Novi vlasnik od", widget=forms.DateInput(attrs={"type": "date"}))
     postojeci = forms.ModelMultipleChoiceField(
         label="Postojeći korisnici",
-        queryset=Korisnik.objects.filter(is_active=True).order_by("last_name", "first_name"),
+        queryset=Korisnik.objects.none(),
         required=False,
         widget=forms.SelectMultiple(attrs={"size": 6}),
     )
@@ -31,6 +31,14 @@ class PromjenaVlasnikaForm(forms.Form):
     deaktiviraj_stare = forms.BooleanField(
         label="Deaktiviraj račune starih vlasnika ako nemaju drugih stanova", required=False, initial=True
     )
+
+    def __init__(self, *args, zgrada, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ponuđeni su samo suvlasnici ove zgrade; korisnici drugih zgrada se ne vide.
+        self.fields["postojeci"].queryset = (
+            Korisnik.objects.filter(is_active=True, vlasnistva__stan__zgrada=zgrada)
+            .distinct().order_by("last_name", "first_name")
+        )
 
     def clean(self):
         podaci = super().clean()

@@ -3,7 +3,7 @@
 {% block sadrzaj %}
 <div class="alati">
   <a class="gumb" href="?mjesec={{ prethodni|date:'Y-m' }}">&larr; {{ prethodni|date:"m/Y" }}</a>
-  <h1 style="margin:0">Očitanja za {{ mjesec|date:"m/Y" }}</h1>
+  <h1 style="margin:0">{{ zgrada.ulica }} {{ zgrada.kucni_broj }}: očitanja za {{ mjesec|date:"m/Y" }}</h1>
   <a class="gumb" href="?mjesec={{ sljedeci|date:'Y-m' }}">{{ sljedeci|date:"m/Y" }} &rarr;</a>
   <span style="flex:1"></span>
   <a class="gumb glavni" href="{% url 'izvoz' %}?mjesec={{ mjesec|date:'Y-m' }}">Izvoz u Excel</a>
@@ -41,7 +41,7 @@
       {% endif %}
     </tr>
   {% endwith %}{% empty %}
-    <tr><td colspan="8">Još nema stanova. Dodajte ih u <a href="{% url 'admin:ocitanja_stan_add' %}">Stanovi i vodomjeri</a>.</td></tr>
+    <tr><td colspan="8">Još nema stanova.{% if user.is_superuser %} Dodajte ih u <a href="{% url 'admin:ocitanja_stan_add' %}">Stanovi i vodomjeri</a>.{% endif %}</td></tr>
   {% endfor %}
   </tbody>
 </table>

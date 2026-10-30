@@ -1,0 +1,29 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Zgrade{% endblock %}
+{% block sadrzaj %}
+<h1>Zgrade</h1>
+<table>
+  <thead><tr>
+    <th>Oznaka</th><th>Adresa</th><th class="broj">Stanova</th>
+    <th class="broj">Neočitano za {{ mjesec|date:"m/Y" }}</th><th></th>
+  </tr></thead>
+  <tbody>
+  {% for r in popis %}
+    <tr>
+      <td>{{ r.zgrada.oznaka }}</td>
+      <td>{{ r.zgrada.adresa }}{% if not r.zgrada.aktivna %} <span class="tiho">(neaktivna)</span>{% endif %}</td>
+      <td class="broj">{{ r.broj_stanova }}</td>
+      <td class="broj">{{ r.neocitano }} / {{ r.za_ocitati }}</td>
+      <td>
+        <form method="post" action="{% url 'odaberi_zgradu' %}" style="margin:0">{% csrf_token %}
+          <input type="hidden" name="zgrada" value="{{ r.zgrada.pk }}">
+          <button class="gumb glavni">Otvori</button>
+        </form>
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">Još nema zgrada.{% if user.is_superuser %} Dodajte je u <a href="{% url 'admin:ocitanja_zgrada_add' %}">Zgrade</a>.{% endif %}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

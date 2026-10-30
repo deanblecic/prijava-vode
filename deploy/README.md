@@ -84,6 +84,8 @@ Zatim `sudo docker compose up -d` i probno slanje:
 Tablica ima tri stupca bez zaglavlja: broj stana, "Prezime Ime" i zadnje stanje vodomjera (m³).
 Ta stanja postaju početna stanja vodomjera; prvo očitanje u aplikaciji računa razliku od njih.
 Vlasnik bez stanja (npr. Grad Rijeka) dobiva stan bez vodomjera i račun bez prijave.
+Stanovi se uvoze u jednu zgradu: `--zgrada` je njezina oznaka (npr. RI-ALB-2) ili jedinstveni ID.
+Zgradu prvo dodaje superadministrator u administraciji (Zgrade).
 
 ```bash
 # na svom računalu:
@@ -91,8 +93,8 @@ scp "Voda početno.xlsx" dean@65.108.144.242:/opt/prijava-vode/voda.xlsx
 # na serveru:
 cd /opt/prijava-vode
 sudo docker compose cp voda.xlsx web:/tmp/voda.xlsx
-sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --suho   # provjera
-sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --pristupni-podaci /tmp/pristupni-podaci.xlsx
+sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --zgrada RI-ALB-2 --suho   # provjera
+sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --zgrada RI-ALB-2 --pristupni-podaci /tmp/pristupni-podaci.xlsx
 sudo docker compose cp web:/tmp/pristupni-podaci.xlsx .
 sudo docker compose exec web rm /tmp/voda.xlsx /tmp/pristupni-podaci.xlsx
 # na svom računalu:

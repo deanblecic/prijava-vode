@@ -7,11 +7,14 @@ from django.test import TestCase
 from openpyxl import Workbook, load_workbook
 
 from .management.commands.uvoz_stanova import korisnicko_ime, razdvoji_ime
-from .models import Korisnik, Stan
+from .models import AdministratorZgrade, Korisnik, Stan, Zgrada
 
 
 class UvozStanovaTest(TestCase):
     def setUp(self):
+        self.zgrada = Zgrada.objects.create(
+            oznaka="RI-ALB-2", ulica="Moše Albaharija", kucni_broj="2", postanski_broj="51000", grad="Rijeka"
+        )
         self.mapa = Path(tempfile.mkdtemp())
         self.tablica = self.mapa / "voda.xlsx"
         self.izlaz = self.mapa / "pristup.xlsx"
@@ -28,7 +31,7 @@ class UvozStanovaTest(TestCase):
         knjiga.save(self.tablica)
 
     def uvezi(self):
-        call_command("uvoz_stanova", str(self.tablica), pristupni_podaci=str(self.izlaz))
+        call_command("uvoz_stanova", str(self.tablica), zgrada="ri-alb-2", pristupni_podaci=str(self.izlaz))
 
     def test_imena(self):
         self.assertEqual(razdvoji_ime("Prelić Gerdević Nataša"), ("Nataša", "Prelić Gerdević"))
@@ -67,7 +70,8 @@ class UvozStanovaTest(TestCase):
 
     def test_stanovi_bez_vodomjera_nisu_u_pregledu(self):
         self.uvezi()
-        Korisnik.objects.create_user("dean", password="lozinka-123", uloga=Korisnik.Uloga.ADMINISTRATOR)
+        dean = Korisnik.objects.create_user("dean", password="lozinka-123")
+        AdministratorZgrade.objects.create(korisnik=dean, zgrada=self.zgrada)
         self.client.login(username="dean", password="lozinka-123")
         r = self.client.get("/")
         self.assertContains(r, "0 / 4")

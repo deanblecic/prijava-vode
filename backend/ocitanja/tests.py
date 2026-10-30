@@ -12,7 +12,7 @@ from django.utils import timezone
 from PIL import Image
 from rest_framework.test import APIClient
 
-from .models import Korisnik, KorisnikStan, Ocitanje, Stan, Vodomjer
+from .models import AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje, Stan, Vodomjer, Zgrada
 from .servisi import GreskaOcitanja, predaj_ocitanje, promijeni_vlasnika
 
 MEDIA = tempfile.mkdtemp()
@@ -36,14 +36,22 @@ class Osnova(TestCase):
         shutil.rmtree(MEDIA, ignore_errors=True)
 
     def setUp(self):
+        self.zgrada = Zgrada.objects.create(
+            oznaka="RI-ALB-2", ulica="Moše Albaharija", kucni_broj="2", postanski_broj="51000", grad="Rijeka"
+        )
         self.ana = Korisnik.objects.create_user("ana", password="lozinka-123", first_name="Ana", last_name="Horvat")
         self.ivo = Korisnik.objects.create_user("ivo", password="lozinka-123", first_name="Ivo", last_name="Ivić")
-        self.stan3 = Stan.objects.create(broj_stana="3")
-        self.stan4 = Stan.objects.create(broj_stana="4")
+        self.stan3 = Stan.objects.create(zgrada=self.zgrada, broj_stana="3")
+        self.stan4 = Stan.objects.create(zgrada=self.zgrada, broj_stana="4")
         KorisnikStan.objects.create(korisnik=self.ana, stan=self.stan3, od_datuma=datetime.date(2020, 1, 1))
         KorisnikStan.objects.create(korisnik=self.ivo, stan=self.stan4, od_datuma=datetime.date(2020, 1, 1))
         self.v3 = Vodomjer.objects.create(stan=self.stan3, pocetno_stanje=Decimal("100.000"))
         self.v4 = Vodomjer.objects.create(stan=self.stan4, pocetno_stanje=Decimal("50.000"))
+
+    def administrator(self, username="dean", zgrada=None, **podaci):
+        korisnik = Korisnik.objects.create_user(username, password="lozinka-123", **podaci)
+        AdministratorZgrade.objects.create(korisnik=korisnik, zgrada=zgrada or self.zgrada)
+        return korisnik
 
 
 class PredajaTest(Osnova):
@@ -184,9 +192,7 @@ class ApiTest(Osnova):
 class UpravljanjeTest(Osnova):
     def setUp(self):
         super().setUp()
-        self.admin = Korisnik.objects.create_user(
-            "dean", password="lozinka-123", uloga=Korisnik.Uloga.ADMINISTRATOR
-        )
+        self.admin = self.administrator()
         self.mjesec = timezone.localdate().replace(day=1)
         self.o = predaj_ocitanje(self.ana, self.v3, "105")
 
@@ -257,7 +263,7 @@ class UpravljanjeTest(Osnova):
 class FotografijaTest(Osnova):
     def setUp(self):
         super().setUp()
-        Korisnik.objects.create_user("dean", password="lozinka-123", uloga=Korisnik.Uloga.ADMINISTRATOR)
+        self.administrator()
         self.o = predaj_ocitanje(self.ana, self.v3, "105", fotografija=slika())
 
     def test_samo_administrator_vidi_fotografiju(self):
