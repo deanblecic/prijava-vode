@@ -44,7 +44,9 @@ fun EkranPovijesti(vm: GlavniViewModel) {
                                 style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                             Text("${hr(o.razlika)} m³", style = MaterialTheme.typography.titleMedium)
                         }
-                        Text("Stan ${o.brojStana} · ${datumIVrijeme(o.datumOcitanja)}",
+                        val zgrada = vm.ja?.takeIf { it.zgrade.size > 1 }?.zgrade?.firstOrNull { it.id == o.zgrada }
+                        val adresa = zgrada?.let { ", ${it.ulica} ${it.kucniBroj}" }.orEmpty()
+                        Text("Stan ${o.brojStana}$adresa · ${datumIVrijeme(o.datumOcitanja)}",
                             style = MaterialTheme.typography.bodySmall)
                         Text("${hr(o.prethodnoStanje)} → ${hr(o.novoStanje)} m³")
                         Text(o.statusTekst, style = MaterialTheme.typography.bodySmall,

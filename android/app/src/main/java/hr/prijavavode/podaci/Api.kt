@@ -19,7 +19,13 @@ data class PrijavaZahtjev(
 )
 
 @Serializable
-data class PrijavaOdgovor(val token: String)
+data class PrijavaOdgovor(
+    val token: String,
+    @SerialName("mora_promijeniti_lozinku") val moraPromijenitiLozinku: Boolean = false,
+)
+
+@Serializable
+data class LozinkaZahtjev(@SerialName("nova_lozinka") val novaLozinka: String)
 
 @Serializable
 data class Greska(val kod: String = "", val poruka: String = "")
@@ -28,6 +34,7 @@ data class Greska(val kod: String = "", val poruka: String = "")
 data class Ocitanje(
     val id: Long,
     val vodomjer: Long,
+    val zgrada: Long? = null,
     @SerialName("broj_stana") val brojStana: String,
     val razdoblje: String,
     @SerialName("datum_ocitanja") val datumOcitanja: String,
@@ -57,13 +64,30 @@ data class Vodomjer(
 @Serializable
 data class Stan(
     val id: Long,
+    /** Id zgrade; null kod servera starijeg od podrške za više zgrada. */
+    val zgrada: Long? = null,
+    /** Oznaka za ljude, npr. RI-ALB-2/17. */
+    val oznaka: String = "",
     @SerialName("broj_stana") val brojStana: String,
     val vodomjeri: List<Vodomjer>,
 )
 
-/** Od kojeg dana u mjesecu i u koliko sati mobitel podsjeća na očitanje; postavlja administrator. */
+/** Od kojeg dana u mjesecu i u koliko sati mobitel podsjeća na očitanje; postavlja administrator zgrade. */
 @Serializable
 data class PostavkePodsjetnika(val dan: Int = 26, val sat: Int = 9)
+
+@Serializable
+data class Zgrada(
+    val id: Long,
+    val oznaka: String = "",
+    val ulica: String = "",
+    @SerialName("kucni_broj") val kucniBroj: String = "",
+    val grad: String = "",
+    val podsjetnik: PostavkePodsjetnika = PostavkePodsjetnika(),
+) {
+    /** Kratka adresa za naslov, npr. "Moše Albaharija 2, Rijeka". */
+    val naziv: String get() = "$ulica $kucniBroj, $grad"
+}
 
 /** Verzija APK-a na serveru (versionCode); null ako server još nema APK. */
 @Serializable
@@ -75,9 +99,24 @@ data class Ja(
     val ime: String,
     val prezime: String,
     val stanovi: List<Stan>,
+    val zgrade: List<Zgrada> = emptyList(),
     val podsjetnik: PostavkePodsjetnika = PostavkePodsjetnika(),
     val aplikacija: VerzijaAplikacije = VerzijaAplikacije(),
-)
+    @SerialName("mora_promijeniti_lozinku") val moraPromijenitiLozinku: Boolean = false,
+) {
+    fun zgrada(stan: Stan): Zgrada? = zgrade.firstOrNull { it.id == stan.zgrada }
+
+    /** Postavke podsjetnika zgrade u kojoj je stan. */
+    fun podsjetnik(stan: Stan): PostavkePodsjetnika = zgrada(stan)?.podsjetnik ?: podsjetnik
+
+    /** Stanovi grupirani po zgradama, redom kojim ih šalje server. */
+    fun stanoviPoZgradama(): List<Pair<Zgrada?, List<Stan>>> =
+        stanovi.groupBy { it.zgrada }.map { (id, stanovi) -> zgrade.firstOrNull { it.id == id } to stanovi }
+
+    /** Sati u koje mobitel provjerava treba li podsjetiti, po jedan za svaku zgradu. */
+    val satiPodsjetnika: List<Int>
+        get() = (if (zgrade.isEmpty()) listOf(podsjetnik.sat) else zgrade.map { it.podsjetnik.sat }).distinct().sorted()
+}
 
 interface Api {
     @POST("api/prijava/")
@@ -88,6 +127,9 @@ interface Api {
 
     @GET("api/ja/")
     suspend fun ja(): Response<Ja>
+
+    @POST("api/lozinka/")
+    suspend fun lozinka(@Body zahtjev: LozinkaZahtjev): Response<Unit>
 
     @GET("api/ocitanja/")
     suspend fun ocitanja(): Response<List<Ocitanje>>

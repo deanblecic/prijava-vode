@@ -35,6 +35,8 @@ sealed interface Ekran {
         val izGalerije: Boolean = false,
     ) : Ekran
     data object Povijest : Ekran
+    /** Lozinku je postavio ovlašteni predstavnik suvlasnika, pa korisnik upisuje svoju. */
+    data object PromjenaLozinke : Ekran
 }
 
 class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
@@ -82,9 +84,21 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
             is Rezultat.Uspjeh -> {
                 if (zapamti) sef.zapamti(ime.trim(), lozinka) else sef.zaboravi()
                 sef.biometrija = zapamti && biometrija
-                osvjeziSada()
+                if (r.podaci) ekran = Ekran.PromjenaLozinke else osvjeziSada()
             }
             is Rezultat.Neuspjeh -> greska = r.poruka
+        }
+    }
+
+    fun promijeniLozinku(nova: String) = posao {
+        when (val r = repo.promijeniLozinku(nova)) {
+            is Rezultat.Uspjeh -> {
+                // Zapamćena lozinka (i otisak prsta) prelazi na novu.
+                sef.ime?.takeIf { sef.zapamceno }?.let { sef.zapamti(it, nova) }
+                poruka = "Lozinka je promijenjena. Ubuduće se prijavljujete novom lozinkom."
+                osvjeziSada()
+            }
+            is Rezultat.Neuspjeh -> obradiGresku(r)
         }
     }
 
@@ -98,7 +112,7 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
             return@posao
         }
         when (val r = repo.prijava(ime, lozinka)) {
-            is Rezultat.Uspjeh -> osvjeziSada()
+            is Rezultat.Uspjeh -> if (r.podaci) ekran = Ekran.PromjenaLozinke else osvjeziSada()
             is Rezultat.Neuspjeh -> greska = r.poruka
         }
     }
@@ -106,7 +120,7 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
     fun odjava() = posao {
         repo.odjava()
         Podsjetnik.otkazi(app)
-        repo.satPodsjetnika = -1
+        repo.satiPodsjetnika = emptyList()
         ja = null
         ekran = Ekran.Prijava
     }
@@ -124,14 +138,18 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
         when (val r = repo.ja()) {
             is Rezultat.Uspjeh -> {
                 ja = r.podaci
+                if (r.podaci.moraPromijenitiLozinku) {
+                    ekran = Ekran.PromjenaLozinke
+                    return
+                }
                 ekran = Ekran.Pocetna
                 if (Nadogradnja.dostupna(r.podaci) && !nadogradnjaPonudena) {
                     nadogradnjaPonudena = true
                     ponudiNadogradnju = true
                 }
-                val sat = r.podaci.podsjetnik.sat
-                Podsjetnik.zakazi(app, sat, zamijeni = sat != repo.satPodsjetnika)
-                repo.satPodsjetnika = sat
+                val sati = r.podaci.satiPodsjetnika
+                Podsjetnik.zakazi(app, sati, zamijeni = sati != repo.satiPodsjetnika)
+                repo.satiPodsjetnika = sati
             }
             is Rezultat.Neuspjeh -> obradiGresku(r)
         }

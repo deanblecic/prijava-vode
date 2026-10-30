@@ -28,10 +28,11 @@ class Repozitorij(context: Context) {
         get() = postavke.getString("token", null)
         private set(vrijednost) = postavke.edit().putString("token", vrijednost).apply()
 
-    /** Sat za koji je zakazan podsjetnik; -1 znači da nije zakazan. */
-    var satPodsjetnika: Int
-        get() = postavke.getInt("sat_podsjetnika", -1)
-        set(vrijednost) = postavke.edit().putInt("sat_podsjetnika", vrijednost).apply()
+    /** Sati za koje je zakazan podsjetnik (po jedan za svaku zgradu); prazno znači da nije zakazan. */
+    var satiPodsjetnika: List<Int>
+        get() = postavke.getString("sati_podsjetnika", null)?.split(",")?.mapNotNull { it.toIntOrNull() }
+            ?: postavke.getInt("sat_podsjetnika", -1).let { if (it >= 0) listOf(it) else emptyList() }
+        set(vrijednost) = postavke.edit().putString("sati_podsjetnika", vrijednost.joinToString(",")).apply()
 
     /** Dozvola za obavijesti traži se samo jednom; poslije je korisnik može uključiti u postavkama mobitela. */
     var obavijestiTrazene: Boolean
@@ -57,14 +58,17 @@ class Repozitorij(context: Context) {
             .create(Api::class.java)
     }
 
-    suspend fun prijava(korisnickoIme: String, lozinka: String): Rezultat<Unit> =
+    /** Uspjeh nosi true kad je lozinku postavio administrator pa je korisnik mora promijeniti. */
+    suspend fun prijava(korisnickoIme: String, lozinka: String): Rezultat<Boolean> =
         when (val r = poziv { api.prijava(PrijavaZahtjev(korisnickoIme.trim(), lozinka)) }) {
             is Rezultat.Uspjeh -> {
                 token = r.podaci.token
-                Rezultat.Uspjeh(Unit)
+                Rezultat.Uspjeh(r.podaci.moraPromijenitiLozinku)
             }
             is Rezultat.Neuspjeh -> r
         }
+
+    suspend fun promijeniLozinku(nova: String): Rezultat<Unit> = poziv { api.lozinka(LozinkaZahtjev(nova)) }
 
     suspend fun odjava() {
         runCatching { api.odjava() }

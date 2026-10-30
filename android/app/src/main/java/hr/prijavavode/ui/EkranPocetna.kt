@@ -62,6 +62,16 @@ fun EkranPocetna(vm: GlavniViewModel) {
             vm.radi && ja == null -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
             ja == null -> Button(onClick = vm::osvjezi) { Text("Pokušaj ponovno") }
             ja.stanovi.isEmpty() -> Text("Niste upisani kao vlasnik nijednog stana. Javite se ovlaštenom predstavniku suvlasnika.")
+            // Stanovi u više zgrada: naslov sa adresom iznad stanova svake zgrade.
+            ja.zgrade.size > 1 -> ja.stanoviPoZgradama().forEach { (zgrada, stanovi) ->
+                Text(
+                    zgrada?.naziv ?: "Ostali stanovi",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                stanovi.forEach { KarticaStana(it, vm) }
+            }
             else -> ja.stanovi.forEach { KarticaStana(it, vm) }
         }
         if (ja != null) {
