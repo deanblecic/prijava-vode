@@ -6,7 +6,7 @@ from django.core import mail
 from django.core.management import call_command
 from rest_framework.test import APIClient
 
-from .models import Korisnik, Postavke
+from .models import Postavke
 from .servisi import predaj_ocitanje
 from .tests import Osnova, trenutak
 
@@ -14,9 +14,7 @@ from .tests import Osnova, trenutak
 class ObavijestNeocitaniTest(Osnova):
     def setUp(self):
         super().setUp()
-        Korisnik.objects.create_user(
-            "dean", email="dean@example.com", password="lozinka-123", uloga=Korisnik.Uloga.ADMINISTRATOR
-        )
+        self.administrator(email="dean@example.com")
         predaj_ocitanje(self.ana, self.v3, Decimal("110"), datum_ocitanja=trenutak(2026, 10, 26))
 
     def pokreni(self, dan, sat=20, **opcije):
@@ -43,27 +41,27 @@ class ObavijestNeocitaniTest(Osnova):
         self.assertEqual(mail.outbox, [])
 
     def test_postavljeni_primatelj_i_odmah(self):
-        Postavke.objects.update_or_create(pk=1, defaults={"email_obavijesti": "upravitelj@example.com"})
+        Postavke.objects.update_or_create(zgrada=self.zgrada, defaults={"email_obavijesti": "upravitelj@example.com"})
         self.pokreni(datetime.date(2026, 10, 15), odmah=True)
         self.assertEqual(mail.outbox[0].to, ["upravitelj@example.com"])
 
 
 class PostavkeTest(Osnova):
     def test_administrator_mijenja_sat_a_api_ga_vraca(self):
-        Korisnik.objects.create_user("dean", password="lozinka-123", uloga=Korisnik.Uloga.ADMINISTRATOR)
+        self.administrator()
         self.client.login(username="dean", password="lozinka-123")
         odgovor = self.client.post("/postavke/", {
             "dan_ocitanja": 25, "sat_podsjetnika": 11, "email_obavijesti": "a@example.com, b@example.com",
         })
         self.assertEqual(odgovor.status_code, 302)
-        self.assertEqual(Postavke.ucitaj().sat_podsjetnika, 11)
+        self.assertEqual(Postavke.ucitaj(self.zgrada).sat_podsjetnika, 11)
 
         api = APIClient()
         api.force_authenticate(self.ana)
         self.assertEqual(api.get("/api/ja/").json()["podsjetnik"], {"dan": 25, "sat": 11})
 
     def test_neispravan_sat_i_email(self):
-        Korisnik.objects.create_user("dean", password="lozinka-123", uloga=Korisnik.Uloga.ADMINISTRATOR)
+        self.administrator()
         self.client.login(username="dean", password="lozinka-123")
         odgovor = self.client.post("/postavke/", {"dan_ocitanja": 31, "sat_podsjetnika": 24, "email_obavijesti": "nije"})
         self.assertEqual(odgovor.status_code, 200)

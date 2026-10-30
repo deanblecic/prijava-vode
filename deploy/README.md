@@ -31,15 +31,40 @@ Skripta instalira Docker, Nginx i Certbot, otvara samo portove 22, 80 i 443, stv
 s nasumičnim lozinkama, pokreće aplikaciju, dohvaća HTTPS certifikat i postavlja noćnu
 sigurnosnu kopiju. Bez domene umjesto nje navedite IP adresu; tada nema HTTPS-a.
 
-Administratoru u `/admin/` → Korisnici postavite ulogu **administrator**, pa se može
-prijaviti i na glavno web sučelje.
+`createsuperuser` stvara superadministratora. Kod prve prijave na web postavlja Google Authenticator.
 
-## 4. Unos stanova i suvlasnika
+## 4. Zgrade, administratori i stanovi
 
-U `/admin/`:
+Sve se radi na webu:
 
-1. **Stanovi**: dodajte 21 stan i svakome vodomjer s početnim stanjem (zadnje stanje iz Excela).
-2. **Korisnici**: za svakog suvlasnika korisničko ime, lozinka, ime i prezime, a u dnu stan.
+1. Superadministrator na stranici **Zgrade** klikne **Nova zgrada** (ulica, kućni broj, poštanski broj, grad, oznaka).
+2. Na stranici **Administratori** doda administratora zgrade. Aplikacija mu stvara privremenu lozinku;
+   kod prve prijave on postavlja svoju lozinku i Google Authenticator.
+3. Stanove upisuje na stranici **Stanovi** ili ih uvozi iz Excela (dolje).
+
+## 5. Ojačavanje servera
+
+```bash
+cd /opt/prijava-vode && bash deploy/ojacaj-server.sh
+```
+
+Uključuje automatske sigurnosne nadogradnje, fail2ban za SSH, vatrozid i šifriranje noćnih kopija.
+Lozinku za kopije koju skripta ispiše spremite uz ostale pristupne podatke.
+
+Preporuka: prijava na server SSH ključem umjesto lozinke. Na svom računalu `ssh-keygen`, pa
+`ssh-copy-id dean@65.108.144.242`; tek kad prijava ključem radi, na serveru u
+`/etc/ssh/sshd_config` postavite `PasswordAuthentication no` i pokrenite `sudo systemctl restart ssh`.
+
+## Sigurnost aplikacije
+
+- Administratori se na web prijavljuju lozinkom (barem 12 znakova) i kodom iz Google Authenticatora.
+  Suvlasnici web ne mogu koristiti, samo aplikaciju.
+- Nakon 5 pogrešnih pokušaja za isto korisničko ime (ili 20 s iste adrese) prijava je blokirana 15 minuta.
+- Web sesija istječe nakon 30 minuta neaktivnosti; prijava u aplikaciji nakon 90 dana nekorištenja.
+- Django administracija nije na `/admin/` nego na skrivenoj adresi; superadministrator je otvara
+  poveznicom **Sustav** u zaglavlju.
+- Superadministrator koji izgubi mobitel i rezervne kodove na serveru pokreće
+  `sudo docker compose exec web python manage.py ponisti_dva_koraka KORISNICKO_IME`.
 
 ## Aplikacija za suvlasnike
 
@@ -54,9 +79,11 @@ preuzimaju APK i vide upute za instalaciju. APK se preuzima iz zadnje uspješne 
 | Samo nova verzija APK-a | `bash deploy/preuzmi-apk.sh` |
 | Zapisi aplikacije | `sudo docker compose logs -f web` |
 | Ručna kopija | `sudo deploy/kopija.sh` |
-| Vraćanje baze | `gunzip -c /var/backups/prijava-vode/baza-DATUM.sql.gz \| sudo docker compose exec -T db psql -U voda voda` |
+| Vraćanje baze | `sudo gpg --batch --pinentry-mode loopback --passphrase-file /root/.prijava-vode-kopija -d /var/backups/prijava-vode/baza-DATUM.sql.gz.gpg \| gunzip \| sudo docker compose exec -T db psql -U voda voda` |
 
-Kopije se čuvaju 30 dana u `/var/backups/prijava-vode`. Preporuka je povremeno ih
+Kopije se čuvaju 30 dana u `/var/backups/prijava-vode`, šifrirane lozinkom iz `/root/.prijava-vode-kopija`
+(naredba ispod je koristi). Prije `ojacaj-server.sh` kopije nisu šifrirane (`.sql.gz` bez `.gpg`).
+`azuriraj.sh` napravi kopiju i prije svakog ažuriranja. Preporuka je povremeno ih
 kopirati i izvan servera.
 
 ## Podsjetnici i e-mail o neočitanim vodomjerima
@@ -84,6 +111,8 @@ Zatim `sudo docker compose up -d` i probno slanje:
 Tablica ima tri stupca bez zaglavlja: broj stana, "Prezime Ime" i zadnje stanje vodomjera (m³).
 Ta stanja postaju početna stanja vodomjera; prvo očitanje u aplikaciji računa razliku od njih.
 Vlasnik bez stanja (npr. Grad Rijeka) dobiva stan bez vodomjera i račun bez prijave.
+Stanovi se uvoze u jednu zgradu: `--zgrada` je njezina oznaka (npr. RI-ALB-2) ili jedinstveni ID.
+Zgradu prvo dodaje superadministrator u administraciji (Zgrade).
 
 ```bash
 # na svom računalu:
@@ -91,8 +120,8 @@ scp "Voda početno.xlsx" dean@65.108.144.242:/opt/prijava-vode/voda.xlsx
 # na serveru:
 cd /opt/prijava-vode
 sudo docker compose cp voda.xlsx web:/tmp/voda.xlsx
-sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --suho   # provjera
-sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --pristupni-podaci /tmp/pristupni-podaci.xlsx
+sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --zgrada RI-ALB-2 --suho   # provjera
+sudo docker compose exec web python manage.py uvoz_stanova /tmp/voda.xlsx --zgrada RI-ALB-2 --pristupni-podaci /tmp/pristupni-podaci.xlsx
 sudo docker compose cp web:/tmp/pristupni-podaci.xlsx .
 sudo docker compose exec web rm /tmp/voda.xlsx /tmp/pristupni-podaci.xlsx
 # na svom računalu:

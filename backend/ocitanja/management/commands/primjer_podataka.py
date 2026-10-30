@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 
-from ocitanja.models import Korisnik, KorisnikStan, Ocitanje, Stan, Vodomjer
+from ocitanja.models import AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje, Stan, Vodomjer, Zgrada
 from ocitanja.servisi import predaj_ocitanje
 
 IMENA = ["Ana", "Ivan", "Marija", "Luka", "Petra", "Josip", "Ivana", "Marko", "Katarina", "Tomislav", "Lucija"]
@@ -20,14 +20,17 @@ class Command(BaseCommand):
         if Stan.objects.exists():
             raise CommandError("Baza već ima stanove; primjer se puni samo u praznu bazu.")
         slucajno = random.Random(7)
-        if not Korisnik.objects.filter(username="admin").exists():
-            Korisnik.objects.create_user(
-                "admin", password="probna-lozinka", first_name="Dean", uloga=Korisnik.Uloga.ADMINISTRATOR
-            )
+        zgrada = Zgrada.objects.create(
+            oznaka="ZG-PRI-1", ulica="Primjerna ulica", kucni_broj="1", postanski_broj="10000", grad="Zagreb"
+        )
+        admin = Korisnik.objects.filter(username="admin").first() or Korisnik.objects.create_user(
+            "admin", password="probna-lozinka", first_name="Dean"
+        )
+        AdministratorZgrade.objects.create(korisnik=admin, zgrada=zgrada)
         danas = timezone.localdate().replace(day=1)
         mjeseci = [(danas - datetime.timedelta(days=31 * i)).replace(day=1) for i in (2, 1, 0)]
         for broj in range(1, 22):
-            stan = Stan.objects.create(broj_stana=str(broj), kat=(broj - 1) // 4)
+            stan = Stan.objects.create(zgrada=zgrada, broj_stana=str(broj), kat=(broj - 1) // 4)
             korisnik = Korisnik.objects.create_user(
                 f"stan{broj}", password="probna-lozinka",
                 first_name=slucajno.choice(IMENA), last_name=slucajno.choice(PREZIMENA),

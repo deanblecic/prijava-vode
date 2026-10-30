@@ -1,0 +1,39 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Korisnici{% endblock %}
+{% block sadrzaj %}
+<h1>Korisnici</h1>
+{% if skupine %}
+<div class="kartica" style="border-color:#eed888;background:#fffdf0">
+  <h2 style="margin-top:0">Možda ista osoba</h2>
+  <p class="tiho">Ovi računi imaju isto ime i prezime. Isto ime ne znači i istu osobu: spojite ih samo ako ste provjerili da je to jedan čovjek.</p>
+  {% for skupina in skupine %}
+  <p>
+    {% for k in skupina %}<b>{{ k.get_full_name }}</b> ({{ k.username }}{% if k.oznake_zgrada %}, {{ k.oznake_zgrada }}{% endif %}){% if not forloop.last %} i {% endif %}{% endfor %}
+    {% if skupina|length == 2 %}&nbsp; <a class="gumb" href="{% url 'spajanje' %}?a={{ skupina.0.pk }}&amp;b={{ skupina.1.pk }}">Spoji…</a>{% endif %}
+  </p>
+  {% endfor %}
+</div>
+{% endif %}
+<table>
+  <thead><tr><th>Ime i prezime</th><th>Korisničko ime</th><th>Stanovi</th><th>Uloga</th><th></th></tr></thead>
+  <tbody>
+  {% for r in redovi %}
+    <tr{% if not r.k.is_active %} class="nedostaje"{% endif %}>
+      <td>{{ r.k.get_full_name|default:"–" }}</td>
+      <td>{{ r.k.username }}{% if not r.k.is_active %} <span class="tiho">(isključen)</span>{% endif %}</td>
+      <td>{{ r.stanovi|default:"–" }}{% if r.drugdje %} <span class="tiho" title="Lozinku mu mijenja superadministrator">+ druga zgrada</span>{% endif %}</td>
+      <td>{% if r.administrator %}administrator{% else %}suvlasnik{% endif %}</td>
+      <td>
+        {% if r.upravlja and r.k.is_active and r.k != user %}
+        <form method="post" action="{% url 'nova_lozinka' r.k.pk %}" style="margin:0"
+              onsubmit="return confirm('Postaviti novu lozinku za {{ r.k.get_full_name|default:r.k.username|escapejs }}? Stara prestaje vrijediti i aplikacija se odjavljuje.')">{% csrf_token %}
+          <button class="gumb">Nova lozinka</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}<tr><td colspan="5">U zgradi još nema korisnika.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<p class="tiho">Novog suvlasnika upisujete na stranici stana, preko Promjena vlasnika. Računi s istim imenom i prezimenom pojavljuju se gore, s gumbom za spajanje.</p>
+{% endblock %}

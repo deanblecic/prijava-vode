@@ -31,6 +31,7 @@ import hr.prijavavode.ui.EkranPocetna
 import hr.prijavavode.ui.EkranPotvrde
 import hr.prijavavode.ui.EkranPovijesti
 import hr.prijavavode.ui.EkranPrijave
+import hr.prijavavode.ui.EkranPromjeneLozinke
 
 // FragmentActivity jer ga traži BiometricPrompt.
 class MainActivity : FragmentActivity() {
@@ -71,6 +72,7 @@ private fun Aplikacija(vm: GlavniViewModel) {
         is Ekran.Kamera -> EkranKamere(ekran.vodomjer, onSnimljeno = vm::snimljeno, onNatrag = vm::natrag)
         is Ekran.Potvrda -> EkranPotvrde(ekran, vm)
         Ekran.Povijest -> EkranPovijesti(vm)
+        Ekran.PromjenaLozinke -> EkranPromjeneLozinke(vm)
     }
     vm.greska?.let { tekst ->
         AlertDialog(

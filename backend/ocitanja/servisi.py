@@ -1,4 +1,5 @@
-"""Pravila za predaju očitanja, zajednička API-ju i web sučelju."""
+"""Pravila za predaju očitanja i upravljanje računima, zajednička API-ju i web sučelju."""
+import secrets
 from decimal import Decimal
 
 from django.conf import settings
@@ -7,6 +8,14 @@ from django.db.models import Avg
 from django.utils import timezone
 
 from .models import Ocitanje, Vodomjer
+
+
+SLOVA_LOZINKE = "abcdefghjkmnpqrstuvwxyz23456789"
+
+
+def nova_lozinka():
+    """Lozinka za podjelu na papiru: bez slova i brojki koje se lako zamijene (l/1, o/0)."""
+    return "-".join("".join(secrets.choice(SLOVA_LOZINKE) for _ in range(4)) for _ in range(3))
 
 
 class GreskaOcitanja(Exception):
@@ -50,8 +59,9 @@ def prosjecna_razlika(vodomjer, razdoblje, broj_mjeseci=12):
     return Ocitanje.objects.filter(id__in=list(ids)).aggregate(p=Avg("razlika"))["p"]
 
 
-def korisnik_smije_ocitati(korisnik, vodomjer):
-    if korisnik.je_administrator:
+def korisnik_smije_ocitati(korisnik, vodomjer, samo_vlasnik=False):
+    """Vlasnik stana; na webu i administrator zgrade u kojoj je stan ili superadministrator."""
+    if not samo_vlasnik and korisnik.zgrade_za_upravljanje().filter(pk=vodomjer.stan.zgrada_id).exists():
         return True
     return korisnik.aktivni_stanovi().filter(pk=vodomjer.stan_id).exists()
 
@@ -67,15 +77,17 @@ def predaj_ocitanje(
     fotografija=None,
     napomena="",
     potvrdi_manje=False,
+    samo_vlasnik=False,
 ):
     """Sprema ili ispravlja očitanje za mjesec u kojem je snimljeno.
 
+    Aplikacija šalje samo_vlasnik=True: tamo i administrator očitava samo svoje stanove.
     Diže GreskaOcitanja kad korisnik nema pravo na vodomjer, kad je očitanje
     već potvrđeno ili kad je novo stanje manje od prethodnog bez potvrde.
     """
     if not vodomjer.aktivan:
         raise GreskaOcitanja("vodomjer_neaktivan", "Ovaj vodomjer više nije aktivan.")
-    if not korisnik_smije_ocitati(korisnik, vodomjer):
+    if not korisnik_smije_ocitati(korisnik, vodomjer, samo_vlasnik):
         raise GreskaOcitanja("nema_prava", "Nemate pravo predati očitanje za ovaj vodomjer.")
 
     novo_stanje = Decimal(novo_stanje)

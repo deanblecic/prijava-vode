@@ -1,0 +1,15 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Nova zgrada{% endblock %}
+{% block sadrzaj %}
+<p><a href="{% url 'zgrade' %}">&larr; Zgrade</a></p>
+<h1>Nova zgrada</h1>
+<div class="kartica" style="max-width:560px">
+  <p class="tiho">Zgrada se prepoznaje po ulici, kućnom broju i gradu, pa ista adresa ne može biti upisana dvaput.
+    Oznaka je kratki naziv za Excel i e-mail, npr. RI-ALB-2.</p>
+  <form method="post">{% csrf_token %}
+    {{ forma.non_field_errors }}
+    {% for polje in forma %}<p>{{ polje.label_tag }}{{ polje }}{{ polje.errors }}</p>{% endfor %}
+    <button class="gumb glavni">Dodaj zgradu</button>
+  </form>
+</div>
+{% endblock %}

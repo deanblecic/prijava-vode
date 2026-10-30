@@ -1,0 +1,24 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Stanovi{% endblock %}
+{% block sadrzaj %}
+<h1>Stanovi i vodomjeri</h1>
+<table>
+  <thead><tr><th>Stan</th><th>Oznaka</th><th>Kat</th><th>Vlasnici</th><th>Vodomjer</th><th class="broj">Početno stanje</th></tr></thead>
+  <tbody>
+  {% for r in redovi %}
+    <tr><td><a href="{% url 'stan' r.stan.pk %}">{{ r.stan.broj_stana }}</a></td><td class="tiho">{{ r.stan.oznaka }}</td>
+      <td>{{ r.stan.kat|default_if_none:"–" }}</td><td>{{ r.vlasnici|default:"–" }}</td>
+      <td>{% if r.vodomjer %}{{ r.vodomjer.serijski_broj|default:"bez serijskog broja" }}{% else %}<span class="tiho">ne očitava se</span>{% endif %}</td>
+      <td class="broj">{% if r.vodomjer %}{{ r.vodomjer.pocetno_stanje }}{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="6">Zgrada još nema stanova.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<h2>Dodaj stan</h2>
+<div class="kartica" style="max-width:560px">
+  <form method="post">{% csrf_token %}
+    {{ forma.non_field_errors }}
+    {% for polje in forma %}<p>{{ polje.label_tag }}{{ polje }}{{ polje.errors }}{% if polje.help_text %}<br><span class="tiho" style="font-size:13px">{{ polje.help_text }}</span>{% endif %}</p>{% endfor %}
+    <button class="gumb glavni">Dodaj stan</button>
+  </form>
+</div>
+{% endblock %}

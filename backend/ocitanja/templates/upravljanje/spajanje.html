@@ -1,0 +1,29 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Spajanje računa{% endblock %}
+{% block sadrzaj %}
+<p><a href="{% url 'korisnici' %}">&larr; Korisnici</a></p>
+<h1>Spajanje računa</h1>
+{% if greska %}<div class="poruka error">{{ greska }}</div>{% endif %}
+<form method="post">{% csrf_token %}
+  <input type="hidden" name="a" value="{{ a.pk }}"><input type="hidden" name="b" value="{{ b.pk }}">
+  <div class="dvije">
+  {% for r in racuni %}
+    <label class="kartica" style="display:block;cursor:pointer;color:inherit;font-size:15px">
+      <input type="radio" name="ostaje" value="{{ r.k.pk }}"{% if r.k == ostaje %} checked{% endif %} onchange="this.form.submit()">
+      <b>{{ r.k.get_full_name|default:r.k.username }}</b> – ostaje ovaj račun
+      <p class="tiho" style="margin:6px 0">Korisničko ime: {{ r.k.username }}{% if not r.k.is_active %} (isključen){% endif %}<br>
+        Očitanja koja je predao: {{ r.broj_ocitanja }}</p>
+      <ul style="margin:0;padding-left:18px">
+      {% for v in r.stanovi %}<li>{{ v.stan.oznaka }} ({{ v.stan.zgrada.adresa }}), od {{ v.od_datuma|date:"d.m.Y." }}{% if v.do_datuma %} do {{ v.do_datuma|date:"d.m.Y." }}{% endif %}</li>
+      {% empty %}<li>bez stanova</li>{% endfor %}
+      </ul>
+    </label>
+  {% endfor %}
+  </div>
+  {% if not greska %}
+  <div class="poruka info">Svi stanovi i očitanja prelaze na račun <b>{{ ostaje.username }}</b>. Drugi račun se isključuje,
+    a njegova prijava u aplikaciji prestaje vrijediti. Spajanje se upisuje u zapisnik i superadministrator ga može poništiti.</div>
+  <button class="gumb glavni" name="potvrda" value="1">Spoji račune</button>
+  {% endif %}
+</form>
+{% endblock %}

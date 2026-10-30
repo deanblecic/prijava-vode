@@ -1,0 +1,29 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Prijava – kod{% endblock %}
+{% block sadrzaj %}
+<div class="kartica" style="max-width:{% if postavljanje %}520{% else %}380{% endif %}px;margin:60px auto">
+  {% if postavljanje %}
+  <h1>Postavite Google Authenticator</h1>
+  <p>Administratori se prijavljuju lozinkom i kodom s mobitela. To se postavlja samo jednom.</p>
+  <ol>
+    <li>Na mobitel instalirajte aplikaciju <b>Google Authenticator</b> (Trgovina Play ili App Store).</li>
+    <li>U njoj dodirnite <b>+</b> i zatim <b>Skeniraj QR kôd</b>.</li>
+    <li>Skenirajte kod ispod. U aplikaciji se pojavi „Prijava vode ({{ korisnik.username }})” sa šest brojki.</li>
+    <li>Upišite tih šest brojki i kliknite Potvrdi.</li>
+  </ol>
+  <div style="text-align:center">{{ qr|safe }}</div>
+  <p class="tiho" style="font-size:13px">Ako skeniranje ne radi, u aplikaciji odaberite „Unesi ključ za postavljanje” i upišite:
+    <code style="word-break:break-all">{{ tajna }}</code></p>
+  {% else %}
+  <h1>Kod za prijavu</h1>
+  <p>Otvorite Google Authenticator na mobitelu i upišite šest brojki za „Prijava vode”.</p>
+  {% endif %}
+  {% if greska %}<div class="poruka error">{{ greska }}</div>{% endif %}
+  <form method="post">{% csrf_token %}
+    <p><label for="kod">Kod</label>
+      <input id="kod" name="kod" inputmode="numeric" autocomplete="one-time-code" autofocus required maxlength="12" style="font-size:20px;letter-spacing:3px;width:200px"></p>
+    <button class="gumb glavni">Potvrdi</button>
+  </form>
+  {% if not postavljanje %}<p class="tiho" style="font-size:13px;margin-top:16px">Izgubili ste mobitel? Upišite jedan od rezervnih kodova koje ste spremili kod postavljanja.</p>{% endif %}
+</div>
+{% endblock %}

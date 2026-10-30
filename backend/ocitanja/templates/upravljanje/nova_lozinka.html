@@ -1,0 +1,14 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Nova lozinka{% endblock %}
+{% block sadrzaj %}
+<div class="kartica" style="max-width:560px">
+  <h1>{% if administrator %}Novi administrator{% else %}Nova lozinka{% endif %}</h1>
+  <p>{{ korisnik.get_full_name }}</p>
+  <p>Korisničko ime: <b style="font-size:18px">{{ korisnik.username }}</b></p>
+  <p>Privremena lozinka: <b style="font-size:20px;font-family:monospace">{{ lozinka }}</b></p>
+  <div class="poruka warning">Lozinka se prikazuje samo sada. Zapišite je i predajte osobno.
+    Kod prve prijave {{ korisnik.first_name|default:"korisnik" }} upisuje svoju novu lozinku.{% if administrator %}
+    Na webu će zatim postaviti i Google Authenticator.{% endif %}</div>
+  <a class="gumb glavni" href="{% if administrator %}{% url 'administratori' %}{% else %}{% url 'korisnici' %}{% endif %}">Gotovo</a>
+</div>
+{% endblock %}

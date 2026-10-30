@@ -24,15 +24,25 @@ Bez varijable `POSTGRES_DB` koristi se SQLite. Testovi: `../.venv/bin/python man
 
 ## Web sučelje za administratora
 
-Prijava na `/prijava/` korisnikom s ulogom administrator. Za isprobavanje na praznoj bazi:
-`manage.py primjer_podataka` stvara 21 stan, suvlasnike i tri mjeseca očitanja (admin / probna-lozinka).
+Aplikacija podržava više zgrada. Zgrada se prepoznaje po ulici, kućnom broju i gradu, a zgrada i stan
+imaju jedinstveni ID (`uid`) koji se ne mijenja; sve veze idu preko ID-ja.
 
-- `/` – mjesečni pregled svih stanova, s oznakom tko nije predao i što treba provjeriti
+- **Superadministrator** (`is_superuser`) vidi sve zgrade i bira ih na `/zgrade/` ili u zaglavlju.
+- **Administrator zgrade** (`AdministratorZgrade`) vidi samo svoje zgrade; tuđi stanovi, očitanja i fotografije vraćaju 404.
+- **Suvlasnik** se prijavljuje samo u Android aplikaciju; web ga ne pušta dalje od prijave.
+
+Prijava na `/prijava/`. Za isprobavanje na praznoj bazi `manage.py primjer_podataka` stvara zgradu
+od 21 stana, suvlasnike i tri mjeseca očitanja (admin / probna-lozinka).
+
+- `/zgrade/` – popis zgrada s brojem neočitanih vodomjera
+- `/` – mjesečni pregled stanova odabrane zgrade, s oznakom tko nije predao i što treba provjeriti
 - `/ocitanje/<id>/` – fotografija, potvrda, odbijanje i ispravak očitanja
 - `/stan/<id>/` – vlasnici, povijest očitanja i ručni unos
 - `/stan/<id>/promjena-vlasnika/` – prodaja stana
 - `/izvoz/?mjesec=2026-10` – Excel tablica za mjesec
-- `/admin/` – dodavanje korisnika, lozinki, stanova i vodomjera
+- Django administracija (skrivena adresa, poveznica Sustav) – samo superadministrator
+- `/stanovi/`, `/korisnici/`, `/administratori/`, `/zapisnik/` – stanovi, računi, spajanje istoimenih računa, administratori zgrade i trag radnji
+- `/prijava/` → `/prijava/kod/` – lozinka pa kod iz Google Authenticatora (prvi put postavljanje)
 
 ## API za Android aplikaciju
 
@@ -42,7 +52,7 @@ Sve osim prijave traži zaglavlje `Authorization: Token <token>`.
 | --- | --- | --- |
 | POST | `/api/prijava/` | `korisnicko_ime`, `lozinka` → `token` |
 | POST | `/api/odjava/` | poništava token |
-| GET | `/api/ja/` | korisnik, njegovi stanovi, vodomjer, prethodno stanje i očitanje ovog mjeseca |
+| GET | `/api/ja/` | korisnik, njegove zgrade (s podsjetnikom svake), stanovi u svim zgradama, vodomjer, prethodno stanje i očitanje ovog mjeseca |
 | GET | `/api/ocitanja/` | povijest očitanja korisnikovih stanova |
 | POST | `/api/ocitanja/` | multipart: `vodomjer`, `novo_stanje`, `ocr_vrijednost`, `fotografija`, `datum_ocitanja`, `napomena`, `potvrdi_manje` |
 

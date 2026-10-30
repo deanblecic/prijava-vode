@@ -1,8 +1,11 @@
 Django==5.2.18
-djangorestframework==3.16.1
+djangorestframework==3.18.2
 gunicorn==26.2.0
 pillow==13.0.0
 psycopg==3.2.13
 psycopg-binary==3.2.13
 openpyxl==3.1.5
 whitenoise==6.8.2
+argon2-cffi==23.1.0
+pyotp==2.9.0
+segno==1.6.1
