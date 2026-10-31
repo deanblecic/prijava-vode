@@ -104,7 +104,7 @@ def ponisti_dva_koraka(korisnik):
 
 # --- Middleware -----------------------------------------------------------------------------------
 
-IZUZETO = ("/api/", "/aplikacija/", "/static/", "/prijava/", "/odjava/")
+IZUZETO = ("/api/", "/aplikacija/", "/static/", "/prijava/", "/odjava/", "/kontakt/")
 
 
 class ZastitaPrijave:

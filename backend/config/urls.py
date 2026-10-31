@@ -12,6 +12,7 @@ admin.site.index_title = "Administracija"
 
 urlpatterns = [
     path("", javno.pocetna, name="pregled"),
+    path("kontakt/", javno.kontakt, name="kontakt"),
     path("zgrade/", upravljanje.zgrade, name="zgrade"),
     path("zgrade/odaberi/", upravljanje.odaberi_zgradu, name="odaberi_zgradu"),
     path("zgrade/nova/", korisnici.nova_zgrada, name="nova_zgrada"),

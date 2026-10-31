@@ -1,0 +1,40 @@
+{% extends "javno/osnova.html" %}
+{% block naslov %}Kontaktirajte nas – Očitanje vode{% endblock %}
+{% block sadrzaj %}
+<section>
+  <div class="sirina" style="max-width:680px">
+    <h2>Kontaktirajte nas</h2>
+    <p class="uvodni">Napišite pitanje, prijedlog ili opišite problem. Ako želite odgovor, upišite svoju e-mail adresu.
+      Za očitanje vodomjera i nove lozinke javite se ovlaštenom predstavniku suvlasnika svoje zgrade.</p>
+
+    {% if poslano %}
+      <div class="poruka-ok" role="status">Hvala! Vaša poruka je poslana.{% if form.cleaned_data.email %} Odgovor ćemo poslati na {{ form.cleaned_data.email }}.{% endif %}</div>
+      <p><a class="gumb" href="{% url 'pregled' %}">Natrag na početnu stranicu</a></p>
+    {% else %}
+      {% if greska %}<div class="poruka-greska" role="alert">{{ greska }}</div>{% endif %}
+      <form method="post" class="obrazac kartica" novalidate>{% csrf_token %}
+        <div class="polje">
+          <label for="id_ime">Ime i prezime <span class="tiho" style="font-weight:400">(nije obavezno)</span></label>
+          {{ form.ime }}
+          {% for e in form.ime.errors %}<div class="greska">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="polje">
+          <label for="id_email">E-mail za odgovor <span class="tiho" style="font-weight:400">(nije obavezno)</span></label>
+          {{ form.email }}
+          {% for e in form.email.errors %}<div class="greska">{{ e }}</div>{% endfor %}
+        </div>
+        <div class="polje">
+          <label for="id_poruka">Poruka</label>
+          {{ form.poruka }}
+          {% for e in form.poruka.errors %}<div class="greska">{{ e }}</div>{% endfor %}
+          <div class="pomoc">Najviše {{ najvise_znakova }} znakova.</div>
+        </div>
+        <div class="skriveno" aria-hidden="true">
+          <label for="id_web_stranica">Ne ispunjavajte ovo polje</label>{{ form.web_stranica }}
+        </div>
+        <button class="gumb glavni" type="submit">Pošalji</button>
+      </form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
