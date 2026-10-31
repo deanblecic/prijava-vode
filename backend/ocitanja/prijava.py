@@ -9,6 +9,7 @@ from django.contrib.auth.forms import SetPasswordForm
 from django.shortcuts import redirect, render
 from django.utils.http import url_has_allowed_host_and_scheme
 
+from .lozinka import obavijesti_o_promjeni
 from .models import Korisnik, Zapisnik
 from .sigurnost import (
     SESIJA_DVA_KORAKA,
@@ -119,6 +120,7 @@ def promjena_lozinke(request):
         korisnik.save(update_fields=["mora_promijeniti_lozinku"])
         update_session_auth_hash(request, korisnik)
         Zapisnik.upisi(Zapisnik.Radnja.PROMJENA_LOZINKE, f"{korisnik.username} je promijenio lozinku", request=request)
+        obavijesti_o_promjeni(korisnik, request, "na webu, nakon prijave")
         messages.success(request, "Lozinka je promijenjena.")
         return redirect("pregled")
     return render(request, "upravljanje/promjena_lozinke.html", {"forma": forma})

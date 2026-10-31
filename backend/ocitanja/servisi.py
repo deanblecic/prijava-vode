@@ -7,7 +7,8 @@ from django.db import transaction
 from django.db.models import Avg
 from django.utils import timezone
 
-from .models import Ocitanje, Vodomjer
+from .models import Ocitanje, Postavke, Vodomjer
+from .rokovi import datum_roka, rok_istekao
 
 
 SLOVA_LOZINKE = "abcdefghjkmnpqrstuvwxyz23456789"
@@ -105,6 +106,18 @@ def predaj_ocitanje(
             "Očitanje za ovaj mjesec je već potvrđeno. Za ispravak se javite ovlaštenom predstavniku suvlasnika.",
         )
 
+    zakasnjelo = False
+    if samo_vlasnik:
+        postavke = Postavke.ucitaj(vodomjer.stan.zgrada)
+        if rok_istekao(postavke, razdoblje, timezone.localdate()):
+            if postavke.nakon_roka == Postavke.NakonRoka.ZATVORI:
+                raise GreskaOcitanja(
+                    "rok_istekao",
+                    f"Rok za očitanje ({datum_roka(postavke, razdoblje):%d.%m.%Y.}) je istekao. "
+                    "Javite stanje vodomjera administratoru zgrade.",
+                )
+            zakasnjelo = True
+
     prethodno = prethodno_stanje(vodomjer, razdoblje)
     razlozi = []
     if novo_stanje < prethodno:
@@ -132,6 +145,7 @@ def predaj_ocitanje(
     ocitanje.za_provjeru = bool(razlozi)
     ocitanje.razlog_provjere = "; ".join(razlozi)[:200]
     ocitanje.napomena = napomena
+    ocitanje.zakasnjelo = zakasnjelo
     if fotografija is not None:
         ocitanje.fotografija = fotografija
     ocitanje.save()

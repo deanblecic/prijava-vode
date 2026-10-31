@@ -23,6 +23,7 @@ from openpyxl.styles import Font
 
 from .forms import IspravakForm, PostavkeForm, PromjenaVlasnikaForm, RucniUnosForm
 from .models import Korisnik, Ocitanje, Postavke, Stan, Zapisnik
+from .rokovi import dani_obavijesti, dani_podsjetnika, datum_roka
 from .servisi import (
     GreskaOcitanja,
     ispravi_ocitanje,
@@ -367,9 +368,20 @@ def aplikacija_apk(request):
 
 @za_zgradu
 def postavke(request):
-    forma = PostavkeForm(request.POST or None, instance=Postavke.ucitaj(request.zgrada))
+    instanca = Postavke.ucitaj(request.zgrada)
+    forma = PostavkeForm(request.POST or None, instance=instanca)
     if request.method == "POST" and forma.is_valid():
         forma.save()
+        Zapisnik.upisi(Zapisnik.Radnja.POSTAVKE, "Promijenjeni rokovi i podsjetnici", request=request,
+                       zgrada=request.zgrada, **{p: forma.cleaned_data[p] for p in forma.changed_data})
         messages.success(request, "Postavke su spremljene. Mobiteli ih preuzimaju pri sljedećem otvaranju aplikacije.")
         return redirect("postavke")
-    return render(request, "upravljanje/postavke.html", {"forma": forma})
+    mjesec = timezone.localdate().replace(day=1)
+    return render(request, "upravljanje/postavke.html", {
+        "forma": forma,
+        "mjesec": mjesec,
+        "rok": datum_roka(instanca, mjesec),
+        "dani_podsjetnika": dani_podsjetnika(instanca, mjesec),
+        "dani_obavijesti": dani_obavijesti(instanca, mjesec),
+        "bez_emaila": [k for k in request.zgrada.administratori.filter(is_active=True) if not k.email],
+    })

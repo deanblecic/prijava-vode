@@ -72,9 +72,20 @@ data class Stan(
     val vodomjeri: List<Vodomjer>,
 )
 
-/** Od kojeg dana u mjesecu i u koliko sati mobitel podsjeća na očitanje; postavlja administrator zgrade. */
+/**
+ * Kada mobitel podsjeća na očitanje; postavlja administrator zgrade. [dani] su dani ovog mjeseca
+ * na koje stiže podsjetnik, a [rok] zadnji dan za očitanje (yyyy-MM-dd). Stariji server šalje samo
+ * [dan], od kojeg se podsjeća do kraja mjeseca.
+ */
 @Serializable
-data class PostavkePodsjetnika(val dan: Int = 26, val sat: Int = 9)
+data class PostavkePodsjetnika(
+    val dan: Int = 26,
+    val sat: Int = 9,
+    val dani: List<Int>? = null,
+    val rok: String? = null,
+) {
+    fun jeDanPodsjetnika(danUMjesecu: Int): Boolean = dani?.contains(danUMjesecu) ?: (danUMjesecu >= dan)
+}
 
 @Serializable
 data class Zgrada(

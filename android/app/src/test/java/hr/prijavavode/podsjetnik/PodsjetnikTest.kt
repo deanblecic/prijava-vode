@@ -61,6 +61,15 @@ class PodsjetnikTest {
     }
 
     @Test
+    fun samoNaDanePodsjetnikaKojeJeOdabraoAdministrator() {
+        val prviIRok = ja.copy(podsjetnik = PostavkePodsjetnika(dan = 1, sat = 9, dani = listOf(1, 20), rok = "2026-10-20"))
+        assertEquals(listOf("3", "5"), Podsjetnik.neocitaniStanovi(prviIRok, u(1)))
+        assertEquals(emptyList<String>(), Podsjetnik.neocitaniStanovi(prviIRok, u(2)))
+        assertEquals(listOf("3", "5"), Podsjetnik.neocitaniStanovi(prviIRok, u(20)))
+        assertEquals(emptyList<String>(), Podsjetnik.neocitaniStanovi(prviIRok, u(26)))
+    }
+
+    @Test
     fun sljedeciTermin() {
         val jutro = LocalDateTime.of(2026, 10, 26, 7, 30)
         assertEquals(Duration.ofMinutes(90), Podsjetnik.doSljedeceg(9, jutro))

@@ -1,0 +1,10 @@
+{% autoescape off %}Poštovani/a {{ user.get_full_name|default:user.username }},
+
+zatražena je nova lozinka za vaš račun {{ user.username }}. Novu lozinku postavite na ovom linku:
+
+{{ protocol }}://{{ domain }}{% url 'nova_lozinka_iz_linka' uidb64=uid token=token %}
+
+Link vrijedi sat vremena i može se iskoristiti samo jednom.
+
+Ako niste vi zatražili novu lozinku, zanemarite ovu poruku: lozinka ostaje ista.
+{% endautoescape %}

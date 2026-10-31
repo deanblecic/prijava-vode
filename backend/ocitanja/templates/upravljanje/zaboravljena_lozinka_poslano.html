@@ -1,0 +1,12 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Provjerite e-mail{% endblock %}
+{% block sadrzaj %}
+<div class="kartica" style="max-width:420px;margin:60px auto">
+  <h1>Provjerite e-mail</h1>
+  <p>Ako je ta adresa upisana na administratorskom računu, na nju je upravo stigao link za novu lozinku.
+    Link vrijedi sat vremena.</p>
+  <p class="tiho">Ne vidite poruku? Pogledajte i mapu neželjene pošte. Ako ni nakon nekoliko minuta ništa ne stigne,
+    javite se glavnom administratoru.</p>
+  <a class="gumb" href="{% url 'prijava' %}">Natrag na prijavu</a>
+</div>
+{% endblock %}

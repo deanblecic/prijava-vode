@@ -32,6 +32,7 @@
         <td class="broj"><b>{{ o.razlika }}</b></td>
         <td>
           <span class="oznaka {{ o.status }}">{{ o.get_status_display }}</span>
+          {% if o.zakasnjelo %}<span class="oznaka odbijeno" title="Predano nakon roka">zakašnjelo</span>{% endif %}
           {% if o.za_provjeru %}<span class="oznaka provjera" title="{{ o.razlog_provjere }}">provjeriti</span>{% endif %}
         </td>
         <td><a href="{% url 'ocitanje' o.pk %}">Otvori</a></td>
