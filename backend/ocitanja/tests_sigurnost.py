@@ -47,7 +47,8 @@ class DvaKorakaTest(DvijeZgrade):
 
     def test_bez_koda_nema_pristupa(self):
         self.lozinka()
-        self.assertRedirects(self.client.get("/"), "/prijava/?next=/")
+        self.assertRedirects(self.client.get("/stanovi/"), "/prijava/?next=/stanovi/")
+        self.assertTemplateUsed(self.client.get("/"), "javno/pocetna.html")
 
     def test_sesija_bez_drugog_koraka_se_odjavljuje(self):
         self.client.force_login(self.admin_b)

@@ -3,14 +3,14 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from ocitanja import korisnici, prijava, upravljanje
+from ocitanja import javno, korisnici, prijava, upravljanje
 
 admin.site.site_header = "Očitanja vodomjera"
 admin.site.site_title = "Očitanja vodomjera"
 admin.site.index_title = "Administracija"
 
 urlpatterns = [
-    path("", upravljanje.pregled, name="pregled"),
+    path("", javno.pocetna, name="pregled"),
     path("zgrade/", upravljanje.zgrade, name="zgrade"),
     path("zgrade/odaberi/", upravljanje.odaberi_zgradu, name="odaberi_zgradu"),
     path("zgrade/nova/", korisnici.nova_zgrada, name="nova_zgrada"),
