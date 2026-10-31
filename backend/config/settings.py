@@ -182,7 +182,7 @@ if os.environ.get("EMAIL_HOST"):
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 # Na ovu adresu stižu poruke iz obrasca „Kontaktirajte nas” na javnoj stranici.
-KONTAKT_EMAIL = os.environ.get("KONTAKT_EMAIL", "ocitanje-vode@gmail.com")
+KONTAKT_EMAIL = os.environ.get("KONTAKT_EMAIL", "ocitanje.vode@gmail.com")
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", os.environ.get("EMAIL_HOST_USER", "prijava-vode@localhost"))
 
 if not DEBUG:

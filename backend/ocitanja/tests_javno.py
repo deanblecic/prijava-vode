@@ -62,7 +62,7 @@ class KontaktTest(Osnova):
         self.assertContains(r, "Vaša poruka je poslana")
         self.assertEqual(len(mail.outbox), 1)
         poruka = mail.outbox[0]
-        self.assertEqual(poruka.to, ["ocitanje-vode@gmail.com"])
+        self.assertEqual(poruka.to, ["ocitanje.vode@gmail.com"])
         self.assertEqual(poruka.reply_to, ["ivana@example.com"])
         self.assertIn("Kako dodati drugu zgradu?", poruka.body)
         self.assertIn("Ivana Horvat", poruka.subject)
