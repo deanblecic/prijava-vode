@@ -4,7 +4,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from django.views.generic import TemplateView
 
-from ocitanja import korisnici, lozinka, prijava, upravljanje
+from ocitanja import javno, korisnici, lozinka, prijava, upravljanje
 
 admin.site.site_header = "Očitanja vodomjera"
 admin.site.site_title = "Očitanja vodomjera"
