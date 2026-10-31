@@ -216,7 +216,7 @@ class UpravljanjeTest(Osnova):
         self.assertEqual(self.client.get("/").status_code, 403)
 
     def test_neprijavljen_ide_na_prijavu(self):
-        self.assertRedirects(self.client.get("/"), "/prijava/?next=/")
+        self.assertRedirects(self.client.get("/stanovi/"), "/prijava/?next=/stanovi/")
 
     def test_pregled_prikazuje_sve_stanove(self):
         self.client.login(username="dean", password="lozinka-123")

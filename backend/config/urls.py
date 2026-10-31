@@ -11,7 +11,7 @@ admin.site.site_title = "Očitanja vodomjera"
 admin.site.index_title = "Administracija"
 
 urlpatterns = [
-    path("", upravljanje.pregled, name="pregled"),
+    path("", javno.pocetna, name="pregled"),
     path("zgrade/", upravljanje.zgrade, name="zgrade"),
     path("zgrade/odaberi/", upravljanje.odaberi_zgradu, name="odaberi_zgradu"),
     path("zgrade/nova/", korisnici.nova_zgrada, name="nova_zgrada"),
