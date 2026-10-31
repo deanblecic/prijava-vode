@@ -94,12 +94,16 @@ class OdvajanjeZgradaTest(DvijeZgrade):
 
     def test_postavke_po_zgradi(self):
         self.prijava("admin_b")
-        self.client.post("/postavke/", {"dan_ocitanja": 20, "sat_podsjetnika": 8, "email_obavijesti": ""})
+        from .tests_obavijest import podaci_postavki
+
+        self.client.post("/postavke/", podaci_postavki(dan_ocitanja=20, sat_podsjetnika=8))
         api = APIClient()
         api.force_authenticate(self.ana)
-        self.assertEqual(api.get("/api/ja/").json()["podsjetnik"], {"dan": 26, "sat": 9})
+        podsjetnik = api.get("/api/ja/").json()["podsjetnik"]
+        self.assertEqual((podsjetnik["dan"], podsjetnik["sat"]), (26, 9))
         api.force_authenticate(self.marija)
-        self.assertEqual(api.get("/api/ja/").json()["podsjetnik"], {"dan": 20, "sat": 8})
+        podsjetnik = api.get("/api/ja/").json()["podsjetnik"]
+        self.assertEqual((podsjetnik["dan"], podsjetnik["sat"]), (20, 8))
 
     def test_administrator_ne_predaje_za_tudju_zgradu(self):
         api = APIClient()

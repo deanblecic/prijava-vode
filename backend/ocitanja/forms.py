@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth.password_validation import validate_password
 
 from .models import Korisnik, Postavke, Zgrada
+from .rokovi import ODABIRI_DANA
 
 
 class IspravakForm(forms.Form):
@@ -61,15 +62,56 @@ class PromjenaVlasnikaForm(forms.Form):
 
 
 class PostavkeForm(forms.ModelForm):
+    podsjetnik_dani = forms.TypedMultipleChoiceField(
+        label="Odabrani dani", choices=ODABIRI_DANA, coerce=int, required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
+    obavijest_dani = forms.TypedMultipleChoiceField(
+        label="Odabrani dani", choices=ODABIRI_DANA, coerce=int, required=False,
+        widget=forms.CheckboxSelectMultiple,
+    )
+
     class Meta:
         model = Postavke
-        fields = ["dan_ocitanja", "sat_podsjetnika", "email_obavijesti"]
+        fields = [
+            "rok_dan", "nakon_roka",
+            "podsjetnik_raspored", "dan_ocitanja", "podsjetnik_broj_dana", "podsjetnik_dani", "sat_podsjetnika",
+            "email_stanarima",
+            "obavijest_raspored", "obavijest_od_dana", "obavijest_broj_dana", "obavijest_dani", "sat_obavijesti",
+            "email_obavijesti",
+        ]
+        widgets = {"nakon_roka": forms.RadioSelect}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for polje in ("podsjetnik_dani", "obavijest_dani"):
+            self.initial[polje] = [str(d) for d in (self.initial.get(polje) or [])]
 
     def clean_email_obavijesti(self):
         adrese = [a.strip() for a in self.cleaned_data["email_obavijesti"].split(",") if a.strip()]
         for adresa in adrese:
             forms.EmailField().clean(adresa)
         return ", ".join(adrese)
+
+    def clean(self):
+        podaci = super().clean()
+        rok = podaci.get("rok_dan")
+        if rok is None:
+            return podaci
+        for raspored, od_dana, dani in (
+            ("podsjetnik_raspored", "dan_ocitanja", "podsjetnik_dani"),
+            ("obavijest_raspored", "obavijest_od_dana", "obavijest_dani"),
+        ):
+            odabran = podaci.get(raspored)
+            if odabran == "od_dana" and rok and (podaci.get(od_dana) or 0) > rok:
+                self.add_error(od_dana, f"Mora biti najkasnije dan roka ({rok}.).")
+            if odabran == "prilagodeno" and not podaci.get(dani):
+                self.add_error(dani, "Odaberite barem jedan dan.")
+            if odabran == "prilagodeno" and rok:
+                kasni = [d for d in podaci.get(dani) or [] if d > rok]
+                if kasni:
+                    self.add_error(dani, f"Dani iza roka ({', '.join(f'{d}.' for d in kasni)}) se ne šalju.")
+        return podaci
 
 
 class NoviAdministratorForm(forms.Form):

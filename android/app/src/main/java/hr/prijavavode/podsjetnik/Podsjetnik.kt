@@ -30,7 +30,7 @@ import java.time.LocalDateTime
 
 /**
  * Podsjetnik na očitanje: svaki dan u sat koji je postavio administrator zgrade mobitel pita server
- * je li vodomjer očitan i, od dana očitanja do kraja mjeseca, prikaže obavijest ako nije.
+ * je li vodomjer očitan i, na dane podsjetnika koje je odabrao administrator, prikaže obavijest ako nije.
  * Suvlasnik sa stanovima u više zgrada dobiva podsjetnik po pravilima svake zgrade.
  */
 object Podsjetnik {
@@ -74,7 +74,7 @@ object Podsjetnik {
         }
 
     /**
-     * Stanovi čiji vodomjer treba očitati, po pravilima njihove zgrade: od dana očitanja
+     * Stanovi čiji vodomjer treba očitati, po pravilima njihove zgrade: na dan podsjetnika
      * i od sata podsjetnika te zgrade. Kad su stanovi u više zgrada, uz broj stoji i adresa.
      */
     fun neocitaniStanovi(ja: Ja, sada: LocalDateTime): List<String> {
@@ -82,7 +82,7 @@ object Podsjetnik {
         return ja.stanovi
             .filter { stan ->
                 val pravila = ja.podsjetnik(stan)
-                sada.dayOfMonth >= pravila.dan && sada.hour >= pravila.sat &&
+                pravila.jeDanPodsjetnika(sada.dayOfMonth) && sada.hour >= pravila.sat &&
                     stan.vodomjeri.any { it.ocitanjeOvajMjesec == null || it.ocitanjeOvajMjesec.status == "odbijeno" }
             }
             .map { stan ->

@@ -2,8 +2,9 @@ from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
+from django.views.generic import TemplateView
 
-from ocitanja import javno, korisnici, prijava, upravljanje
+from ocitanja import javno, korisnici, lozinka, prijava, upravljanje
 
 admin.site.site_header = "Očitanja vodomjera"
 admin.site.site_title = "Očitanja vodomjera"
@@ -24,7 +25,14 @@ urlpatterns = [
     path("zapisnik/<int:pk>/ponisti/", korisnici.ponisti, name="ponisti_spajanje"),
     path("prijava/", prijava.Prijava.as_view(), name="prijava"),
     path("prijava/kod/", prijava.prijava_kod, name="prijava_kod"),
+    path("prijava/zaboravljena-lozinka/", lozinka.ZaboravljenaLozinka.as_view(), name="zaboravljena_lozinka"),
+    path("prijava/zaboravljena-lozinka/poslano/", TemplateView.as_view(
+        template_name="upravljanje/zaboravljena_lozinka_poslano.html"), name="zaboravljena_lozinka_poslano"),
+    path("prijava/nova-lozinka/<uidb64>/<token>/", lozinka.NovaLozinkaIzLinka.as_view(), name="nova_lozinka_iz_linka"),
+    path("prijava/nova-lozinka/gotovo/", TemplateView.as_view(
+        template_name="upravljanje/nova_lozinka_gotovo.html"), name="zaboravljena_lozinka_gotovo"),
     path("lozinka/", prijava.promjena_lozinke, name="promjena_lozinke"),
+    path("racun/", lozinka.moj_racun, name="moj_racun"),
     path("odjava/", auth_views.LogoutView.as_view(next_page="prijava"), name="odjava"),
     path("ocitanje/<int:pk>/", upravljanje.ocitanje_detalj, name="ocitanje"),
     path("stan/<int:pk>/", upravljanje.stan_detalj, name="stan"),

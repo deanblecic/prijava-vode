@@ -105,6 +105,11 @@ BLOKADA_POKUSAJA = int(os.environ.get("BLOKADA_POKUSAJA", "5"))
 BLOKADA_POKUSAJA_ADRESA = int(os.environ.get("BLOKADA_POKUSAJA_ADRESA", "20"))
 BLOKADA_MINUTA = int(os.environ.get("BLOKADA_MINUTA", "15"))
 
+# Link za zaboravljenu lozinku vrijedi sat vremena; najviše toliko zahtjeva na sat za istu adresu i s iste IP adrese.
+PASSWORD_RESET_TIMEOUT = int(os.environ.get("RESET_LOZINKE_SEKUNDI", "3600"))
+RESET_LOZINKE_PO_ADRESI = int(os.environ.get("RESET_LOZINKE_PO_ADRESI", "3"))
+RESET_LOZINKE_PO_IP = int(os.environ.get("RESET_LOZINKE_PO_IP", "10"))
+
 # Web sesija administratora istječe nakon 30 minuta neaktivnosti.
 SESSION_COOKIE_AGE = 30 * 60
 SESSION_SAVE_EVERY_REQUEST = True
@@ -162,14 +167,18 @@ APK_VERZIJA = APK_DATOTEKA.with_name("verzija.txt")
 # Razlika veća od ovoliko puta prosjeka stana označava se za provjeru.
 PRAG_SUMNJIVE_RAZLIKE = float(os.environ.get("PRAG_SUMNJIVE_RAZLIKE", "3"))
 
-# E-pošta za obavijest administratoru o neočitanim vodomjerima. Bez EMAIL_HOST poruka se samo ispisuje u log.
+# E-pošta: link za zaboravljenu lozinku, podsjetnici suvlasnicima i popis neočitanih administratoru.
+# Bez EMAIL_HOST poruka se samo ispisuje u log.
 if os.environ.get("EMAIL_HOST"):
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     EMAIL_HOST = os.environ["EMAIL_HOST"]
     EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
-    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "1") == "1"
+    # Port 465 (npr. neki hosting): EMAIL_USE_SSL=1; port 587 (Gmail, Brevo): STARTTLS.
+    EMAIL_USE_SSL = os.environ.get("EMAIL_USE_SSL", "0") == "1"
+    EMAIL_USE_TLS = not EMAIL_USE_SSL and os.environ.get("EMAIL_USE_TLS", "1") == "1"
+    EMAIL_TIMEOUT = 20
 else:
     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", os.environ.get("EMAIL_HOST_USER", "prijava-vode@localhost"))

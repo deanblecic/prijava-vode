@@ -1,0 +1,18 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Moj račun{% endblock %}
+{% block sadrzaj %}
+<div class="kartica" style="max-width:480px">
+  <h1>Moj račun</h1>
+  <p>{{ user.get_full_name }} <span class="tiho">({{ user.username }})</span></p>
+  {% if not user.email %}<div class="poruka warning">Upišite e-mail adresu. Bez nje ne možete sami postaviti novu lozinku
+    ako je zaboravite, niti primati obavijesti o neočitanim vodomjerima.</div>{% endif %}
+  <form method="post">{% csrf_token %}
+    <p>{{ forma.email.label_tag }}{{ forma.email }}{{ forma.email.errors }}<br>
+      <span class="tiho" style="font-size:13px">{{ forma.email.help_text }}</span></p>
+    <p>{{ forma.lozinka.label_tag }}{{ forma.lozinka }}{{ forma.lozinka.errors }}</p>
+    <button class="gumb glavni">Spremi e-mail</button>
+  </form>
+  <h2>Lozinka</h2>
+  <a class="gumb" href="{% url 'promjena_lozinke' %}">Promijeni lozinku</a>
+</div>
+{% endblock %}

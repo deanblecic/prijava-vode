@@ -44,6 +44,9 @@ od 21 stana, suvlasnike i tri mjeseca očitanja (admin / probna-lozinka).
 - Django administracija (skrivena adresa, poveznica Sustav) – samo superadministrator
 - `/stanovi/`, `/korisnici/`, `/administratori/`, `/zapisnik/` – stanovi, računi, spajanje istoimenih računa, administratori zgrade i trag radnji
 - `/prijava/` → `/prijava/kod/` – lozinka pa kod iz Google Authenticatora (prvi put postavljanje)
+- `/prijava/zaboravljena-lozinka/` – jednokratni link za novu lozinku na e-mail administratora (vrijedi 1 h, ograničen broj zahtjeva)
+- `/racun/` – vlastiti e-mail (promjena traži lozinku) i promjena lozinke
+- `/postavke/` – krajnji rok očitanja, raspored podsjetnika suvlasnicima i obavijesti administratoru o neočitanima
 
 ## API za Android aplikaciju
 
@@ -58,7 +61,7 @@ Sve osim prijave traži zaglavlje `Authorization: Token <token>`.
 | POST | `/api/ocitanja/` | multipart: `vodomjer`, `novo_stanje`, `ocr_vrijednost`, `fotografija`, `datum_ocitanja`, `napomena`, `potvrdi_manje` |
 
 Greške predaje vraćaju `{"kod", "poruka"}`: `nema_prava` (403), `vec_potvrdeno`,
-`manje_od_prethodnog`, `vodomjer_neaktivan` (409). Kod `manje_od_prethodnog` aplikacija
+`manje_od_prethodnog`, `vodomjer_neaktivan`, `rok_istekao` (409). Kod `manje_od_prethodnog` aplikacija
 pita korisnika i šalje ponovno s `potvrdi_manje=true`.
 
 ## Pravila
@@ -68,6 +71,10 @@ pita korisnika i šalje ponovno s `potvrdi_manje=true`.
 - Razlika veća od `PRAG_SUMNJIVE_RAZLIKE` × prosjek zadnjih 12 mjeseci označava se za provjeru.
 - Jedan aktivni vodomjer po stanu; zamijenjeni ostaju neaktivni radi povijesti.
 - Promjena vlasnika (`servisi.promijeni_vlasnika`) zatvara stara suvlasništva, povijest ostaje.
+- Razdoblje očitanja traje od 1. u mjesecu do roka zgrade. Nakon roka očitanje iz aplikacije je `zakasnjelo`
+  ili odbijeno s `rok_istekao`, ovisno o postavci zgrade; administrator na webu unosi i nakon roka.
+- Podsjetnik zgrade u `/api/ja/` (`podsjetnik`): `dani` (dani ovog mjeseca), `sat`, `rok`, `nakon_roka`;
+  `dan` ostaje za starije verzije aplikacije.
 
 ## Android aplikacija
 

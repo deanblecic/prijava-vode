@@ -86,25 +86,51 @@ Kopije se čuvaju 30 dana u `/var/backups/prijava-vode`, šifrirane lozinkom iz 
 `azuriraj.sh` napravi kopiju i prije svakog ažuriranja. Preporuka je povremeno ih
 kopirati i izvan servera.
 
-## Podsjetnici i e-mail o neočitanim vodomjerima
+## E-pošta, rokovi i podsjetnici
 
-U web sučelju, pod **Podsjetnici**, administrator postavlja dan očitanja (zadano 26.), sat
-podsjetnika (zadano 9) i e-mail za obavijest. Od dana očitanja do kraja mjeseca aplikacija
-svaki dan u taj sat podsjeti suvlasnike čiji vodomjer još nije očitan. Zadnji dan u mjesecu u
-20 h server pošalje popis neočitanih stanova na upisani e-mail (ako je prazan, administratorima).
-
-Za slanje e-maila u `.env` dopišite podatke SMTP poslužitelja, npr. za Gmail
-(lozinka aplikacije: Google račun → Sigurnost → Potvrda u dva koraka → Lozinke aplikacija):
+Server šalje e-poštu za tri stvari: link za zaboravljenu lozinku administratora, podsjetnike
+suvlasnicima koji još nisu očitali i popis neočitanih stanova administratoru zgrade. Za to u `.env`
+dopišite podatke SMTP poslužitelja, npr. za Gmail (lozinka aplikacije: Google račun → Sigurnost →
+Potvrda u dva koraka → Lozinke aplikacija):
 
 ```
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_HOST_USER=vas.racun@gmail.com
 EMAIL_HOST_PASSWORD=lozinka-aplikacije
+DEFAULT_FROM_EMAIL=Očitanja vodomjera <vas.racun@gmail.com>
 ```
 
-Zatim `sudo docker compose up -d` i probno slanje:
-`sudo docker compose exec web python manage.py obavijest_neocitani --odmah`.
+Brevo (besplatno do 300 poruka dnevno): `EMAIL_HOST=smtp-relay.brevo.com`, `EMAIL_PORT=587`, a korisnik i
+lozinka su login i SMTP ključ iz Brevo postavki (SMTP & API). Zatim `sudo docker compose up -d`.
+
+**Svaki administrator mora imati upisan e-mail** (u webu: klik na svoje ime gore desno → Moj račun;
+na stranici Administratori vidi se tko ga nema). Bez e-maila ne može sam postaviti novu lozinku.
+
+### Zaboravljena lozinka
+
+Na prijavi je link **Zaboravljena lozinka?**. Administrator (glavni ili zgrade) upiše svoj e-mail i dobije
+jednokratni link koji vrijedi sat vremena. Odgovor na ekranu je uvijek isti, postoji li adresa ili ne.
+Najviše 3 zahtjeva na sat za istu adresu i 10 s iste IP adrese. Nakon promjene vlasnik dobiva obavijest
+e-mailom, a prijava i dalje traži kod iz Google Authenticatora. Tko nema pristup e-mailu, glavni
+administrator mu na stranici Administratori postavi privremenu lozinku (mijenja je kod prve prijave).
+Glavnom administratoru bez e-maila lozinku postavlja `sudo docker compose exec web python manage.py changepassword IME`.
+
+### Rokovi i podsjetnici
+
+U web sučelju, pod **Rokovi i podsjetnici**, administrator zgrade postavlja:
+
+- **krajnji rok** (1.–28. ili zadnji dan u mjesecu) i što nakon roka: očitanje se i dalje prima, ali je
+  označeno kao zakašnjelo, ili je predaja u aplikaciji zatvorena (administrator ga tada unosi na webu);
+- **podsjetnike suvlasnicima** koji nisu očitali: raspored (samo prvi dan, prvi dan i dan roka, svaki dan,
+  od odabranog dana do roka, zadnjih N dana, ili odabrani dani) i sat. Podsjetnik stiže na mobitel, a
+  suvlasnicima s upisanim e-mailom i e-poštom;
+- **obavijest administratoru** s popisom neočitanih: isti izbor rasporeda, sat i adrese primatelja.
+
+`deploy/zakazi.sh` (pokreće ga i `azuriraj.sh`) upisuje u cron naredbu `posalji_obavijesti` svakih 15 minuta.
+Ona šalje kad je dan slanja i sat prošao, po hrvatskom vremenu, a u bazi bilježi što je poslano, pa nitko
+ne dobije istu poruku dvaput. Probno slanje svega odmah (ne bilježi se):
+`sudo docker compose exec web python manage.py posalji_obavijesti --odmah --zgrada RI-ALB-2`.
 
 ## Uvoz stanova i suvlasnika iz Excela
 

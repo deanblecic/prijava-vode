@@ -1,0 +1,16 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Zaboravljena lozinka{% endblock %}
+{% block sadrzaj %}
+<div class="kartica" style="max-width:420px;margin:60px auto">
+  <h1>Zaboravljena lozinka</h1>
+  <p class="tiho">Upišite e-mail adresu svog administratorskog računa. Poslat ćemo vam link za novu lozinku.
+    Link vrijedi sat vremena i može se iskoristiti samo jednom.</p>
+  <form method="post">{% csrf_token %}
+    <p>{{ form.email.label_tag }}{{ form.email }}{{ form.email.errors }}</p>
+    <button class="gumb glavni">Pošalji link</button>
+    <a class="gumb" href="{% url 'prijava' %}">Natrag na prijavu</a>
+  </form>
+  <p class="tiho" style="font-size:13px;margin-top:16px">Nemate pristup tom e-mailu? Javite se glavnom administratoru:
+    postavit će vam privremenu lozinku koju mijenjate kod prve prijave.</p>
+</div>
+{% endblock %}

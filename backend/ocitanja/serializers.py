@@ -1,6 +1,8 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from .models import Ocitanje, Postavke, Stan, Vodomjer, Zgrada
+from .rokovi import dani_podsjetnika, datum_roka
 from .servisi import prethodno_stanje, prvi_u_mjesecu
 
 
@@ -15,7 +17,7 @@ class OcitanjeSerializer(serializers.ModelSerializer):
         fields = [
             "id", "vodomjer", "zgrada", "broj_stana", "ime_prezime", "razdoblje", "datum_ocitanja",
             "prethodno_stanje", "novo_stanje", "razlika", "ocr_vrijednost", "rucno_ispravljeno",
-            "fotografija", "status", "za_provjeru", "napomena",
+            "fotografija", "status", "za_provjeru", "zakasnjelo", "napomena",
         ]
         read_only_fields = fields
 
@@ -59,8 +61,17 @@ class ZgradaSerializer(serializers.ModelSerializer):
         fields = ["id", "uid", "oznaka", "ulica", "kucni_broj", "postanski_broj", "grad", "adresa", "podsjetnik"]
 
     def get_podsjetnik(self, zgrada):
+        """dani: dani ovog mjeseca s podsjetnikom; dan je za starije aplikacije koje podsjećaju od dana do kraja mjeseca."""
         postavke = Postavke.ucitaj(zgrada)
-        return {"dan": postavke.dan_ocitanja, "sat": postavke.sat_podsjetnika}
+        mjesec = timezone.localdate().replace(day=1)
+        dani = dani_podsjetnika(postavke, mjesec)
+        return {
+            "dan": dani[0] if dani else postavke.dan_ocitanja,
+            "sat": postavke.sat_podsjetnika,
+            "dani": dani,
+            "rok": datum_roka(postavke, mjesec).isoformat(),
+            "nakon_roka": postavke.nakon_roka,
+        }
 
 
 class StanSerializer(serializers.ModelSerializer):

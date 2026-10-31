@@ -8,6 +8,8 @@ from django.db import models
 from django.db.models import Q
 from django.utils import timezone
 
+from .rokovi import RASPOREDI
+
 
 def kljuc_adrese(ulica, kucni_broj, grad):
     """Ulica, kućni broj i grad bez kvačica, točaka, velikih slova i viška razmaka."""
@@ -218,6 +220,7 @@ class Ocitanje(models.Model):
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PREDANO)
     za_provjeru = models.BooleanField(default=False)
     razlog_provjere = models.CharField(max_length=200, blank=True)
+    zakasnjelo = models.BooleanField("zakašnjelo", default=False, help_text="Predano u aplikaciji nakon roka zgrade.")
     napomena = models.CharField(max_length=500, blank=True)
     stvoreno = models.DateTimeField(auto_now_add=True)
     izmijenjeno = models.DateTimeField(auto_now=True)
@@ -239,21 +242,60 @@ class Ocitanje(models.Model):
 
 
 class Postavke(models.Model):
-    """Postavke podsjetnika jedne zgrade koje administrator mijenja u web sučelju."""
+    """Rok očitanja, podsjetnici suvlasnicima i obavijesti administratoru jedne zgrade (web, Podsjetnici)."""
+
+    class NakonRoka(models.TextChoices):
+        OZNACI = "oznaci", "Primaj očitanja i dalje, ali ih označi kao zakašnjela"
+        ZATVORI = "zatvori", "Zatvori predaju u aplikaciji (očitanje unosi administrator)"
 
     zgrada = models.OneToOneField(Zgrada, on_delete=models.CASCADE, related_name="postavke")
 
-    dan_ocitanja = models.PositiveSmallIntegerField(
-        "dan očitanja", default=26, validators=[MinValueValidator(1), MaxValueValidator(28)],
-        help_text="Od ovog dana do kraja mjeseca aplikacija podsjeća suvlasnike koji još nisu očitali vodomjer.",
+    rok_dan = models.PositiveSmallIntegerField(
+        "krajnji rok", default=0, choices=[(0, "zadnji dan u mjesecu")] + [(d, f"{d}. u mjesecu") for d in range(1, 29)],
+        help_text="Dan do kojeg suvlasnici predaju očitanje. Razdoblje očitanja traje od 1. u mjesecu do tog dana.",
     )
+    nakon_roka = models.CharField("nakon roka", max_length=10, choices=NakonRoka.choices, default=NakonRoka.OZNACI)
+
+    # Podsjetnici suvlasnicima koji još nisu očitali (obavijest na mobitelu i e-mail ako ga imaju).
+    podsjetnik_raspored = models.CharField(
+        "kada podsjetiti suvlasnike", max_length=20, choices=RASPOREDI, default="od_dana",
+    )
+    dan_ocitanja = models.PositiveSmallIntegerField(
+        "od dana", default=26, validators=[MinValueValidator(1), MaxValueValidator(28)],
+        help_text="Za raspored „svaki dan od odabranog dana do roka”.",
+    )
+    podsjetnik_broj_dana = models.PositiveSmallIntegerField(
+        "broj dana", default=3, validators=[MinValueValidator(1), MaxValueValidator(28)],
+        help_text="Za raspored „svaki dan zadnjih nekoliko dana do roka”.",
+    )
+    podsjetnik_dani = models.JSONField("odabrani dani", default=list, blank=True)
     sat_podsjetnika = models.PositiveSmallIntegerField(
         "sat podsjetnika", default=9, validators=[MinValueValidator(0), MaxValueValidator(23)],
-        help_text="U koliko sati (0–23) mobitel prikazuje podsjetnik.",
+        help_text="U koliko sati (0–23) stiže podsjetnik.",
+    )
+    email_stanarima = models.BooleanField(
+        "podsjetnik i e-mailom", default=True,
+        help_text="Suvlasnici s upisanim e-mailom dobivaju podsjetnik i e-mailom, ne samo na mobitelu.",
+    )
+
+    # Obavijest administratoru o stanovima koji još nisu očitali.
+    obavijest_raspored = models.CharField(
+        "kada poslati popis neočitanih", max_length=20, choices=RASPOREDI, default="rok",
+    )
+    obavijest_od_dana = models.PositiveSmallIntegerField(
+        "od dana", default=25, validators=[MinValueValidator(1), MaxValueValidator(28)],
+    )
+    obavijest_broj_dana = models.PositiveSmallIntegerField(
+        "broj dana", default=3, validators=[MinValueValidator(1), MaxValueValidator(28)],
+    )
+    obavijest_dani = models.JSONField("odabrani dani", default=list, blank=True)
+    sat_obavijesti = models.PositiveSmallIntegerField(
+        "sat obavijesti", default=20, validators=[MinValueValidator(0), MaxValueValidator(23)],
+        help_text="U koliko sati (0–23) stiže popis neočitanih.",
     )
     email_obavijesti = models.CharField(
         "e-mail za obavijest", max_length=300, blank=True,
-        help_text="Kamo zadnji dan u mjesecu stiže popis neočitanih vodomjera; više adresa odvojite zarezom. "
+        help_text="Kamo stiže popis neočitanih vodomjera; više adresa odvojite zarezom. "
                   "Prazno: svim administratorima zgrade s upisanim e-mailom.",
     )
 
@@ -267,6 +309,31 @@ class Postavke(models.Model):
 
     def __str__(self):
         return f"Postavke – {self.zgrada}"
+
+
+class PoslanaObavijest(models.Model):
+    """Što je poslano kojeg dana, da nitko ne dobije istu poruku dvaput."""
+
+    class Vrsta(models.TextChoices):
+        PODSJETNIK = "podsjetnik", "Podsjetnik suvlasnicima"
+        NEOCITANI = "neocitani", "Popis neočitanih administratoru"
+
+    zgrada = models.ForeignKey(Zgrada, on_delete=models.CASCADE, related_name="poslane_obavijesti")
+    vrsta = models.CharField(max_length=20, choices=Vrsta.choices)
+    datum = models.DateField()
+    poslano = models.DateTimeField(auto_now_add=True)
+    broj_primatelja = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "poslana obavijest"
+        verbose_name_plural = "poslane obavijesti"
+        ordering = ["-datum"]
+        constraints = [
+            models.UniqueConstraint(fields=["zgrada", "vrsta", "datum"], name="jedna_obavijest_dnevno"),
+        ]
+
+    def __str__(self):
+        return f"{self.zgrada.oznaka} {self.get_vrsta_display()} {self.datum:%d.%m.%Y.}"
 
 
 def ip_klijenta(request):
@@ -292,6 +359,9 @@ class Zapisnik(models.Model):
         STAN = "stan", "Stan i vodomjer"
         OCITANJE = "ocitanje", "Očitanje"
         DVA_KORAKA = "dva_koraka", "Prijava u dva koraka"
+        ZABORAVLJENA_LOZINKA = "zaboravljena_lozinka", "Zaboravljena lozinka"
+        EMAIL = "email", "Promjena e-maila"
+        POSTAVKE = "postavke", "Rokovi i podsjetnici"
 
     vrijeme = models.DateTimeField(default=timezone.now, db_index=True)
     korisnik = models.ForeignKey(Korisnik, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")

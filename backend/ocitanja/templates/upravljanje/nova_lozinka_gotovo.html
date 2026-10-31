@@ -1,0 +1,9 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Lozinka je promijenjena{% endblock %}
+{% block sadrzaj %}
+<div class="kartica" style="max-width:420px;margin:60px auto">
+  <h1>Lozinka je promijenjena</h1>
+  <p>Prijavite se novom lozinkom. Nakon nje upisujete i kod iz Google Authenticatora, kao i prije.</p>
+  <a class="gumb glavni" href="{% url 'prijava' %}">Prijava</a>
+</div>
+{% endblock %}

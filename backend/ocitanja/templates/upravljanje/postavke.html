@@ -1,16 +1,69 @@
 {% extends "upravljanje/base.html" %}
-{% block naslov %}Podsjetnici{% endblock %}
+{% block naslov %}Rokovi i podsjetnici{% endblock %}
 {% block sadrzaj %}
-<h1>Podsjetnici za očitanje</h1>
-<div class="kartica" style="max-width:560px">
-  <p class="tiho">Od dana očitanja do kraja mjeseca aplikacija svaki dan u zadani sat podsjeti suvlasnike čiji vodomjer još nije očitan.
-    Zadnji dan u mjesecu navečer popis neočitanih stiže na e-mail.</p>
-  <form method="post">{% csrf_token %}
-    {{ forma.non_field_errors }}
-    {% for polje in forma %}
-    <p>{{ polje.label_tag }}{{ polje }}{{ polje.errors }}<br><span class="tiho" style="font-size:13px">{{ polje.help_text }}</span></p>
-    {% endfor %}
-    <button class="gumb glavni">Spremi</button>
-  </form>
-</div>
+<style>
+  .dani > div { display:grid; grid-template-columns:repeat(auto-fill, minmax(64px, 1fr)); gap:4px 10px; margin-top:4px; }
+  .dani > div > div:nth-child(-n+3) { grid-column:span 2; }
+  .dani label { display:inline; color:var(--tekst); font-size:14px; white-space:nowrap; }
+  .pomoc { font-size:13px; }
+  fieldset { border:0; padding:0; margin:0; }
+  ul.radio { list-style:none; padding:0; margin:4px 0 0; } ul.radio label { display:inline; color:var(--tekst); font-size:14px; }
+</style>
+<h1>Rokovi i podsjetnici</h1>
+<form method="post" style="max-width:720px">{% csrf_token %}
+  {{ forma.non_field_errors }}
+
+  <div class="kartica">
+    <h2 style="margin-top:0">Krajnji rok očitanja</h2>
+    <p>{{ forma.rok_dan.label_tag }}{{ forma.rok_dan }}{{ forma.rok_dan.errors }}<br>
+      <span class="tiho pomoc">{{ forma.rok_dan.help_text }}</span></p>
+    <p><label>Što nakon roka</label>{{ forma.nakon_roka }}{{ forma.nakon_roka.errors }}</p>
+    <p class="tiho pomoc">Ovaj mjesec: rok je {{ rok|date:"d.m.Y." }}</p>
+  </div>
+
+  <div class="kartica raspored" data-polje="podsjetnik">
+    <h2 style="margin-top:0">Podsjetnici suvlasnicima</h2>
+    <p class="tiho pomoc">Podsjetnik dobivaju samo suvlasnici čiji vodomjer još nije očitan: obavijest na mobitelu,
+      a ako imaju upisan e-mail i poruku e-poštom.</p>
+    <p>{{ forma.podsjetnik_raspored.label_tag }}{{ forma.podsjetnik_raspored }}{{ forma.podsjetnik_raspored.errors }}</p>
+    <p class="za od_dana">{{ forma.dan_ocitanja.label_tag }}{{ forma.dan_ocitanja }}{{ forma.dan_ocitanja.errors }}</p>
+    <p class="za prije_roka">{{ forma.podsjetnik_broj_dana.label_tag }}{{ forma.podsjetnik_broj_dana }}{{ forma.podsjetnik_broj_dana.errors }}</p>
+    <div class="za prilagodeno dani"><label>{{ forma.podsjetnik_dani.label }}</label>{{ forma.podsjetnik_dani }}{{ forma.podsjetnik_dani.errors }}</div>
+    <p style="margin-top:12px">{{ forma.sat_podsjetnika.label_tag }}{{ forma.sat_podsjetnika }}{{ forma.sat_podsjetnika.errors }}<br>
+      <span class="tiho pomoc">{{ forma.sat_podsjetnika.help_text }}</span></p>
+    <p><label style="display:inline;color:var(--tekst)">{{ forma.email_stanarima }} {{ forma.email_stanarima.label }}</label><br>
+      <span class="tiho pomoc">{{ forma.email_stanarima.help_text }}</span></p>
+    <p class="tiho pomoc">Ovaj mjesec: {% for d in dani_podsjetnika %}{{ d }}.{% if not forloop.last %}, {% endif %}{% empty %}nijedan dan{% endfor %} u {{ forma.instance.sat_podsjetnika }} h</p>
+  </div>
+
+  <div class="kartica raspored" data-polje="obavijest">
+    <h2 style="margin-top:0">Obavijest administratoru o neočitanima</h2>
+    <p class="tiho pomoc">E-mail s popisom stanova koji još nisu očitali. Ako su svi očitali, ne šalje se ništa.</p>
+    <p>{{ forma.obavijest_raspored.label_tag }}{{ forma.obavijest_raspored }}{{ forma.obavijest_raspored.errors }}</p>
+    <p class="za od_dana">{{ forma.obavijest_od_dana.label_tag }}{{ forma.obavijest_od_dana }}{{ forma.obavijest_od_dana.errors }}</p>
+    <p class="za prije_roka">{{ forma.obavijest_broj_dana.label_tag }}{{ forma.obavijest_broj_dana }}{{ forma.obavijest_broj_dana.errors }}</p>
+    <div class="za prilagodeno dani"><label>{{ forma.obavijest_dani.label }}</label>{{ forma.obavijest_dani }}{{ forma.obavijest_dani.errors }}</div>
+    <p style="margin-top:12px">{{ forma.sat_obavijesti.label_tag }}{{ forma.sat_obavijesti }}{{ forma.sat_obavijesti.errors }}<br>
+      <span class="tiho pomoc">{{ forma.sat_obavijesti.help_text }}</span></p>
+    <p>{{ forma.email_obavijesti.label_tag }}{{ forma.email_obavijesti }}{{ forma.email_obavijesti.errors }}<br>
+      <span class="tiho pomoc">{{ forma.email_obavijesti.help_text }}</span></p>
+    {% if bez_emaila %}<div class="poruka warning">Bez e-maila: {% for k in bez_emaila %}{{ k }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+      Upišite ga pod svojim imenom gore desno.</div>{% endif %}
+    <p class="tiho pomoc">Ovaj mjesec: {% for d in dani_obavijesti %}{{ d }}.{% if not forloop.last %}, {% endif %}{% empty %}nijedan dan{% endfor %} u {{ forma.instance.sat_obavijesti }} h</p>
+  </div>
+
+  <button class="gumb glavni">Spremi</button>
+</form>
+<script>
+  document.querySelectorAll(".raspored").forEach(function (kartica) {
+    var izbor = kartica.querySelector("select[name$='_raspored']");
+    function prikazi() {
+      kartica.querySelectorAll(".za").forEach(function (el) {
+        el.style.display = el.classList.contains(izbor.value) ? "" : "none";
+      });
+    }
+    izbor.addEventListener("change", prikazi);
+    prikazi();
+  });
+</script>
 {% endblock %}
