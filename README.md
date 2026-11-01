@@ -29,7 +29,7 @@ imaju jedinstveni ID (`uid`) koji se ne mijenja; sve veze idu preko ID-ja.
 
 - **Superadministrator** (`is_superuser`) vidi sve zgrade i bira ih na `/zgrade/` ili u zaglavlju.
 - **Administrator zgrade** (`AdministratorZgrade`) vidi samo svoje zgrade; tuđi stanovi, očitanja i fotografije vraćaju 404.
-- **Suvlasnik** se prijavljuje samo u Android aplikaciju; web ga ne pušta dalje od prijave.
+- **Suvlasnik** se prijavljuje u Android aplikaciju ili u web aplikaciju na `/app/` (iPhone); web administracija ga ne pušta dalje od prijave.
 
 Prijava na `/prijava/`. Za isprobavanje na praznoj bazi `manage.py primjer_podataka` stvara zgradu
 od 21 stana, suvlasnike i tri mjeseca očitanja (admin / probna-lozinka).
@@ -75,6 +75,27 @@ pita korisnika i šalje ponovno s `potvrdi_manje=true`.
   ili odbijeno s `rok_istekao`, ovisno o postavci zgrade; administrator na webu unosi i nakon roka.
 - Podsjetnik zgrade u `/api/ja/` (`podsjetnik`): `dani` (dani ovog mjeseca), `sat`, `rok`, `nakon_roka`;
   `dan` ostaje za starije verzije aplikacije.
+
+## Web aplikacija za iPhone (PWA)
+
+`/app/` je web aplikacija za suvlasnike s istim API-jem kao Android aplikacija (prijava tokenom).
+Na iPhoneu se u Safariju doda na početni zaslon (Dijeli → Dodaj na početni zaslon) i otvara se kao
+aplikacija, bez adresne trake. Upute za stanare su na `/aplikacija/#iphone`.
+
+- `app/manifest.webmanifest`, ikone i `apple-touch-icon` u `ocitanja/static/app/`; service worker `/app/sw.js`
+  sprema samo ljusku aplikacije (bez podataka s `/api/`), pa se aplikacija otvara i bez mreže.
+- Fotografija vodomjera kamerom preko preglednika (`<input capture>`), smanjena na 1600 px prije slanja.
+  OCR kao u Android aplikaciji nema; suvlasnik upisuje broj, a fotografija ide predstavniku.
+- Podsjetnici na rok kao obavijesti na mobitel (Web Push; iPhone od iOS-a 16.4, samo s početnog zaslona).
+  Šalju se uz e-mail podsjetnike, istim rasporedom zgrade (`posalji_obavijesti`), samo onima koji nisu očitali.
+  VAPID ključ izvodi se iz `DJANGO_SECRET_KEY`; `VAPID_PRIVATNI_KLJUC` ga može zadati izravno.
+  Promjena `DJANGO_SECRET_KEY` mijenja ključ, pa suvlasnici moraju ponovno uključiti podsjetnike.
+
+| Metoda | Putanja | Opis |
+| --- | --- | --- |
+| POST | `/api/obavijesti/pretplata/` | `PushSubscription.toJSON()` (+ `uredaj`) – uključuje obavijesti na tom uređaju |
+| DELETE | `/api/obavijesti/pretplata/` | `endpoint` – isključuje ih |
+| POST | `/api/obavijesti/proba/` | probna obavijest na sve uređaje korisnika |
 
 ## Android aplikacija
 

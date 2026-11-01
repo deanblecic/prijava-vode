@@ -1,7 +1,23 @@
 {% extends "upravljanje/base.html" %}
 {% block naslov %}Aplikacija za očitanje vode{% endblock %}
 {% block sadrzaj %}
-<div class="kartica" style="max-width:520px;margin:24px auto">
+<div class="kartica" style="max-width:560px;margin:24px auto" id="iphone">
+  <h1>Očitanje vode za iPhone</h1>
+  <p>Na iPhoneu se aplikacija ne preuzima iz App Storea, nego se doda na početni zaslon iz Safarija.
+    Nakon toga otvara se kao svaka druga aplikacija.</p>
+  <ol>
+    <li>Na iPhoneu u <b>Safariju</b> otvorite <a href="{% url 'web_aplikacija' %}">{{ request.scheme }}://{{ request.get_host }}{% url 'web_aplikacija' %}</a>.</li>
+    <li>Dodirnite gumb <b>Dijeli</b> (kvadrat sa strelicom prema gore) na dnu ekrana.</li>
+    <li>Pomaknite popis prema dolje i odaberite <b>Dodaj na početni zaslon</b>, zatim <b>Dodaj</b>.</li>
+    <li>Na početnom zaslonu otvorite ikonu <b>Očitanje vode</b> i prijavite se korisničkim imenom i lozinkom
+      koje ste dobili od ovlaštenog predstavnika suvlasnika.</li>
+    <li>Dodirnite <b>Uključi podsjetnike</b> i dopustite obavijesti. Podsjetnik na rok tada stiže na mobitel.</li>
+  </ol>
+  <p class="tiho">Podsjetnici rade na iOS-u 16.4 ili novijem, i to samo kad je aplikacija otvorena s početnog zaslona.
+    Ista adresa radi i u pregledniku na Android mobitelu ili računalu.</p>
+  <p><a class="gumb glavni" style="font-size:17px;padding:12px 20px" href="{% url 'web_aplikacija' %}">Otvori web aplikaciju</a></p>
+</div>
+<div class="kartica" style="max-width:560px;margin:24px auto" id="android">
   <h1>Očitanje vode za Android</h1>
   {% if dostupna %}
     <p><a class="gumb glavni" style="font-size:17px;padding:12px 20px" href="{% url 'aplikacija_apk' %}">Preuzmi aplikaciju ({{ velicina_mb }} MB)</a></p>
@@ -14,7 +30,7 @@
       <li>Prijavite se korisničkim imenom i lozinkom koje ste dobili od ovlaštenog predstavnika suvlasnika.</li>
     </ol>
   {% else %}
-    <p>Aplikacija još nije postavljena na server. Javite se ovlaštenom predstavniku suvlasnika.</p>
+    <p>Android aplikacija još nije postavljena na server. Do tada koristite <a href="{% url 'web_aplikacija' %}">web aplikaciju</a>.</p>
   {% endif %}
 </div>
 {% endblock %}

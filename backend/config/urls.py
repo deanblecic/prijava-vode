@@ -4,7 +4,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from django.views.generic import TemplateView
 
-from ocitanja import javno, korisnici, lozinka, prijava, upravljanje
+from ocitanja import javno, korisnici, lozinka, prijava, pwa, upravljanje
 
 admin.site.site_header = "Očitanja vodomjera"
 admin.site.site_title = "Očitanja vodomjera"
@@ -43,6 +43,9 @@ urlpatterns = [
     path("media/<path:putanja>", upravljanje.fotografija, name="fotografija"),
     path("aplikacija/", upravljanje.aplikacija, name="aplikacija"),
     path("aplikacija/ocitanje-vode.apk", upravljanje.aplikacija_apk, name="aplikacija_apk"),
+    path("app/", pwa.aplikacija, name="web_aplikacija"),
+    path("app/manifest.webmanifest", pwa.manifest, name="web_aplikacija_manifest"),
+    path("app/sw.js", pwa.service_worker, name="web_aplikacija_sw"),
     path(settings.ADMIN_PUTANJA, admin.site.urls),
     path("api/", include("ocitanja.urls")),
 ]

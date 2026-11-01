@@ -121,6 +121,9 @@ SECURE_REFERRER_POLICY = "same-origin"
 # Prijava u Android aplikaciji istječe nakon ovoliko dana nekorištenja.
 TOKEN_ISTEK_DANA = int(os.environ.get("TOKEN_ISTEK_DANA", "90"))
 
+# Web Push obavijesti web aplikacije: bez ove postavke ključ se izvodi iz DJANGO_SECRET_KEY.
+VAPID_PRIVATNI_KLJUC = os.environ.get("VAPID_PRIVATNI_KLJUC", "")
+
 # Django administracija (samo superadministrator) nije na pogodivoj adresi /admin/.
 ADMIN_PUTANJA = os.environ.get("DJANGO_ADMIN_PUTANJA") or (
     "sustav-" + hashlib.sha256(f"admin:{SECRET_KEY}".encode()).hexdigest()[:12] + "/"

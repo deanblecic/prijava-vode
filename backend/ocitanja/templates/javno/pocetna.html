@@ -9,6 +9,7 @@
         suvlasnika sva očitanja zgrade pregledava i potvrđuje na jednom mjestu. Bez poruka, papira i prepisivanja.</p>
       <div class="gumbi">
         <a class="gumb glavni" href="{% url 'aplikacija' %}">Preuzmi aplikaciju za Android</a>
+        <a class="gumb glavni" href="{% url 'aplikacija' %}#iphone">Aplikacija za iPhone</a>
         <a class="gumb" href="#upute">Kako se koristi</a>
       </div>
     </div>
@@ -114,7 +115,9 @@
               <li>Ako instalacija nije dopuštena, dodirnite „Postavke”, uključite „Dopusti iz ovog izvora” i vratite se.</li>
               <li>Dodirnite „Instaliraj”. Ako se javi Play Protect, odaberite „Svejedno instaliraj”.</li>
             </ol>
-            <p>Aplikacija radi samo na Android mobitelima. Tko nema Android, stanje vodomjera javlja ovlaštenom predstavniku koji ga unese ručno.</p>
+            <p>Na iPhoneu u Safariju otvorite <a href="{% url 'web_aplikacija' %}">web aplikaciju</a>, dodirnite „Dijeli”
+              pa „Dodaj na početni zaslon” (<a href="{% url 'aplikacija' %}#iphone">upute</a>). Tko nema pametni mobitel,
+              stanje vodomjera javlja ovlaštenom predstavniku koji ga unese ručno.</p>
           </div>
         </details>
         <details>
