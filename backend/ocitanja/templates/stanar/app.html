@@ -1,0 +1,37 @@
+{% load static %}<!doctype html>
+<html lang="hr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Očitanje vode</title>
+<meta name="description" content="Mjesečno očitanje vodomjera u zgradi.">
+<meta name="theme-color" content="{{ boja }}">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Očitanje vode">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="{% url 'web_aplikacija_manifest' %}">
+<link rel="icon" type="image/png" sizes="192x192" href="{% static 'app/ikona-192.png' %}">
+<link rel="apple-touch-icon" href="{% static 'app/apple-touch-icon.png' %}">
+<link rel="stylesheet" href="{% static 'app/app.css' %}?v={{ verzija }}">
+</head>
+<body>
+<header class="traka">
+  <span class="naslov"><img src="{% static 'app/ikona-192.png' %}" alt="" width="28" height="28"> Očitanje vode</span>
+  <button type="button" class="izbornik-gumb" id="izbornik-gumb" hidden aria-haspopup="true" aria-expanded="false">Izbornik</button>
+</header>
+<nav class="izbornik" id="izbornik" hidden>
+  <button type="button" data-idi="pocetna">Početna</button>
+  <button type="button" data-idi="povijest">Povijest očitanja</button>
+  <button type="button" data-idi="lozinka">Promjena lozinke</button>
+  <button type="button" data-idi="instalacija">Kako dodati na početni zaslon</button>
+  <button type="button" data-idi="odjava" class="crveno">Odjava</button>
+</nav>
+<main id="ekran" aria-live="polite">
+  <noscript><div class="kartica">Za aplikaciju treba uključiti JavaScript u pregledniku.</div></noscript>
+</main>
+<script>window.OCITANJE = {vapid: "{{ vapid }}", sw: "{% url 'web_aplikacija_sw' %}", verzija: "{{ verzija }}"};</script>
+<script src="{% static 'app/app.js' %}?v={{ verzija }}" defer></script>
+</body>
+</html>

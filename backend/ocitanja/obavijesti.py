@@ -9,7 +9,8 @@ from django.conf import settings
 from django.core.mail import EmailMessage, get_connection
 from django.db import IntegrityError, transaction
 
-from .models import Ocitanje, PoslanaObavijest, Postavke, Zgrada
+from . import web_push
+from .models import Ocitanje, PoslanaObavijest, Postavke, PushPretplata, Zgrada
 from .rokovi import datum_roka, dani_obavijesti, dani_podsjetnika
 from .upravljanje import redovi_mjeseca, vlasnici_u_mjesecu
 
@@ -31,15 +32,21 @@ def primatelji_obavijesti(zgrada, postavke):
     return sorted({k.email for k in zgrada.administratori.filter(is_active=True) if k.email})
 
 
+def neocitani_po_korisniku(zgrada, mjesec):
+    """Aktivni suvlasnici i brojevi njihovih stanova koji još nisu očitani."""
+    po_korisniku = {}
+    for red in neocitani(zgrada, mjesec):
+        for korisnik in vlasnici_u_mjesecu(red["stan"], mjesec):
+            if korisnik.is_active:
+                po_korisniku.setdefault(korisnik, []).append(red["stan"].broj_stana)
+    return po_korisniku
+
+
 def podsjetnici(zgrada, postavke, danas, mjesec):
     """Jedan e-mail svakom suvlasniku s e-mailom čiji stan još nije očitan."""
     if not postavke.email_stanarima:
         return []
-    po_korisniku = {}
-    for red in neocitani(zgrada, mjesec):
-        for korisnik in vlasnici_u_mjesecu(red["stan"], mjesec):
-            if korisnik.is_active and korisnik.email:
-                po_korisniku.setdefault(korisnik, []).append(red["stan"].broj_stana)
+    po_korisniku = {k: s for k, s in neocitani_po_korisniku(zgrada, mjesec).items() if k.email}
     rok = datum_roka(postavke, mjesec)
     poruke = []
     for korisnik, stanovi in po_korisniku.items():
@@ -54,6 +61,26 @@ def podsjetnici(zgrada, postavke, danas, mjesec):
             [korisnik.email],
         ))
     return poruke
+
+
+def push_podsjetnici(zgrada, postavke, mjesec):
+    """Obavijest na mobitel suvlasnicima koji su je uključili u web aplikaciji (npr. na iPhoneu).
+
+    Ne ovisi o postavci e-maila stanarima: obavijesti je uključio sam suvlasnik. Vraća broj uređaja.
+    """
+    po_korisniku = neocitani_po_korisniku(zgrada, mjesec)
+    s_pretplatom = set(PushPretplata.objects.filter(korisnik__in=list(po_korisniku)).values_list("korisnik_id", flat=True))
+    rok = datum_roka(postavke, mjesec)
+    poslano = 0
+    for korisnik, stanovi in po_korisniku.items():
+        if korisnik.pk not in s_pretplatom:
+            continue
+        koji = f"stana {stanovi[0]}" if len(stanovi) == 1 else f"stanova {', '.join(stanovi)}"
+        poslano += web_push.posalji_korisniku(
+            korisnik, f"Očitajte vodomjer do {rok:%d.%m.%Y.}",
+            f"Vodomjer {koji} ({zgrada.ulica} {zgrada.kucni_broj}) za {mjesec:%m/%Y} još nije očitan.",
+        )
+    return poslano
 
 
 def popis_neocitanih(zgrada, postavke, danas, mjesec):
@@ -119,6 +146,11 @@ def posalji(sada, *, odmah=False, zgrade=None):
                 izvjestaj.append(f"{zgrada.oznaka} {vrsta}: GREŠKA pri slanju")
                 continue
             primatelja = sum(len(p.to) for p in poruke)
+            if vrsta == PoslanaObavijest.Vrsta.PODSJETNIK:
+                try:
+                    primatelja += push_podsjetnici(zgrada, postavke, mjesec)
+                except Exception:
+                    log.exception("%s: obavijesti na mobitel nisu poslane", zgrada.oznaka)
             if zapis is not None:
                 zapis.broj_primatelja = primatelja
                 zapis.save(update_fields=["broj_primatelja"])

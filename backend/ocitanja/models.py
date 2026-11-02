@@ -336,6 +336,24 @@ class PoslanaObavijest(models.Model):
         return f"{self.zgrada.oznaka} {self.get_vrsta_display()} {self.datum:%d.%m.%Y.}"
 
 
+class PushPretplata(models.Model):
+    """Uređaj na kojem je suvlasnik u web aplikaciji uključio obavijesti (iPhone, Android, računalo)."""
+
+    korisnik = models.ForeignKey(Korisnik, on_delete=models.CASCADE, related_name="push_pretplate")
+    endpoint = models.URLField(max_length=1000, unique=True)
+    p256dh = models.CharField(max_length=200)
+    auth = models.CharField(max_length=100)
+    uredaj = models.CharField("uređaj", max_length=200, blank=True)
+    stvoreno = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "pretplata na obavijesti"
+        verbose_name_plural = "pretplate na obavijesti"
+
+    def __str__(self):
+        return f"{self.korisnik.username}: {self.uredaj or self.endpoint[:40]}"
+
+
 def ip_klijenta(request):
     """Adresa posjetitelja; nginx je dopisuje kao zadnju u X-Forwarded-For, prethodne može lažirati klijent."""
     proslijedjeno = request.META.get("HTTP_X_FORWARDED_FOR", "")
