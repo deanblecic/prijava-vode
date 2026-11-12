@@ -37,8 +37,19 @@ sudo ufw allow 'Nginx Full'
 sudo ufw --force enable
 
 echo "== Nginx bez oznake verzije"
-echo "server_tokens off;" | sudo tee /etc/nginx/conf.d/prijava-vode-sigurnost.conf >/dev/null
-sudo nginx -t && sudo systemctl reload nginx
+# Ako je server_tokens već uključen u glavnoj datoteci (npr. nakon ažuriranja
+# Nginxa), ne smije se ponoviti jer se Nginx tada ne pokreće.
+SIGURNOST_CONF=/etc/nginx/conf.d/prijava-vode-sigurnost.conf
+if grep -qE '^[[:space:]]*server_tokens[[:space:]]' /etc/nginx/nginx.conf; then
+    sudo rm -f "$SIGURNOST_CONF"
+else
+    echo "server_tokens off;" | sudo tee "$SIGURNOST_CONF" >/dev/null
+fi
+if ! sudo nginx -t; then
+    sudo rm -f "$SIGURNOST_CONF"
+    sudo nginx -t
+fi
+sudo systemctl reload nginx
 
 echo "== Lozinka za šifriranje kopija"
 LOZINKA_KOPIJA=/root/.prijava-vode-kopija
