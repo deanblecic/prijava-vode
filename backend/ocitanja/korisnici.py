@@ -49,11 +49,14 @@ def stanovi_u_zgradi(korisnik, zgrada):
 @za_zgradu
 def korisnici(request):
     zgrada = request.zgrada
-    svi = list(korisnici_zgrade(zgrada).prefetch_related("vlasnistva__stan", "uloge_u_zgradama"))
+    svi = list(korisnici_zgrade(zgrada).prefetch_related(
+        "vlasnistva__stan", "uloge_u_zgradama", "zamjenska_ocitanja__stan"))
     administratori = set(zgrada.administratori.values_list("pk", flat=True))
     redovi = [{
         "k": k,
         "stanovi": ", ".join(stanovi_u_zgradi(k, zgrada)),
+        "zamjene": ", ".join(sorted(
+            (z.stan.broj_stana for z in k.zamjenska_ocitanja.all() if z.stan.zgrada_id == zgrada.pk), key=kljuc_stana)),
         "administrator": k.pk in administratori,
         "drugdje": not samo_u_zgradi(k, zgrada) and not k.is_superuser,
         "upravlja": smije_upravljati(request.user, k, zgrada),
@@ -192,12 +195,13 @@ def stanovi(request):
         return redirect("stan", pk=stan.pk)
     danas = timezone.localdate()
     redovi = []
-    for stan in zgrada.stanovi.prefetch_related("vlasnistva__korisnik", "vodomjeri"):
+    for stan in zgrada.stanovi.prefetch_related("vlasnistva__korisnik", "vodomjeri", "zamjenski_ocitavaci__korisnik"):
         vlasnici = [v.korisnik for v in stan.vlasnistva.all()
                     if v.od_datuma <= danas and (v.do_datuma is None or v.do_datuma >= danas)]
         redovi.append({
             "stan": stan,
             "vlasnici": ", ".join(k.get_full_name() or k.username for k in vlasnici),
+            "zamjenski": ", ".join(z.korisnik.get_full_name() or z.korisnik.username for z in stan.zamjenski_ocitavaci.all()),
             "vodomjer": next((v for v in stan.vodomjeri.all() if v.aktivan), None),
         })
     redovi.sort(key=lambda r: kljuc_stana(r["stan"].broj_stana))

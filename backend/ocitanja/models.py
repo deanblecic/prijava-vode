@@ -102,6 +102,15 @@ class Korisnik(AbstractUser):
             vlasnistva__od_datuma__lte=na_dan,
         ).distinct()
 
+    def zamjenski_stanovi(self):
+        """Stanovi za koje je administrator zgrade ovog korisnika upisao kao zamjenskog očitavača."""
+        return Stan.objects.filter(zamjenski_ocitavaci__korisnik=self).distinct()
+
+    def stanovi_za_ocitanje(self, na_dan=None):
+        """Vlastiti stanovi i stanovi za koje očitava umjesto vlasnika."""
+        vlastiti = self.aktivni_stanovi(na_dan).values("pk")
+        return Stan.objects.filter(Q(pk__in=vlastiti) | Q(zamjenski_ocitavaci__korisnik=self)).distinct()
+
     def __str__(self):
         return self.get_full_name() or self.username
 
@@ -168,6 +177,28 @@ class KorisnikStan(models.Model):
 
     def __str__(self):
         return f"{self.korisnik} – {self.stan}"
+
+
+class ZamjenskiOcitavac(models.Model):
+    """Osoba koja smije predati očitanje za tuđi stan, npr. susjed starijeg suvlasnika bez mobitela.
+
+    Jedna osoba može biti zamjenski očitavač za više stanova; vlasništvo stana se time ne mijenja.
+    """
+
+    stan = models.ForeignKey(Stan, on_delete=models.CASCADE, related_name="zamjenski_ocitavaci")
+    korisnik = models.ForeignKey(Korisnik, on_delete=models.CASCADE, related_name="zamjenska_ocitanja")
+    od = models.DateTimeField("dodano", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "zamjenski očitavač"
+        verbose_name_plural = "zamjenski očitavači"
+        ordering = ["stan_id", "korisnik__last_name", "korisnik__first_name"]
+        constraints = [
+            models.UniqueConstraint(fields=["stan", "korisnik"], name="zamjenski_ocitavac_jednom_po_stanu"),
+        ]
+
+    def __str__(self):
+        return f"{self.korisnik} očitava {self.stan}"
 
 
 class Vodomjer(models.Model):

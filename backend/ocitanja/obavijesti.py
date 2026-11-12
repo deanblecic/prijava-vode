@@ -33,12 +33,14 @@ def primatelji_obavijesti(zgrada, postavke):
 
 
 def neocitani_po_korisniku(zgrada, mjesec):
-    """Aktivni suvlasnici i brojevi njihovih stanova koji još nisu očitani."""
+    """Aktivni suvlasnici i zamjenski očitavači i brojevi njihovih stanova koji još nisu očitani."""
     po_korisniku = {}
     for red in neocitani(zgrada, mjesec):
-        for korisnik in vlasnici_u_mjesecu(red["stan"], mjesec):
+        stan = red["stan"]
+        zamjenski = [z.korisnik for z in stan.zamjenski_ocitavaci.select_related("korisnik")]
+        for korisnik in dict.fromkeys(list(vlasnici_u_mjesecu(stan, mjesec)) + zamjenski):
             if korisnik.is_active:
-                po_korisniku.setdefault(korisnik, []).append(red["stan"].broj_stana)
+                po_korisniku.setdefault(korisnik, []).append(stan.broj_stana)
     return po_korisniku
 
 

@@ -3,14 +3,14 @@
 {% block sadrzaj %}
 <h1>Stanovi i vodomjeri</h1>
 <table>
-  <thead><tr><th>Stan</th><th>Oznaka</th><th>Kat</th><th>Vlasnici</th><th>Vodomjer</th><th class="broj">Početno stanje</th></tr></thead>
+  <thead><tr><th>Stan</th><th>Oznaka</th><th>Kat</th><th>Vlasnici</th><th>Očitava i</th><th>Vodomjer</th><th class="broj">Početno stanje</th></tr></thead>
   <tbody>
   {% for r in redovi %}
     <tr><td><a href="{% url 'stan' r.stan.pk %}">{{ r.stan.broj_stana }}</a></td><td class="tiho">{{ r.stan.oznaka }}</td>
-      <td>{{ r.stan.kat|default_if_none:"–" }}</td><td>{{ r.vlasnici|default:"–" }}</td>
+      <td>{{ r.stan.kat|default_if_none:"–" }}</td><td>{{ r.vlasnici|default:"–" }}</td><td>{{ r.zamjenski|default:"–" }}</td>
       <td>{% if r.vodomjer %}{{ r.vodomjer.serijski_broj|default:"bez serijskog broja" }}{% else %}<span class="tiho">ne očitava se</span>{% endif %}</td>
       <td class="broj">{% if r.vodomjer %}{{ r.vodomjer.pocetno_stanje }}{% endif %}</td></tr>
-  {% empty %}<tr><td colspan="6">Zgrada još nema stanova.</td></tr>{% endfor %}
+  {% empty %}<tr><td colspan="7">Zgrada još nema stanova.</td></tr>{% endfor %}
   </tbody>
 </table>
 <h2>Dodaj stan</h2>

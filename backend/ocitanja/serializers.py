@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -78,10 +79,25 @@ class StanSerializer(serializers.ModelSerializer):
     vodomjeri = serializers.SerializerMethodField()
     zgrada = serializers.PrimaryKeyRelatedField(read_only=True)
     oznaka = serializers.CharField(read_only=True)
+    zamjena = serializers.SerializerMethodField()
+    vlasnici = serializers.SerializerMethodField()
 
     class Meta:
         model = Stan
-        fields = ["id", "uid", "zgrada", "oznaka", "broj_stana", "kat", "vodomjeri"]
+        fields = ["id", "uid", "zgrada", "oznaka", "broj_stana", "kat", "vodomjeri", "zamjena", "vlasnici"]
+
+    def get_zamjena(self, stan):
+        """True kad korisnik nije vlasnik nego očitava umjesto vlasnika."""
+        vlastiti = self.context.get("vlastiti")
+        return vlastiti is not None and stan.pk not in vlastiti
+
+    def get_vlasnici(self, stan):
+        """Imena trenutnih vlasnika, da zamjenski očitavač zna čiji stan očitava."""
+        danas = timezone.localdate()
+        veze = stan.vlasnistva.filter(od_datuma__lte=danas).filter(
+            Q(do_datuma__isnull=True) | Q(do_datuma__gte=danas)
+        ).select_related("korisnik")
+        return ", ".join(v.korisnik.get_full_name() or v.korisnik.username for v in veze)
 
     def get_vodomjeri(self, stan):
         return VodomjerSerializer(stan.vodomjeri.filter(aktivan=True), many=True, context=self.context).data

@@ -21,8 +21,8 @@ from django.utils import timezone
 from openpyxl import Workbook
 from openpyxl.styles import Font
 
-from .forms import IspravakForm, PostavkeForm, PromjenaVlasnikaForm, RucniUnosForm
-from .models import Korisnik, Ocitanje, Postavke, Stan, Zapisnik
+from .forms import IspravakForm, PostavkeForm, PromjenaVlasnikaForm, RucniUnosForm, ZamjenskiOcitavacForm
+from .models import Korisnik, Ocitanje, Postavke, Stan, ZamjenskiOcitavac, Zapisnik
 from .rokovi import dani_obavijesti, dani_podsjetnika, datum_roka
 from .servisi import (
     GreskaOcitanja,
@@ -228,12 +228,13 @@ def ocitanje_detalj(request, pk):
 
 
 @za_zgradu
-def stan_detalj(request, pk):
+def stan_detalj(request, pk, zamjenski_forma=None):
     stan = get_object_or_404(Stan, pk=pk, zgrada=request.zgrada)
     vodomjer = stan.vodomjeri.filter(aktivan=True).first()
     mjesec = mjesec_iz_upita(request)
     unos = RucniUnosForm(initial={"datum_ocitanja": min(zadnji_dan(mjesec), timezone.localdate())})
-    if request.method == "POST":
+    # zamjenski_forma s greškama dolazi iz zamjenski_dodaj; tada POST nije ručni unos.
+    if request.method == "POST" and zamjenski_forma is None:
         unos = RucniUnosForm(request.POST, request.FILES)
         if vodomjer and unos.is_valid():
             d = unos.cleaned_data
@@ -259,7 +260,55 @@ def stan_detalj(request, pk):
         "vlasnistva": stan.vlasnistva.select_related("korisnik").order_by("-od_datuma"),
         "ocitanja": Ocitanje.objects.filter(vodomjer__stan=stan).select_related("korisnik", "vodomjer"),
         "unos": unos,
+        "zamjenski": stan.zamjenski_ocitavaci.select_related("korisnik"),
+        "zamjenski_forma": zamjenski_forma or ZamjenskiOcitavacForm(stan=stan),
     })
+
+
+def opis_korisnika(korisnik):
+    return f"{korisnik.get_full_name() or korisnik.username} ({korisnik.username})"
+
+
+@za_zgradu
+def zamjenski_dodaj(request, pk):
+    """Upisuje osobu koja očitava vodomjer stana umjesto vlasnika."""
+    stan = get_object_or_404(Stan, pk=pk, zgrada=request.zgrada)
+    if request.method != "POST":
+        return redirect(f"{reverse('stan', args=[stan.pk])}#zamjenski")
+    forma = ZamjenskiOcitavacForm(request.POST, stan=stan)
+    if not forma.is_valid():
+        return stan_detalj(request, pk, zamjenski_forma=forma)
+    d = forma.cleaned_data
+    korisnik = d["postojeci"]
+    if korisnik is None:
+        # Lozinku je upisao administrator, pa je korisnik mijenja kod prve prijave.
+        korisnik = Korisnik.objects.create_user(
+            d["korisnicko_ime"], password=d["lozinka"], first_name=d["ime"], last_name=d["prezime"],
+            mora_promijeniti_lozinku=True,
+        )
+    ZamjenskiOcitavac.objects.get_or_create(stan=stan, korisnik=korisnik)
+    Zapisnik.upisi(
+        Zapisnik.Radnja.STAN, f"{opis_korisnika(korisnik)} očitava stan {stan.oznaka} umjesto vlasnika",
+        request=request, zgrada=request.zgrada, stan=str(stan.uid), korisnik_id=korisnik.pk,
+    )
+    messages.success(
+        request, f"{korisnik.get_full_name() or korisnik.username} sada u aplikaciji može očitati i stan {stan.broj_stana}."
+    )
+    return redirect(f"{reverse('stan', args=[stan.pk])}#zamjenski")
+
+
+@za_zgradu
+def zamjenski_ukloni(request, pk, korisnik_pk):
+    stan = get_object_or_404(Stan, pk=pk, zgrada=request.zgrada)
+    if request.method == "POST":
+        zamjena = get_object_or_404(stan.zamjenski_ocitavaci.select_related("korisnik"), korisnik_id=korisnik_pk)
+        zamjena.delete()
+        Zapisnik.upisi(
+            Zapisnik.Radnja.STAN, f"{opis_korisnika(zamjena.korisnik)} više ne očitava stan {stan.oznaka}",
+            request=request, zgrada=request.zgrada, stan=str(stan.uid), korisnik_id=zamjena.korisnik_id,
+        )
+        messages.success(request, f"{zamjena.korisnik.get_full_name() or zamjena.korisnik.username} više ne očitava stan {stan.broj_stana}.")
+    return redirect(f"{reverse('stan', args=[stan.pk])}#zamjenski")
 
 
 @za_zgradu

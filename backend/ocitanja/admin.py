@@ -4,7 +4,9 @@ from django.urls import reverse
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 
-from .models import AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje, Postavke, Stan, Vodomjer, Zgrada
+from .models import (
+    AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje, Postavke, Stan, Vodomjer, ZamjenskiOcitavac, Zgrada,
+)
 
 # Django administracija ne zna za zgrade, pa je smije koristiti samo superadministrator.
 admin.site.has_permission = lambda request: request.user.is_active and request.user.is_superuser
@@ -17,6 +19,21 @@ class KorisnikStanInline(admin.TabularInline):
     extra = 0
 
 
+class ZamjenskiOcitavacInline(admin.TabularInline):
+    model = ZamjenskiOcitavac
+    extra = 0
+    readonly_fields = ["od"]
+    autocomplete_fields = ["korisnik"]
+
+
+class ZamjenskiStanInline(admin.TabularInline):
+    model = ZamjenskiOcitavac
+    extra = 0
+    readonly_fields = ["od"]
+    verbose_name = "stan koji očitava umjesto vlasnika"
+    verbose_name_plural = "stanovi koje očitava umjesto vlasnika"
+
+
 @admin.register(Korisnik)
 class KorisnikAdmin(UserAdmin):
     list_display = ["username", "first_name", "last_name", "is_superuser", "is_active"]
@@ -25,7 +42,7 @@ class KorisnikAdmin(UserAdmin):
     add_fieldsets = UserAdmin.add_fieldsets + (
         ("Podaci", {"fields": ["first_name", "last_name"]}),
     )
-    inlines = [KorisnikStanInline]
+    inlines = [KorisnikStanInline, ZamjenskiStanInline]
 
 
 class AdministratorZgradeInline(admin.TabularInline):
@@ -50,7 +67,7 @@ class StanAdmin(admin.ModelAdmin):
     list_display = ["broj_stana", "zgrada", "kat", "napomena", "uid"]
     list_filter = ["zgrada"]
     readonly_fields = ["uid"]
-    inlines = [KorisnikStanInline, VodomjerInline]
+    inlines = [KorisnikStanInline, ZamjenskiOcitavacInline, VodomjerInline]
 
 
 @admin.register(Vodomjer)
