@@ -70,6 +70,10 @@ data class Stan(
     val oznaka: String = "",
     @SerialName("broj_stana") val brojStana: String,
     val vodomjeri: List<Vodomjer>,
+    /** True kad korisnik nije vlasnik nego očitava umjesto vlasnika (zamjenski očitavač). */
+    val zamjena: Boolean = false,
+    /** Imena trenutnih vlasnika stana. */
+    val vlasnici: String = "",
 )
 
 /**

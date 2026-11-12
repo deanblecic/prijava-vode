@@ -6,7 +6,7 @@ from django.db import transaction
 from django.db.models import Q
 from rest_framework.authtoken.models import Token
 
-from .models import AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje
+from .models import AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje, ZamjenskiOcitavac
 from .servisi import nova_lozinka
 
 
@@ -15,9 +15,12 @@ class GreskaRacuna(Exception):
 
 
 def korisnici_zgrade(zgrada):
-    """Svi koji su ikad bili suvlasnici u zgradi ili su njezini administratori."""
+    """Svi koji su ikad bili suvlasnici u zgradi, njezini su administratori ili očitavaju umjesto vlasnika."""
     return (
-        Korisnik.objects.filter(Q(vlasnistva__stan__zgrada=zgrada) | Q(uloge_u_zgradama__zgrada=zgrada))
+        Korisnik.objects.filter(
+            Q(vlasnistva__stan__zgrada=zgrada) | Q(uloge_u_zgradama__zgrada=zgrada)
+            | Q(zamjenska_ocitanja__stan__zgrada=zgrada)
+        )
         .distinct().order_by("last_name", "first_name", "username")
     )
 
@@ -28,6 +31,7 @@ def samo_u_zgradi(korisnik, zgrada):
         not korisnik.is_superuser
         and not korisnik.vlasnistva.exclude(stan__zgrada=zgrada).exists()
         and not korisnik.uloge_u_zgradama.exclude(zgrada=zgrada).exists()
+        and not korisnik.zamjenska_ocitanja.exclude(stan__zgrada=zgrada).exists()
     )
 
 
@@ -95,15 +99,24 @@ def spoji_racune(ostaje, odlazi):
             uloga.delete()
         else:
             uloge.append(uloga.pk)
+    zamjene, suvisne_zamjene = [], []
+    for zamjena in odlazi.zamjenska_ocitanja.all():
+        if ZamjenskiOcitavac.objects.filter(korisnik=ostaje, stan=zamjena.stan_id).exists():
+            suvisne_zamjene.append(zamjena.stan_id)
+            zamjena.delete()
+        else:
+            zamjene.append(zamjena.pk)
     KorisnikStan.objects.filter(pk__in=vlasnistva).update(korisnik=ostaje)
     Ocitanje.objects.filter(pk__in=ocitanja).update(korisnik=ostaje)
     AdministratorZgrade.objects.filter(pk__in=uloge).update(korisnik=ostaje)
+    ZamjenskiOcitavac.objects.filter(pk__in=zamjene).update(korisnik=ostaje)
     odlazi.is_active = False
     odlazi.save(update_fields=["is_active"])
     Token.objects.filter(user=odlazi).delete()
     return {
         "ostaje": ostaje.pk, "odlazi": odlazi.pk,
         "vlasnistva": vlasnistva, "ocitanja": ocitanja, "uloge": uloge, "suvisne_uloge": suvisne,
+        "zamjene": zamjene, "suvisne_zamjene": suvisne_zamjene,
     }
 
 
@@ -115,6 +128,9 @@ def ponisti_spajanje(podaci):
     AdministratorZgrade.objects.filter(pk__in=podaci["uloge"]).update(korisnik=odlazi)
     for zgrada_id in podaci.get("suvisne_uloge", []):
         AdministratorZgrade.objects.get_or_create(korisnik=odlazi, zgrada_id=zgrada_id)
+    ZamjenskiOcitavac.objects.filter(pk__in=podaci.get("zamjene", [])).update(korisnik=odlazi)
+    for stan_id in podaci.get("suvisne_zamjene", []):
+        ZamjenskiOcitavac.objects.get_or_create(korisnik=odlazi, stan_id=stan_id)
     odlazi.is_active = True
     odlazi.save(update_fields=["is_active"])
     return odlazi

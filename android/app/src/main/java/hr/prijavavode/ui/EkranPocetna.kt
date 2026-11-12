@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import hr.prijavavode.BuildConfig
 import hr.prijavavode.GlavniViewModel
+import hr.prijavavode.podaci.Ja
 import hr.prijavavode.podaci.Stan
 
 @Composable
@@ -62,17 +63,21 @@ fun EkranPocetna(vm: GlavniViewModel) {
             vm.radi && ja == null -> CircularProgressIndicator(Modifier.align(Alignment.CenterHorizontally))
             ja == null -> Button(onClick = vm::osvjezi) { Text("Pokušaj ponovno") }
             ja.stanovi.isEmpty() -> Text("Niste upisani kao vlasnik nijednog stana. Javite se ovlaštenom predstavniku suvlasnika.")
-            // Stanovi u više zgrada: naslov sa adresom iznad stanova svake zgrade.
-            ja.zgrade.size > 1 -> ja.stanoviPoZgradama().forEach { (zgrada, stanovi) ->
-                Text(
-                    zgrada?.naziv ?: "Ostali stanovi",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(top = 8.dp),
-                )
-                stanovi.forEach { KarticaStana(it, vm) }
+            else -> {
+                // Vlastiti stanovi prvi; stanovi za koje očitava umjesto vlasnika ispod svog naslova.
+                val (zamjenski, vlastiti) = ja.stanovi.partition { it.zamjena }
+                StanoviPoZgradama(ja.copy(stanovi = vlastiti), vm)
+                if (zamjenski.isNotEmpty()) {
+                    if (vlastiti.isNotEmpty()) {
+                        Text(
+                            "Stanovi koje očitavate umjesto vlasnika",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(top = 12.dp),
+                        )
+                    }
+                    StanoviPoZgradama(ja.copy(stanovi = zamjenski), vm)
+                }
             }
-            else -> ja.stanovi.forEach { KarticaStana(it, vm) }
         }
         if (ja != null) {
             OutlinedButton(onClick = vm::otvoriPovijest, modifier = Modifier.fillMaxWidth()) {
@@ -91,10 +96,34 @@ fun EkranPocetna(vm: GlavniViewModel) {
 }
 
 @Composable
+private fun StanoviPoZgradama(ja: Ja, vm: GlavniViewModel) {
+    // Stanovi u više zgrada: naslov sa adresom iznad stanova svake zgrade.
+    if (ja.zgrade.size > 1) {
+        ja.stanoviPoZgradama().forEach { (zgrada, stanovi) ->
+            Text(
+                zgrada?.naziv ?: "Ostali stanovi",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            stanovi.forEach { KarticaStana(it, vm) }
+        }
+    } else {
+        ja.stanovi.forEach { KarticaStana(it, vm) }
+    }
+}
+
+@Composable
 private fun KarticaStana(stan: Stan, vm: GlavniViewModel) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Stan ${stan.brojStana}", style = MaterialTheme.typography.titleLarge)
+            if (stan.zamjena) {
+                Text(
+                    if (stan.vlasnici.isBlank()) "Očitavate umjesto vlasnika" else "Očitavate umjesto vlasnika: ${stan.vlasnici}",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             val vodomjer = stan.vodomjeri.firstOrNull()
             if (vodomjer == null) {
                 Text("Stan nema upisan vodomjer. Javite se ovlaštenom predstavniku suvlasnika.")

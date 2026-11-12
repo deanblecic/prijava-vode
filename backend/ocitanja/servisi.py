@@ -61,10 +61,10 @@ def prosjecna_razlika(vodomjer, razdoblje, broj_mjeseci=12):
 
 
 def korisnik_smije_ocitati(korisnik, vodomjer, samo_vlasnik=False):
-    """Vlasnik stana; na webu i administrator zgrade u kojoj je stan ili superadministrator."""
+    """Vlasnik stana ili zamjenski očitavač; na webu i administrator zgrade ili superadministrator."""
     if not samo_vlasnik and korisnik.zgrade_za_upravljanje().filter(pk=vodomjer.stan.zgrada_id).exists():
         return True
-    return korisnik.aktivni_stanovi().filter(pk=vodomjer.stan_id).exists()
+    return korisnik.stanovi_za_ocitanje().filter(pk=vodomjer.stan_id).exists()
 
 
 @transaction.atomic
@@ -82,7 +82,8 @@ def predaj_ocitanje(
 ):
     """Sprema ili ispravlja očitanje za mjesec u kojem je snimljeno.
 
-    Aplikacija šalje samo_vlasnik=True: tamo i administrator očitava samo svoje stanove.
+    Aplikacija šalje samo_vlasnik=True: tamo i administrator očitava samo svoje stanove
+    i stanove za koje je upisan kao zamjenski očitavač.
     Diže GreskaOcitanja kad korisnik nema pravo na vodomjer, kad je očitanje
     već potvrđeno ili kad je novo stanje manje od prethodnog bez potvrde.
     """

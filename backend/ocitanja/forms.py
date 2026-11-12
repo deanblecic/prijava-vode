@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
+from django.db.models import Q
+from django.utils import timezone
 
 from .models import Korisnik, Postavke, Zgrada
 from .rokovi import ODABIRI_DANA
@@ -57,6 +59,58 @@ class PromjenaVlasnikaForm(forms.Form):
                 except forms.ValidationError as e:
                     self.add_error("lozinka", e)
         if not novi and not podaci.get("postojeci"):
+            raise forms.ValidationError("Odaberite postojećeg korisnika ili upišite novog.")
+        return podaci
+
+
+class ZamjenskiOcitavacForm(forms.Form):
+    """Osoba koja očitava vodomjer umjesto vlasnika: postojeći korisnik zgrade ili novi račun."""
+
+    postojeci = forms.ModelChoiceField(
+        label="Postojeći korisnik", queryset=Korisnik.objects.none(), required=False,
+        empty_label="– odaberite –",
+    )
+    ime = forms.CharField(label="Ime", max_length=150, required=False)
+    prezime = forms.CharField(label="Prezime", max_length=150, required=False)
+    korisnicko_ime = forms.CharField(label="Korisničko ime", max_length=150, required=False)
+    lozinka = forms.CharField(label="Lozinka", required=False, widget=forms.PasswordInput)
+
+    NOVI = ["ime", "prezime", "korisnicko_ime", "lozinka"]
+
+    def __init__(self, *args, stan, **kwargs):
+        from .racuni import korisnici_zgrade
+
+        super().__init__(*args, **kwargs)
+        danas = timezone.localdate()
+        vlasnici = stan.vlasnistva.filter(od_datuma__lte=danas).filter(
+            Q(do_datuma__isnull=True) | Q(do_datuma__gte=danas)
+        ).values("korisnik")
+        # Ponuđeni su samo aktivni korisnici ove zgrade koji već ne mogu očitati ovaj stan.
+        self.fields["postojeci"].queryset = (
+            korisnici_zgrade(stan.zgrada).filter(is_active=True)
+            .exclude(pk__in=stan.zamjenski_ocitavaci.values("korisnik"))
+            .exclude(pk__in=vlasnici)
+        )
+        self.fields["postojeci"].label_from_instance = lambda k: f"{k.get_full_name() or k.username} ({k.username})"
+
+    def clean(self):
+        podaci = super().clean()
+        novi = any(podaci.get(p) for p in self.NOVI)
+        if novi and podaci.get("postojeci"):
+            raise forms.ValidationError("Odaberite postojećeg korisnika ili upišite novog, ne oboje.")
+        if novi:
+            for polje in self.NOVI:
+                if not podaci.get(polje):
+                    self.add_error(polje, "Obavezno za novog korisnika.")
+            ime = podaci.get("korisnicko_ime")
+            if ime and Korisnik.objects.filter(username=ime).exists():
+                self.add_error("korisnicko_ime", "To korisničko ime već postoji.")
+            if podaci.get("lozinka"):
+                try:
+                    validate_password(podaci["lozinka"])
+                except forms.ValidationError as e:
+                    self.add_error("lozinka", e)
+        elif not podaci.get("postojeci"):
             raise forms.ValidationError("Odaberite postojećeg korisnika ili upišite novog.")
         return podaci
 

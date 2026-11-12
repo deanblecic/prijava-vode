@@ -334,6 +334,7 @@
     const kartica = el("section", {klasa: "kartica"},
       el("h2", {}, `Stan ${stan.broj_stana}`),
       viseZgrada && zgrada ? el("p", {klasa: "tiho"}, zgrada.adresa) : null,
+      stan.zamjena ? el("p", {klasa: "tiho"}, `Očitavate umjesto vlasnika${stan.vlasnici ? `: ${stan.vlasnici}` : ""}`) : null,
     );
     if (!stan.vodomjeri.length) {
       dodaj(kartica, el("p", {klasa: "tiho"}, "Stan nema aktivni vodomjer. Javite se ovlaštenom predstavniku."));
@@ -381,7 +382,12 @@
       obavijest ? poruka("uspjeh", obavijest) : null,
       rokovi,
       ja.stanovi.length
-        ? ja.stanovi.map((s) => karticaStana(s, zgrade.get(s.zgrada), zgrade.size > 1))
+        ? ja.stanovi.flatMap((s, i) => [
+            // Stanovi za koje korisnik očitava umjesto vlasnika dolaze iza vlastitih, pod svojim naslovom.
+            s.zamjena && !(ja.stanovi[i - 1] || {}).zamjena && ja.stanovi.some((x) => !x.zamjena)
+              ? el("h2", {}, "Stanovi koje očitavate umjesto vlasnika") : null,
+            karticaStana(s, zgrade.get(s.zgrada), zgrade.size > 1),
+          ])
         : poruka("info", "Nemate upisan stan. Javite se ovlaštenom predstavniku suvlasnika."),
       karticaObavijesti(),
       karticaInstalacije(false),
@@ -504,6 +510,7 @@
     prikazi(
       el("h1", {}, `Očitanje – stan ${stan.broj_stana}`),
       zgrada && ja && ja.zgrade.length > 1 ? el("p", {klasa: "tiho"}, zgrada.adresa) : null,
+      stan.zamjena && stan.vlasnici ? el("p", {klasa: "tiho"}, `Vlasnik: ${stan.vlasnici}`) : null,
       greska,
       el("form", {klasa: "kartica", novalidate: true, onsubmit: (d) => { d.preventDefault(); posalji(false); }},
         el("h2", {}, "1. Fotografirajte vodomjer"),

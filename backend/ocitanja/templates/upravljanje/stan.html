@@ -21,6 +21,36 @@
   </tbody>
 </table>
 
+<h2 id="zamjenski">Zamjenski očitavači</h2>
+<p class="tiho">Osobe koje u aplikaciji smiju očitati vodomjer ovog stana umjesto vlasnika, npr. susjed ili član obitelji starijeg suvlasnika. Jedna osoba može očitavati više stanova; u aplikaciji bira stan koji očitava. Vlasništvo stana se ne mijenja.</p>
+<table>
+  <thead><tr><th>Ime i prezime</th><th>Korisničko ime</th><th>Dodano</th><th></th></tr></thead>
+  <tbody>
+  {% for z in zamjenski %}
+    <tr><td>{{ z.korisnik.get_full_name|default:"–" }}</td><td>{{ z.korisnik.username }}{% if not z.korisnik.is_active %} <span class="tiho">(isključen)</span>{% endif %}</td>
+      <td>{{ z.od|date:"d.m.Y." }}</td>
+      <td><form method="post" action="{% url 'zamjenski_ukloni' stan.pk z.korisnik_id %}" style="margin:0"
+            onsubmit="return confirm('Ukloniti {{ z.korisnik.get_full_name|default:z.korisnik.username|escapejs }} kao očitavača stana {{ stan.broj_stana|escapejs }}?')">{% csrf_token %}
+        <button class="gumb crveni">Ukloni</button></form></td></tr>
+  {% empty %}<tr><td colspan="4">Vodomjer očitavaju samo vlasnici.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<details class="kartica" style="max-width:560px"{% if zamjenski_forma.errors %} open{% endif %}>
+  <summary><b>Dodaj zamjenskog očitavača</b></summary>
+  <form method="post" action="{% url 'zamjenski_dodaj' stan.pk %}">{% csrf_token %}
+    {{ zamjenski_forma.non_field_errors }}
+    <p>{{ zamjenski_forma.postojeci.label_tag }}{{ zamjenski_forma.postojeci }}{{ zamjenski_forma.postojeci.errors }}</p>
+    <p class="tiho">ili novi korisnik, npr. član obitelji koji ne živi u zgradi:</p>
+    <div class="dvije">
+      <p>{{ zamjenski_forma.ime.label_tag }}{{ zamjenski_forma.ime }}{{ zamjenski_forma.ime.errors }}</p>
+      <p>{{ zamjenski_forma.prezime.label_tag }}{{ zamjenski_forma.prezime }}{{ zamjenski_forma.prezime.errors }}</p>
+      <p>{{ zamjenski_forma.korisnicko_ime.label_tag }}{{ zamjenski_forma.korisnicko_ime }}{{ zamjenski_forma.korisnicko_ime.errors }}</p>
+      <p>{{ zamjenski_forma.lozinka.label_tag }}{{ zamjenski_forma.lozinka }}{{ zamjenski_forma.lozinka.errors }}</p>
+    </div>
+    <button class="gumb glavni">Dodaj očitavača</button>
+  </form>
+</details>
+
 <h2>Povijest očitanja</h2>
 <table>
   <thead><tr><th>Mjesec</th><th>Datum</th><th>Predao</th><th class="broj">Prethodno</th><th class="broj">Novo</th><th class="broj">Razlika</th><th>Status</th></tr></thead>

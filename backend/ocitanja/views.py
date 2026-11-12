@@ -16,6 +16,7 @@ from .serializers import (
     ZgradaSerializer,
 )
 from .servisi import GreskaOcitanja, predaj_ocitanje, verzija_aplikacije
+from .upravljanje import kljuc_stana
 from .sigurnost import blokirano, poruka_blokade, zabiljezi_neuspjeh
 
 
@@ -67,8 +68,14 @@ def lozinka(request):
 def ja(request):
     korisnik = request.user
     context = {"request": request, "sada": timezone.now()}
-    stanovi = korisnik.aktivni_stanovi().select_related("zgrada")
-    zgrade = Zgrada.objects.filter(stanovi__in=stanovi).distinct()
+    vlastiti = set(korisnik.aktivni_stanovi().values_list("pk", flat=True))
+    # Vlastiti stanovi prvi, zatim stanovi za koje očitava umjesto vlasnika.
+    stanovi = sorted(
+        korisnik.stanovi_za_ocitanje().select_related("zgrada"),
+        key=lambda s: (s.pk not in vlastiti, s.zgrada_id, kljuc_stana(s.broj_stana)),
+    )
+    context["vlastiti"] = vlastiti
+    zgrade = Zgrada.objects.filter(stanovi__in=[s.pk for s in stanovi]).distinct()
     # Aplikacije starije od podrške za više zgrada znaju samo za jedan podsjetnik.
     prvi = ZgradaSerializer(zgrade[0]).data["podsjetnik"] if zgrade else {"dan": 26, "sat": 9}
     return Response({
@@ -88,7 +95,7 @@ def ja(request):
 def ocitanja(request):
     if request.method == "GET":
         moja = (
-            Ocitanje.objects.filter(vodomjer__stan__in=request.user.aktivni_stanovi())
+            Ocitanje.objects.filter(vodomjer__stan__in=request.user.stanovi_za_ocitanje())
             .select_related("vodomjer__stan", "korisnik")[:36]
         )
         return Response(OcitanjeSerializer(moja, many=True, context={"request": request}).data)

@@ -71,6 +71,9 @@ pita korisnika i šalje ponovno s `potvrdi_manje=true`.
 - Razlika veća od `PRAG_SUMNJIVE_RAZLIKE` × prosjek zadnjih 12 mjeseci označava se za provjeru.
 - Jedan aktivni vodomjer po stanu; zamijenjeni ostaju neaktivni radi povijesti.
 - Promjena vlasnika (`servisi.promijeni_vlasnika`) zatvara stara suvlasništva, povijest ostaje.
+- Zamjenski očitavač (`ZamjenskiOcitavac`, na stranici stana) smije u aplikaciji predati očitanje za tuđi stan,
+  npr. susjed starijeg suvlasnika. Jedna osoba može očitavati više stanova; `/api/ja/` vraća vlastite stanove prve,
+  a zamjenske s `zamjena: true` i imenima `vlasnici`. Podsjetnici stižu i zamjenskim očitavačima.
 - Razdoblje očitanja traje od 1. u mjesecu do roka zgrade. Nakon roka očitanje iz aplikacije je `zakasnjelo`
   ili odbijeno s `rok_istekao`, ovisno o postavci zgrade; administrator na webu unosi i nakon roka.
 - Podsjetnik zgrade u `/api/ja/` (`podsjetnik`): `dani` (dani ovog mjeseca), `sat`, `rok`, `nakon_roka`;
