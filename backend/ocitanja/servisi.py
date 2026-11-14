@@ -141,7 +141,13 @@ def predaj_ocitanje(
     ocitanje.prethodno_stanje = prethodno
     ocitanje.novo_stanje = novo_stanje
     ocitanje.ocr_vrijednost = ocr_vrijednost
-    ocitanje.rucno_ispravljeno = ocr_vrijednost is not None and Decimal(ocr_vrijednost) != novo_stanje
+    # Ručni upis: aplikacija nije pročitala broj s fotografije ili ga je suvlasnik promijenio.
+    # Aplikacija čita samo cijele m³, pa decimale koje suvlasnik doda nisu ispravak.
+    # Administrator tada očima provjeri fotografiju. Unos administratora se ne označava.
+    if ocr_vrijednost is not None:
+        ocitanje.rucno_ispravljeno = int(Decimal(ocr_vrijednost)) != int(novo_stanje)
+    else:
+        ocitanje.rucno_ispravljeno = samo_vlasnik
     ocitanje.status = Ocitanje.Status.PREDANO
     ocitanje.za_provjeru = bool(razlozi)
     ocitanje.razlog_provjere = "; ".join(razlozi)[:200]

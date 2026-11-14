@@ -12,6 +12,7 @@
   <div><b>{{ broj_predanih }} / {{ broj_stanova }}</b><span>stanova predalo očitanje</span></div>
   <div><b>{{ nepotvrdena }}</b><span>čeka vašu potvrdu</span></div>
   <div><b>{{ za_provjeru }}</b><span>označeno za provjeru</span></div>
+  <div><b>{{ rucno }}</b><span>upisano ručno, provjerite fotografiju</span></div>
   <div><b>{{ ukupna_razlika|floatformat:3 }} m³</b><span>ukupna potrošnja</span></div>
 </div>
 {% if referentni %}<p class="tiho">Referentni dan očitanja je {{ referentni|date:"d.m.Y." }}; očitanja prije tog dana ispisana su <span class="prerano-tekst">crveno</span>.</p>{% endif %}
@@ -29,12 +30,13 @@
       {% if o %}
         <td>{{ o.datum_ocitanja|date:"d.m.Y." }}</td>
         <td class="broj">{{ o.prethodno_stanje }}</td>
-        <td class="broj">{{ o.novo_stanje }}{% if o.rucno_ispravljeno %} <span class="tiho" title="OCR je pročitao {{ o.ocr_vrijednost }}">✎</span>{% endif %}</td>
+        <td class="broj">{{ o.novo_stanje }}{% if o.rucno_ispravljeno %} <span class="tiho" title="{% if o.ocr_vrijednost is not None %}Aplikacija je pročitala {{ o.ocr_vrijednost }}{% else %}Broj nije pročitan s fotografije{% endif %}">✎</span>{% endif %}</td>
         <td class="broj"><b>{{ o.razlika }}</b></td>
         <td>
           <span class="oznaka {{ o.status }}">{{ o.get_status_display }}</span>
           {% if o.zakasnjelo %}<span class="oznaka odbijeno" title="Predano nakon roka">zakašnjelo</span>{% endif %}
           {% if o.za_provjeru %}<span class="oznaka provjera" title="{{ o.razlog_provjere }}">provjeriti</span>{% endif %}
+          {% if o.rucno_ispravljeno %}<a class="oznaka provjera" href="{% url 'ocitanje' o.pk %}" title="Suvlasnik je broj upisao ručno; usporedite ga s fotografijom">ručno upisano</a>{% endif %}
         </td>
         <td><a href="{% url 'ocitanje' o.pk %}">Otvori</a></td>
       {% else %}
