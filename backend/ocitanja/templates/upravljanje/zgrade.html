@@ -4,7 +4,10 @@
 <div class="alati">
   <h1 style="margin:0">Zgrade</h1>
   <span style="flex:1"></span>
-  {% if user.is_superuser %}<a class="gumb glavni" href="{% url 'nova_zgrada' %}">Nova zgrada</a>{% endif %}
+  {% if user.is_superuser %}
+  <a class="gumb" href="{% url 'uvoz_zgrade' %}">Uvezi iz Excela</a>
+  <a class="gumb glavni" href="{% url 'nova_zgrada' %}">Nova zgrada</a>
+  {% endif %}
 </div>
 <table>
   <thead><tr>

@@ -1,0 +1,25 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Uvoz završen{% endblock %}
+{% block sadrzaj %}
+<h1>Uvoz je završen: {{ zgrada.adresa }}</h1>
+<div class="poruka warning">Lozinke se prikazuju samo sada. Preuzmite tablicu pristupnih podataka i predajte
+  lozinke osobno. Kod prve prijave svatko upisuje svoju novu lozinku; administrator zatim postavlja i Google Authenticator.</div>
+<div class="alati">
+  <a class="gumb glavni" href="?preuzmi=1">Preuzmi pristupne podatke (Excel)</a>
+  <form method="post" style="margin:0">{% csrf_token %}<button class="gumb">Gotovo, otvori stanove</button></form>
+</div>
+<table>
+  <thead><tr><th>Stan</th><th>Ime i prezime</th><th>Korisničko ime</th><th>Privremena lozinka</th><th>Uloga</th></tr></thead>
+  <tbody>
+  {% for p in pristup %}
+    <tr>
+      <td>{{ p.stanovi }}</td>
+      <td>{{ p.ime }}</td>
+      <td>{{ p.korisnicko_ime }}</td>
+      <td>{% if p.nova_lozinka %}<b style="font-family:monospace">{{ p.lozinka }}</b>{% else %}<span class="tiho">{{ p.lozinka }}</span>{% endif %}</td>
+      <td>{{ p.uloga }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

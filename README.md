@@ -35,6 +35,9 @@ Prijava na `/prijava/`. Za isprobavanje na praznoj bazi `manage.py primjer_podat
 od 21 stana, suvlasnike i tri mjeseca očitanja (admin / probna-lozinka).
 
 - `/zgrade/` – popis zgrada s brojem neočitanih vodomjera
+- `/zgrade/uvoz/` – superadministrator preuzima Excel predložak (zgrada, stanovi i vodomjeri, suvlasnici, zamjenski
+  očitavači), učitava popunjenu tablicu, pregledava što će se upisati i potvrđuje; nakon uvoza preuzima tablicu
+  korisničkih imena i privremenih lozinki. Greške se javljaju po listu i retku i tada se ništa ne upisuje.
 - `/` – neprijavljenima javna početna stranica (opis, slike ekrana, upute, preuzimanje uputa, prijava za administratore);
   prijavljenom administratoru mjesečni pregled stanova odabrane zgrade, s oznakom tko nije predao i što treba provjeriti
 - `/ocitanje/<id>/` – fotografija, potvrda, odbijanje i ispravak očitanja

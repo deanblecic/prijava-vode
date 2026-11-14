@@ -1,7 +1,11 @@
 {% extends "upravljanje/base.html" %}
 {% block naslov %}Stanovi{% endblock %}
 {% block sadrzaj %}
-<h1>Stanovi i vodomjeri</h1>
+<div class="alati">
+  <h1 style="margin:0">Stanovi i vodomjeri</h1>
+  <span style="flex:1"></span>
+  {% if user.is_superuser %}<a class="gumb" href="{% url 'uvoz_zgrade' %}">Uvezi stanove iz Excela</a>{% endif %}
+</div>
 <table>
   <thead><tr><th>Stan</th><th>Oznaka</th><th>Kat</th><th>Vlasnici</th><th>Očitava i</th><th>Vodomjer</th><th class="broj">Početno stanje</th></tr></thead>
   <tbody>

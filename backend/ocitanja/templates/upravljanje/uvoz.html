@@ -1,0 +1,94 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}Uvoz iz Excela{% endblock %}
+{% block sadrzaj %}
+<p><a href="{% url 'zgrade' %}">&larr; Zgrade</a></p>
+<h1>Uvoz zgrade iz Excela</h1>
+
+{% if plan %}
+<div class="kartica">
+  <h2 style="margin-top:0">Provjera je prošla: {{ ime_datoteke }}</h2>
+  <p>
+    {% if plan.postojeca_zgrada %}Stanovi se dodaju u postojeću zgradu <b>{{ plan.postojeca_zgrada.adresa }}</b> ({{ plan.postojeca_zgrada.oznaka }}).
+    {% else %}Nova zgrada <b>{{ plan.zgrada.ulica }} {{ plan.zgrada.kucni_broj }}, {{ plan.zgrada.postanski_broj }} {{ plan.zgrada.grad }}</b> ({{ plan.zgrada.oznaka|upper }}).{% endif %}
+    Administrator: {{ plan.zgrada.admin_ime }} {{ plan.zgrada.admin_prezime }} ({{ plan.zgrada.admin_email }}).
+  </p>
+  <div class="sazetak">
+    <div><b>{{ plan.stanovi|length }}</b><span>stanova</span></div>
+    <div><b>{{ vodomjera }}</b><span>vodomjera</span></div>
+    <div><b>{{ nove_osobe }}</b><span>novih korisničkih računa</span></div>
+    <div><b>{{ s_prijavom }}</b><span>osoba s prijavom</span></div>
+  </div>
+  {% for u in plan.upozorenja %}<div class="poruka warning">{{ u }}</div>{% endfor %}
+  <form method="post">{% csrf_token %}
+    <input type="hidden" name="akcija" value="potvrdi">
+    <button class="gumb zeleni">Potvrdi i uvezi</button>
+    <a class="gumb" href="{% url 'uvoz_zgrade' %}">Odustani</a>
+  </form>
+</div>
+
+<h2>Stanovi</h2>
+<table>
+  <thead><tr><th>Stan</th><th class="broj">Kat</th><th class="broj">Početno stanje (m³)</th><th>Serijski broj</th>
+    <th>Suvlasnici</th><th>Zamjenski očitavač</th><th>Napomena</th></tr></thead>
+  <tbody>
+  {% for s in stanovi %}
+    <tr>
+      <td>{{ s.broj_stana }}</td>
+      <td class="broj">{{ s.kat|default_if_none:"" }}</td>
+      <td class="broj">{% if s.ima_vodomjer %}{{ s.pocetno_stanje }}{% else %}<span class="tiho">bez vodomjera</span>{% endif %}</td>
+      <td>{{ s.serijski_broj }}</td>
+      <td>{{ s.vlasnici }}</td>
+      <td>{{ s.zamjenski }}</td>
+      <td>{{ s.napomena }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<h2>Osobe</h2>
+<table>
+  <thead><tr><th>Ime i prezime</th><th>E-mail</th><th>Stanovi</th><th>Prijava</th><th>Račun</th></tr></thead>
+  <tbody>
+  {% for o in plan.osobe %}
+    <tr>
+      <td>{{ o.puno_ime }}{% if o.administrator %} <span class="oznaka predano">administrator</span>{% endif %}</td>
+      <td>{{ o.email }}</td>
+      <td>{{ o.stanovi|join:", " }}{% if o.zamjene %} <span class="tiho">(očitava {{ o.zamjene|join:", " }})</span>{% endif %}</td>
+      <td>{% if o.prijava %}da{% else %}<span class="tiho">ne</span>{% endif %}</td>
+      <td>{% if o.postojeci %}postojeći ({{ o.postojeci.username }}){% else %}novi{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% else %}
+{% if greske %}
+<div class="poruka error">
+  <b>Tablica nije uvezena.</b> Ispravite greške u Excelu i učitajte je ponovno; ništa nije upisano u bazu.
+</div>
+<table style="margin-bottom:16px">
+  <thead><tr><th>List</th><th class="broj">Redak</th><th>Greška</th></tr></thead>
+  <tbody>
+  {% for g in greske %}<tr><td>{{ g.list }}</td><td class="broj">{{ g.red|default_if_none:"" }}</td><td>{{ g.poruka }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endif %}
+<div class="dvije">
+  <div class="kartica">
+    <h2 style="margin-top:0">1. Pošaljite predložak administratoru zgrade</h2>
+    <p class="tiho">Administrator nove zgrade u predložak upisuje adresu, stanove s vodomjerima, suvlasnike
+      i zamjenske očitavače. Upute su na prvom listu tablice.</p>
+    <p><a class="gumb glavni" href="{% url 'uvoz_predlozak' %}">Preuzmi prazni predložak</a>
+       <a class="gumb" href="{% url 'uvoz_predlozak' %}?primjer=1">Preuzmi popunjeni primjer</a></p>
+  </div>
+  <div class="kartica">
+    <h2 style="margin-top:0">2. Učitajte popunjenu tablicu</h2>
+    <p class="tiho">Aplikacija prvo provjeri cijelu tablicu i pokaže što će upisati. Ništa se ne upisuje dok ne potvrdite.</p>
+    <form method="post" enctype="multipart/form-data">{% csrf_token %}
+      <p><input type="file" name="tablica" accept=".xlsx" required></p>
+      <button class="gumb glavni">Provjeri tablicu</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
