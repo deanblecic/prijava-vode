@@ -10,4 +10,3 @@ argon2-cffi==23.1.0
 pyotp==2.9.0
 segno==1.6.1
 cryptography==50.0.2
-anthropic==2.8.0

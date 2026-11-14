@@ -184,14 +184,9 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
 
     fun snimljeno(vodomjer: Vodomjer, slika: Bitmap, izGalerije: Boolean) = posao {
         val prethodno = vodomjer.prethodnoStanje.toBigDecimalOrNull()
-        val naMobitelu = runCatching {
+        val kandidati = runCatching {
             Prepoznavanje.procitaj(slika, prethodno, izrezi = !izGalerije)
         }.getOrElse { emptyList() }
-        // Server (Claude) čita i mutne, nakošene i stare vodomjere; njegov broj se nudi prvi,
-        // a prepoznavanje na mobitelu ostaje kao zamjena kad server nije dostupan.
-        val jpeg = withContext(Dispatchers.Default) { Prepoznavanje.zaSlanje(slika) }
-        val saServera = repo.procitaj(jpeg, prethodno)
-        val kandidati = (listOfNotNull(saServera) + naMobitelu).distinctBy { it.stripTrailingZeros() }
         if (kandidati.isEmpty()) {
             poruka = "Broj nije prepoznat. Upišite ga ručno ili snimite ponovno."
         }

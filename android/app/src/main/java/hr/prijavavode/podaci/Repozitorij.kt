@@ -101,22 +101,6 @@ class Repozitorij(context: Context) {
         return poziv { api.predaj(polja, foto) }
     }
 
-    /**
-     * Stanje koje server pročita s fotografije, ili null ako čitanje na serveru nije uključeno,
-     * nema veze ili brojilo nije čitljivo. Ništa se ne sprema; to radi tek [predaj].
-     */
-    suspend fun procitaj(fotografijaJpeg: ByteArray, prethodno: BigDecimal?): BigDecimal? {
-        val tekst = "text/plain".toMediaType()
-        val polja = buildMap {
-            prethodno?.let { put("prethodno_stanje", it.toPlainString().toRequestBody(tekst)) }
-        }
-        val foto = MultipartBody.Part.createFormData(
-            "fotografija", "vodomjer.jpg", fotografijaJpeg.toRequestBody("image/jpeg".toMediaType())
-        )
-        val r = poziv { api.procitaj(polja, foto) }
-        return (r as? Rezultat.Uspjeh)?.podaci?.stanje?.toBigDecimalOrNull()
-    }
-
     private suspend fun <T> poziv(blok: suspend () -> Response<T>): Rezultat<T> {
         val odgovor = try {
             blok()

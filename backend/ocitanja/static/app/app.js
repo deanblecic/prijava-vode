@@ -426,7 +426,6 @@
     prikaziIzbornik(true);
     let fotografija = null;
     let urlPregleda = null;
-    let procitano = null;
     const prethodno = Number(vodomjer.prethodno_stanje);
     const greska = el("div");
     const pregled = el("div");
@@ -470,29 +469,6 @@
       );
       odabir.hidden = true;
       stanje.focus();
-      procitajSFotografije(fotografija);
-    }
-
-    async function procitajSFotografije(slika) {
-      // Server (Claude) predloži stanje; suvlasnik ga provjeri i po potrebi ispravi prije slanja.
-      const podaci = new FormData();
-      podaci.append("fotografija", slika, "vodomjer.jpg");
-      podaci.append("prethodno_stanje", vodomjer.prethodno_stanje);
-      const prije = stanje.placeholder;
-      stanje.placeholder = "Čitam broj s fotografije…";
-      try {
-        const r = await api("ocitanja/procitaj/", {metoda: "POST", tijelo: podaci});
-        if (r && r.stanje && slika === fotografija && !stanje.value.trim()) {
-          procitano = r.stanje;
-          stanje.value = r.stanje.replace(".", ",");
-          osvjeziPotrosnju();
-          pregled.append(el("p", {klasa: "tiho"}, "Broj je pročitan s fotografije. Usporedite ga s vodomjerom i ispravite ako treba."));
-        }
-      } catch (e) {
-        // Čitanje nije uključeno ili nije uspjelo; suvlasnik upisuje broj sam.
-      } finally {
-        stanje.placeholder = prije;
-      }
     }
     izKamere.addEventListener("change", odabrana);
     izGalerije.addEventListener("change", odabrana);
@@ -511,7 +487,6 @@
       const podaci = new FormData();
       podaci.append("vodomjer", vodomjer.id);
       podaci.append("novo_stanje", b);
-      if (procitano) podaci.append("ocr_vrijednost", procitano);
       podaci.append("napomena", napomena.value.trim());
       podaci.append("fotografija", fotografija, "vodomjer.jpg");
       if (potvrdiManje) podaci.append("potvrdi_manje", "true");
