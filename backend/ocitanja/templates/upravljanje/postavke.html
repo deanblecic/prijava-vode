@@ -21,12 +21,21 @@
     <p class="tiho pomoc">Ovaj mjesec: rok je {{ rok|date:"d.m.Y." }}</p>
   </div>
 
+  <div class="kartica">
+    <h2 style="margin-top:0">Referentni dan očitanja</h2>
+    <p>{{ forma.referentni_dan.label_tag }}{{ forma.referentni_dan }}{{ forma.referentni_dan.errors }}<br>
+      <span class="tiho pomoc">{{ forma.referentni_dan.help_text }}</span></p>
+    <p class="tiho pomoc">{% if referentni %}Ovaj mjesec: {{ referentni|date:"d.m.Y." }}{% else %}Nije postavljen: nijedno očitanje se ne ispisuje crveno.{% endif %}
+      Promjena vrijedi od ovog mjeseca; prošli mjeseci ostaju prema danu koji je tada vrijedio.</p>
+  </div>
+
   <div class="kartica raspored" data-polje="podsjetnik">
     <h2 style="margin-top:0">Podsjetnici suvlasnicima</h2>
     <p class="tiho pomoc">Podsjetnik dobivaju samo suvlasnici čiji vodomjer još nije očitan: obavijest na mobitelu,
       a ako imaju upisan e-mail i poruku e-poštom.</p>
     <p>{{ forma.podsjetnik_raspored.label_tag }}{{ forma.podsjetnik_raspored }}{{ forma.podsjetnik_raspored.errors }}</p>
-    <p class="za od_dana">{{ forma.dan_ocitanja.label_tag }}{{ forma.dan_ocitanja }}{{ forma.dan_ocitanja.errors }}</p>
+    <p class="za od_dana">{{ forma.dan_ocitanja.label_tag }}{{ forma.dan_ocitanja }}{{ forma.dan_ocitanja.errors }}<br>
+      <span class="tiho pomoc">Ako je postavljen referentni dan očitanja, podsjetnici kreću od njega.</span></p>
     <p class="za prije_roka">{{ forma.podsjetnik_broj_dana.label_tag }}{{ forma.podsjetnik_broj_dana }}{{ forma.podsjetnik_broj_dana.errors }}</p>
     <div class="za prilagodeno dani"><label>{{ forma.podsjetnik_dani.label }}</label>{{ forma.podsjetnik_dani }}{{ forma.podsjetnik_dani.errors }}</div>
     <p style="margin-top:12px">{{ forma.sat_podsjetnika.label_tag }}{{ forma.sat_podsjetnika }}{{ forma.sat_podsjetnika.errors }}<br>

@@ -286,6 +286,12 @@ class Postavke(models.Model):
         help_text="Dan do kojeg suvlasnici predaju očitanje. Razdoblje očitanja traje od 1. u mjesecu do tog dana.",
     )
     nakon_roka = models.CharField("nakon roka", max_length=10, choices=NakonRoka.choices, default=NakonRoka.OZNACI)
+    referentni_dan = models.PositiveSmallIntegerField(
+        "referentni dan očitanja", null=True, blank=True,
+        choices=[(d, f"{d}. u mjesecu" + (" (u kraćim mjesecima zadnji dan)" if d > 28 else "")) for d in range(1, 32)],
+        help_text="Dan u mjesecu kada bi trebalo očitati vodomjer. Predaja prije tog dana nije zabranjena, "
+                  "ali su takva očitanja na pregledu ispisana crveno. Podsjetnici suvlasnicima kreću od tog dana.",
+    )
 
     # Podsjetnici suvlasnicima koji još nisu očitali (obavijest na mobitelu i e-mail ako ga imaju).
     podsjetnik_raspored = models.CharField(
@@ -338,8 +344,42 @@ class Postavke(models.Model):
     def ucitaj(cls, zgrada):
         return cls.objects.get_or_create(zgrada=zgrada)[0]
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Referentni dan vrijedi od tekućeg mjeseca nadalje; prošli mjeseci zadržavaju dan koji je tada vrijedio.
+        mjesec = timezone.localdate().replace(day=1)
+        if ReferentniDan.za_mjesec(self.zgrada_id, mjesec) != self.referentni_dan:
+            ReferentniDan.objects.update_or_create(
+                zgrada_id=self.zgrada_id, od_mjeseca=mjesec, defaults={"dan": self.referentni_dan},
+            )
+
     def __str__(self):
         return f"Postavke – {self.zgrada}"
+
+
+class ReferentniDan(models.Model):
+    """Povijest referentnog dana očitanja zgrade: dan vrijedi od mjeseca od_mjeseca do sljedeće promjene."""
+
+    zgrada = models.ForeignKey(Zgrada, on_delete=models.CASCADE, related_name="referentni_dani")
+    od_mjeseca = models.DateField(help_text="Prvi dan mjeseca od kojeg vrijedi")
+    dan = models.PositiveSmallIntegerField(null=True, blank=True, help_text="Prazno: nije postavljen")
+
+    class Meta:
+        verbose_name = "referentni dan očitanja"
+        verbose_name_plural = "referentni dani očitanja"
+        ordering = ["zgrada", "-od_mjeseca"]
+        constraints = [
+            models.UniqueConstraint(fields=["zgrada", "od_mjeseca"], name="jedan_referentni_dan_mjesecno"),
+        ]
+
+    @classmethod
+    def za_mjesec(cls, zgrada_id, mjesec):
+        """Upisani referentni dan (1–31) koji je vrijedio u mjesecu, ili None ako nije bio postavljen."""
+        zapis = cls.objects.filter(zgrada_id=zgrada_id, od_mjeseca__lte=mjesec).order_by("-od_mjeseca").first()
+        return zapis.dan if zapis else None
+
+    def __str__(self):
+        return f"{self.zgrada} od {self.od_mjeseca:%m/%Y}: {self.dan or '–'}"
 
 
 class PoslanaObavijest(models.Model):
