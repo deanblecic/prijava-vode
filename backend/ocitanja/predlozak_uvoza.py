@@ -85,13 +85,13 @@ PRIMJER = {
     "Suvlasnici": [
         ["01", "Marko", "Kovačević", "marko.kovacevic@primjer.hr", "098 765 4321", None, "DA"],
         ["02", "", "Grad Rijeka", "", "", None, "NE"],
-        ["03", "Sanja", "Njirić", "sanja.njiric@primjer.hr", "", date(2015, 3, 1), "DA"],
-        ["03", "Petar", "Njirić", "", "", date(2015, 3, 1), "DA"],
-        ["04", "Nataša", "Prelić Gerdević", "", "051 222 333", None, "DA"],
-        ["05", "Sanja", "Njirić", "sanja.njiric@primjer.hr", "", date(2020, 9, 15), "DA"],
+        ["03", "Sanja", "Kljukić", "sanja.kljukic@primjer.hr", "", date(2015, 3, 1), "DA"],
+        ["03", "Petar", "Jarić", "", "", date(2015, 3, 1), "DA"],
+        ["04", "Željko", "Hustek", "", "051 222 333", None, "DA"],
+        ["05", "Sanja", "Kljukić", "sanja.kljukic@primjer.hr", "", date(2020, 9, 15), "DA"],
     ],
     "Zamjenski očitavači": [
-        ["04", "Sanja", "Njirić", "sanja.njiric@primjer.hr", ""],
+        ["04", "Sanja", "Kljukić", "sanja.kljukic@primjer.hr", ""],
     ],
 }
 
