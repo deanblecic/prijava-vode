@@ -14,6 +14,7 @@
   <div><b>{{ za_provjeru }}</b><span>označeno za provjeru</span></div>
   <div><b>{{ ukupna_razlika|floatformat:3 }} m³</b><span>ukupna potrošnja</span></div>
 </div>
+{% if referentni %}<p class="tiho">Referentni dan očitanja je {{ referentni|date:"d.m.Y." }}; očitanja prije tog dana ispisana su <span class="prerano-tekst">crveno</span>.</p>{% endif %}
 <table>
   <thead><tr>
     <th>Stan</th><th>Ime i prezime</th><th>Datum očitanja</th>
@@ -22,7 +23,7 @@
   </tr></thead>
   <tbody>
   {% for r in redovi %}{% with o=r.ocitanje %}
-    <tr{% if not o %} class="nedostaje"{% endif %}>
+    <tr{% if not o %} class="nedostaje"{% elif r.prerano %} class="prerano" title="Očitano prije referentnog dana ({{ referentni|date:'d.m.Y.' }})"{% endif %}>
       <td><a href="{% url 'stan' r.stan.pk %}?mjesec={{ mjesec|date:'Y-m' }}">{{ r.stan.broj_stana }}</a></td>
       <td>{{ r.vlasnici|default:"–" }}</td>
       {% if o %}

@@ -128,7 +128,7 @@ class PostavkeForm(forms.ModelForm):
     class Meta:
         model = Postavke
         fields = [
-            "rok_dan", "nakon_roka",
+            "rok_dan", "nakon_roka", "referentni_dan",
             "podsjetnik_raspored", "dan_ocitanja", "podsjetnik_broj_dana", "podsjetnik_dani", "sat_podsjetnika",
             "email_stanarima",
             "obavijest_raspored", "obavijest_od_dana", "obavijest_broj_dana", "obavijest_dani", "sat_obavijesti",
@@ -152,6 +152,9 @@ class PostavkeForm(forms.ModelForm):
         rok = podaci.get("rok_dan")
         if rok is None:
             return podaci
+        referentni = podaci.get("referentni_dan")
+        if referentni and rok and referentni > rok:
+            self.add_error("referentni_dan", f"Ne može biti iza krajnjeg roka ({rok}.).")
         for raspored, od_dana, dani in (
             ("podsjetnik_raspored", "dan_ocitanja", "podsjetnik_dani"),
             ("obavijest_raspored", "obavijest_od_dana", "obavijest_dani"),

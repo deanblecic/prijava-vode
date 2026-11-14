@@ -5,7 +5,7 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 
 from .models import (
-    AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje, Postavke, Stan, Vodomjer, ZamjenskiOcitavac, Zgrada,
+    AdministratorZgrade, Korisnik, KorisnikStan, Ocitanje, Postavke, ReferentniDan, Stan, Vodomjer, ZamjenskiOcitavac, Zgrada,
 )
 
 # Django administracija ne zna za zgrade, pa je smije koristiti samo superadministrator.
@@ -111,3 +111,4 @@ class OcitanjeAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Postavke)
+admin.site.register(ReferentniDan)

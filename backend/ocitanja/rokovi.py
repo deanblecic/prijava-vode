@@ -1,6 +1,7 @@
 """Krajnji rok očitanja zgrade i dani na koje se šalju podsjetnici suvlasnicima i obavijesti administratoru.
 
-Razdoblje očitanja traje od 1. u mjesecu do dana roka. Dani slanja računaju se uvijek unutar tog razdoblja.
+Razdoblje očitanja traje od 1. u mjesecu do dana roka. Dani slanja računaju se uvijek unutar tog razdoblja;
+podsjetnici suvlasnicima kreću od referentnog dana očitanja ako je postavljen.
 """
 import calendar
 import datetime
@@ -36,33 +37,49 @@ def datum_roka(postavke, mjesec):
     return mjesec.replace(day=dan_roka(postavke.rok_dan, mjesec))
 
 
-def dani_slanja(raspored, rok, *, od_dana=1, broj_dana=1, dani=()):
-    """Dani u mjesecu (1..rok) na koje se šalje poruka po odabranom rasporedu."""
+def referentni_dan(zgrada_id, mjesec):
+    """Referentni dan očitanja koji je vrijedio u mjesecu, skraćen na zadnji dan kraćeg mjeseca; None ako ga nema."""
+    from .models import ReferentniDan
+
+    dan = ReferentniDan.za_mjesec(zgrada_id, mjesec)
+    return min(dan, zadnji_u_mjesecu(mjesec).day) if dan else None
+
+
+def datum_referentnog_dana(zgrada_id, mjesec):
+    dan = referentni_dan(zgrada_id, mjesec)
+    return mjesec.replace(day=dan) if dan else None
+
+
+def dani_slanja(raspored, rok, *, od_dana=1, broj_dana=1, dani=(), pocetak=1):
+    """Dani u mjesecu (pocetak..rok) na koje se šalje poruka po odabranom rasporedu."""
+    pocetak = max(1, min(pocetak, rok))
     if raspored == "prvi":
-        odabrani = {1}
+        odabrani = {pocetak}
     elif raspored == "prvi_rok":
-        odabrani = {1, rok}
+        odabrani = {pocetak, rok}
     elif raspored == "rok":
         odabrani = {rok}
     elif raspored == "predzadnji_rok":
         odabrani = {rok - 1, rok}
     elif raspored == "svaki_dan":
-        odabrani = set(range(1, rok + 1))
+        odabrani = set(range(pocetak, rok + 1))
     elif raspored == "od_dana":
-        odabrani = set(range(min(od_dana, rok), rok + 1))
+        odabrani = set(range(min(max(od_dana, pocetak), rok), rok + 1))
     elif raspored == "prije_roka":
         odabrani = set(range(rok - max(broj_dana, 1) + 1, rok + 1))
     elif raspored == "prilagodeno":
         odabrani = {int(d) if int(d) > 0 else rok + int(d) for d in dani}
     else:
         odabrani = set()
-    return sorted(d for d in odabrani if 1 <= d <= rok)
+    return sorted(d for d in odabrani if pocetak <= d <= rok)
 
 
 def dani_podsjetnika(postavke, mjesec):
+    """Podsjetnici suvlasnicima; s referentnim danom kreću od njega (i raspored „od dana” počinje tim danom)."""
+    pocetak = referentni_dan(postavke.zgrada_id, mjesec)
     return dani_slanja(
-        postavke.podsjetnik_raspored, dan_roka(postavke.rok_dan, mjesec),
-        od_dana=postavke.dan_ocitanja, broj_dana=postavke.podsjetnik_broj_dana, dani=postavke.podsjetnik_dani,
+        postavke.podsjetnik_raspored, dan_roka(postavke.rok_dan, mjesec), pocetak=pocetak or 1,
+        od_dana=pocetak or postavke.dan_ocitanja, broj_dana=postavke.podsjetnik_broj_dana, dani=postavke.podsjetnik_dani,
     )
 
 
