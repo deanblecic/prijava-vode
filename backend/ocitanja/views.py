@@ -1,6 +1,10 @@
+from decimal import Decimal, InvalidOperation
+
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.conf import settings
+from django.core.cache import cache
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.authtoken.models import Token
@@ -8,6 +12,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from . import citac
 from .models import Ocitanje, Zapisnik, Zgrada
 from .serializers import (
     OcitanjeSerializer,
@@ -111,3 +116,24 @@ def ocitanja(request):
         OcitanjeSerializer(ocitanje, context={"request": request}).data,
         status=status.HTTP_201_CREATED,
     )
+
+
+@api_view(["POST"])
+def procitaj(request):
+    """Stanje vodomjera s fotografije (Claude), za prijedlog u polju za upis; ništa se ne sprema."""
+    if not citac.ukljucen():
+        return Response({"kod": "nije_ukljuceno"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+    fotografija = request.FILES.get("fotografija")
+    if fotografija is None or fotografija.size > 8 * 1024 * 1024:
+        return Response({"kod": "neispravna_fotografija"}, status=status.HTTP_400_BAD_REQUEST)
+    kljuc = f"citanja:{request.user.pk}:{timezone.localdate():%Y%m%d}"
+    cache.add(kljuc, 0, 24 * 3600)
+    if cache.incr(kljuc) > settings.CITANJA_DNEVNO:
+        return Response({"kod": "previse_citanja"}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+    prethodno = None
+    try:
+        prethodno = Decimal(request.data.get("prethodno_stanje") or "0")
+    except InvalidOperation:
+        pass
+    stanje, sigurno = citac.procitaj(fotografija.read(), prethodno)
+    return Response({"stanje": str(stanje) if stanje is not None else None, "sigurno": sigurno})

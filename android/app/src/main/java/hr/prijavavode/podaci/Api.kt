@@ -52,6 +52,10 @@ data class Ocitanje(
         }
 }
 
+/** Stanje koje je server (Claude) pročitao s fotografije; null ako brojilo nije čitljivo. */
+@Serializable
+data class Procitano(val stanje: String? = null, val sigurno: Boolean = false)
+
 @Serializable
 data class Vodomjer(
     val id: Long,
@@ -155,4 +159,11 @@ interface Api {
         @PartMap polja: Map<String, @JvmSuppressWildcards RequestBody>,
         @Part fotografija: MultipartBody.Part?,
     ): Response<Ocitanje>
+
+    @Multipart
+    @POST("api/ocitanja/procitaj/")
+    suspend fun procitaj(
+        @PartMap polja: Map<String, @JvmSuppressWildcards RequestBody>,
+        @Part fotografija: MultipartBody.Part,
+    ): Response<Procitano>
 }

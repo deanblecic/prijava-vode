@@ -94,6 +94,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# Očitanje vodomjera s fotografije pomoću Claudea kad mobitel sam ne pročita broj (ocitanja/citac.py).
+# Bez ključa se fotografije nikamo ne šalju i aplikacija koristi samo prepoznavanje na mobitelu.
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-opus-5-5")
+# Najviše toliko očitanja s fotografije po korisniku na dan (zaštita od troška).
+CITANJA_DNEVNO = int(os.environ.get("CITANJA_DNEVNO", "20"))
+
 # Argon2 za nove lozinke; postojeće se prebacuju same kod sljedeće prijave.
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.Argon2PasswordHasher",

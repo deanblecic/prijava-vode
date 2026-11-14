@@ -8,6 +8,7 @@ urlpatterns = [
     path("ja/", views.ja, name="api-ja"),
     path("lozinka/", views.lozinka, name="api-lozinka"),
     path("ocitanja/", views.ocitanja, name="api-ocitanja"),
+    path("ocitanja/procitaj/", views.procitaj, name="api-procitaj"),
     path("obavijesti/pretplata/", pwa.pretplata, name="api-pretplata"),
     path("obavijesti/proba/", pwa.proba, name="api-proba"),
 ]
