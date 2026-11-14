@@ -344,4 +344,36 @@ class CitacBrojilaTest {
         // Preostale dvije pogreške su fotografije na kojima je OCR ispustio ili dodao znamenku brojila.
         assertTrue("Krivo ponuđeno: $krivo", krivo.size <= 2)
     }
+
+    @Test
+    fun cijeliBroj() {
+        assertEquals(listOf(BigDecimal("784")), CitacBrojila.cijeliBrojevi(listOf("15686132", "00784806"), BigDecimal("781.885")).take(1))
+        assertEquals(BigDecimal("1993"), CitacBrojila.cijeliBrojevi(listOf("1:9:9:3:4 2 6", "60700247"), null).first())
+    }
+
+    @Test
+    fun glasanjeBiraNajcesciBroj() {
+        val citanja = listOf(listOf("7805"), listOf("00784806"), listOf("0078 4806"), listOf("m3"))
+        assertEquals(BigDecimal("784"), CitacBrojila.glasaj(citanja, BigDecimal("770.512")).first())
+        assertTrue(CitacBrojila.glasaj(listOf(listOf("m3"), emptyList()), BigDecimal.ONE).isEmpty())
+    }
+
+    /**
+     * Cijeli broj m³ uz glasanje između šest inačica svake od 20 fotografija (ocr-inacice.tsv:
+     * datoteka, točno, prethodno, inačica, retci), kao u Prepoznavanje.procitaj.
+     */
+    @Test
+    fun zbirkaCijeliBrojGlasanjem() {
+        val redovi = javaClass.getResource("/vodomjeri/ocr-inacice.tsv")!!.readText().lines()
+            .filter { it.isNotBlank() }.map { it.split("\t") }
+        var tocno = 0
+        val krivo = mutableListOf<String>()
+        for ((datoteka, inacice) in redovi.groupBy { it[0] }) {
+            val stanje = BigDecimal(inacice[0][1]).setScale(0, java.math.RoundingMode.DOWN)
+            val prvi = CitacBrojila.glasaj(inacice.map { it.drop(4) }, BigDecimal(inacice[0][2])).firstOrNull() ?: continue
+            if (prvi.compareTo(stanje) == 0) tocno++ else krivo += "$datoteka: $prvi"
+        }
+        assertTrue("Točno samo $tocno", tocno >= 11)
+        assertTrue("Krivo ponuđeno: $krivo", krivo.size <= 4)
+    }
 }

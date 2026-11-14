@@ -18,3 +18,15 @@ Rezultat na ovih 20 fotografija (prvi ponuđeni broj, s prethodnim stanjem):
 Na 10 fotografija OCR uopće ne pročita brojilo (mutno, nakošeno, odsjaj, kazaljke); tada je
 bolje ne ponuditi ništa nego uvjerljiv krivi broj. Dvije preostale pogreške (`elster-1510133`,
 `wehrle-314704`) su fotografije na kojima je OCR ispustio ili dodao znamenku.
+
+## Cijeli broj (m³) uz glasanje
+
+Aplikacija nudi samo cijeli broj prije zareza i čita šest inačica slike (cijela, izrezi 80 % i 60 %,
+izrez s kontrastom, izrez zakrenut ±10°), pa bira broj koji se najčešće pročita. Retci za svaku
+inačicu su u `ocr-inacice.tsv`; test `zbirkaCijeliBrojGlasanjem`.
+
+| cijeli broj, s prethodnim stanjem | točno | krivo | ništa |
+|---|---|---|---|
+| jedno čitanje | 9 | 1 | 10 |
+| glasanje 6 inačica | 11 | 4 | 5 |
+

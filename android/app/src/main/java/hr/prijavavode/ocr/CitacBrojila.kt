@@ -62,6 +62,26 @@ object CitacBrojila {
         val triDecimale: Boolean = false,
     )
 
+    /**
+     * Cijeli kubni metri (crne znamenke), bez decimala: suvlasnici upisuju samo broj prije zareza.
+     * Redoslijed je isti kao u [kandidati].
+     */
+    fun cijeliBrojevi(linije: List<String>, prethodno: BigDecimal?): List<BigDecimal> =
+        kandidati(linije, prethodno).map { it.setScale(0, RoundingMode.DOWN) }.distinct()
+
+    /**
+     * Glasanje između više čitanja iste fotografije (izrezi, kontrast, zakretanje): prvi je cijeli
+     * broj koji je najviše čitanja ponudilo kao najvjerojatniji (kod jednakog broja glasova onaj
+     * iz ranijeg čitanja), a iza njega ostali brojevi za izbor.
+     */
+    fun glasaj(citanja: List<List<String>>, prethodno: BigDecimal?): List<BigDecimal> {
+        val poCitanju = citanja.map { cijeliBrojevi(it, prethodno) }
+        val glasovi = poCitanju.mapNotNull { it.firstOrNull() }
+        val broj = glasovi.groupingBy { it }.eachCount()
+        val pobjednici = glasovi.distinct().sortedByDescending { broj[it] }
+        return (pobjednici + poCitanju.flatten()).distinct()
+    }
+
     fun kandidati(linije: List<String>, prethodno: BigDecimal?): List<BigDecimal> {
         val svi = mutableListOf<Kandidat>()
         val ocisceneLinije = linije.map(::popraviZnakove)
