@@ -1,14 +1,17 @@
 """Web stranice administratora zgrade: korisnici, spajanje računa, administratori, stanovi, zgrade i zapisnik."""
+from io import BytesIO
+
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.core.exceptions import PermissionDenied
-from django.db import transaction
-from django.http import Http404
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import IntegrityError, transaction
+from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import NoviAdministratorForm, NoviStanForm, ZamjenaVodomjeraForm, ZgradaForm
-from .models import Korisnik, Postavke, Stan, Vodomjer, Zapisnik
+from .models import Korisnik, Postavke, Stan, Vodomjer, Zapisnik, Zgrada
+from .predlozak_uvoza import napravi_predlozak
 from .racuni import (
     GreskaRacuna,
     dodaj_administratora,
@@ -23,6 +26,7 @@ from .racuni import (
     ukloni_administratora,
 )
 from .sigurnost import ponisti_dva_koraka
+from .uvoz import procitaj, provjeri, tablica_pristupa, uvezi
 from .upravljanje import KLJUC_ZGRADE, kljuc_stana, samo_administrator, za_zgradu
 
 
@@ -261,3 +265,99 @@ def ponisti(request, pk):
                    request=request, zgrada=zapis.zgrada, zapis=zapis.pk)
     messages.success(request, f"Spajanje je poništeno; račun {odlazi.username} ponovno radi.")
     return redirect("zapisnik")
+
+
+SESIJA_UVOZA = "uvoz_podaci"
+SESIJA_PRISTUPA = "uvoz_pristup"
+
+
+def excel_odgovor(knjiga, ime_datoteke):
+    izlaz = BytesIO()
+    knjiga.save(izlaz)
+    odgovor = HttpResponse(
+        izlaz.getvalue(), content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    odgovor["Content-Disposition"] = f'attachment; filename="{ime_datoteke}"'
+    return odgovor
+
+
+def samo_superadministrator(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied
+
+
+@samo_administrator
+def uvoz_predlozak(request):
+    samo_superadministrator(request)
+    primjer = request.GET.get("primjer") == "1"
+    return excel_odgovor(napravi_predlozak(primjer), "uvoz-zgrade-primjer.xlsx" if primjer else "uvoz-zgrade-predlozak.xlsx")
+
+
+def pregled_plana(plan):
+    """Stanovi s imenima suvlasnika i zamjenskih očitavača, za pregled prije potvrde."""
+    redovi = []
+    for s in plan.stanovi:
+        broj = s["broj_stana"]
+        redovi.append({
+            **s,
+            "vlasnici": ", ".join(o.puno_ime for b, o, _ in plan.vlasnistva if b == broj),
+            "zamjenski": ", ".join(o.puno_ime for b, o in plan.zamjene if b == broj),
+        })
+    return redovi
+
+
+@samo_administrator
+def uvoz_zgrade(request):
+    samo_superadministrator(request)
+    kontekst = {}
+    if request.method == "POST" and request.POST.get("akcija") == "potvrdi":
+        podaci = request.session.get(SESIJA_UVOZA)
+        if not podaci:
+            messages.error(request, "Tablica više nije spremljena (istekla je prijava). Učitajte je ponovno.")
+            return redirect("uvoz_zgrade")
+        plan, greske = provjeri(podaci)
+        if greske:
+            request.session.pop(SESIJA_UVOZA, None)
+            return render(request, "upravljanje/uvoz.html", {"greske": greske})
+        try:
+            zgrada, pristup = uvezi(plan, request)
+        except (IntegrityError, ValidationError):
+            messages.error(request, "Netko je u međuvremenu promijenio podatke zgrade. Učitajte tablicu ponovno.")
+            return redirect("uvoz_zgrade")
+        request.session.pop(SESIJA_UVOZA, None)
+        request.session[SESIJA_PRISTUPA] = {"zgrada": zgrada.pk, "pristup": pristup}
+        request.session[KLJUC_ZGRADE] = zgrada.pk
+        return redirect("uvoz_gotovo")
+    if request.method == "POST":
+        request.session.pop(SESIJA_UVOZA, None)
+        datoteka = request.FILES.get("tablica")
+        if datoteka is None:
+            kontekst["greske"] = [{"list": "Datoteka", "red": None, "poruka": "Odaberite Excel tablicu."}]
+        else:
+            podaci, greske = procitaj(datoteka)
+            plan = None
+            if not greske:
+                plan, greske = provjeri(podaci)
+            if greske:
+                kontekst["greske"] = greske
+            else:
+                request.session[SESIJA_UVOZA] = podaci
+                kontekst.update({
+                    "plan": plan, "stanovi": pregled_plana(plan), "ime_datoteke": datoteka.name,
+                    "nove_osobe": sum(1 for o in plan.osobe if o.postojeci is None),
+                    "s_prijavom": sum(1 for o in plan.osobe if o.prijava),
+                    "vodomjera": sum(1 for s in plan.stanovi if s["ima_vodomjer"]),
+                })
+    return render(request, "upravljanje/uvoz.html", kontekst)
+
+
+@samo_administrator
+def uvoz_gotovo(request):
+    samo_superadministrator(request)
+    rezultat = request.session.get(SESIJA_PRISTUPA)
+    if rezultat is None or request.method == "POST":
+        request.session.pop(SESIJA_PRISTUPA, None)
+        return redirect("stanovi" if rezultat else "zgrade")
+    zgrada = get_object_or_404(Zgrada, pk=rezultat["zgrada"])
+    if request.GET.get("preuzmi") == "1":
+        return excel_odgovor(tablica_pristupa(zgrada, rezultat["pristup"]), f"pristupni-podaci-{zgrada.oznaka}.xlsx")
+    return render(request, "upravljanje/uvoz_gotovo.html", {"zgrada": zgrada, "pristup": rezultat["pristup"]})
