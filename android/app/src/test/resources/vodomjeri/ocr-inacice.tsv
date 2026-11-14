@@ -1,0 +1,120 @@
+siemens-784806.png	784.806	781.885	orig	CE	M15	0102	15686132	m3	Q,2.5DE-08-MI001-OTB018	SIEMENS
+siemens-784806.png	784.806	781.885	izrez0.8	M150102	15686132	m3	Q.2.5DE-08-MI001-0TB018	T30R80NR40V	SIEMENS
+siemens-784806.png	784.806	781.885	izrez0.8+kontrast	CEI	M150102	15686132	Q.2.5DE-08-MI001-0TB018	MPa	T30R80NR40VY	SIEMENS
+siemens-784806.png	784.806	781.885	izrez0.8+rot-10	CE	M150102	15686132	Q,2.5DE-08-MI0010TB018	T30-R80R	m3	AMPa	SIEMENS
+siemens-784806.png	784.806	781.885	izrez0.8+rot10	CE	M150102	15686132	m3	MPa	Q.2.5DE-08-MI001-0TB018	T30R80MR40V	SIEMENS
+siemens-784806.png	784.806	781.885	izrez0.6	CE	M150102	15686132	80	Q,2.5DE-08-MI001-0TB018	MPa	T30R80NR40	SIEMENS
+siemens-781885.jpg	781.885	775.885	orig	M15	0102	15686132	Q0781885	m?	Q32,5DE-08-MI001-PTB018	T30R80H/R40V16MPa	SIEMENS
+siemens-781885.jpg	781.885	775.885	izrez0.8	M15	0102	15686132	Q0781885	Q32,5DE.08-M1001-PTB018	T30R80H/R40V16MPa	SIEMENS
+siemens-781885.jpg	781.885	775.885	izrez0.8+kontrast	CE	M15	0102	15686132	10780885	Q:2,5DE-08-M1001-PTB018	T30R80H/R40V16MPa	SIEMENS
+siemens-781885.jpg	781.885	775.885	izrez0.8+rot-10	M15	0102	15686132	Q32,5DE-08-M1001-PTB018	T30R80H/R40V16MPa	SIEMENS
+siemens-781885.jpg	781.885	775.885	izrez0.8+rot10	0102	CE	M15	15686132	m?	1078188	Q32,5DE-08-MI001-PTB018	T30R80H/R40V16MPa	SIEMENS
+siemens-781885.jpg	781.885	775.885	izrez0.6	CE	M150102	15686132	0078188	Q325DE-08-M1001-PTB018	T30R80H/R40V16MPa	SIEMENS
+elster-1993426.jpg	1993.426	1970.110	orig	D92	B-H A-V	613192	Qn15mm	1993426	ELSTER	ELSTERMesstechnik	HRZ-141016	X0.0001	Tmax+30c	60700247	2006
+elster-1993426.jpg	1993.426	1970.110	izrez0.8	D92	B-H A-V	613192	Qn1.5mm	1993426	ELSTER	ELSTERMesstechnk	HAZ-141016	X0.0001	Tmax+30C	60700247	2006
+elster-1993426.jpg	1993.426	1970.110	izrez0.8+kontrast	D92	B-HAV	613192	Qn1.5mm	1993429	ELSTER	ELsTERMesstechnk	HAZ141O16	X0.0001	Tmax-30C	60700247	2006
+elster-1993426.jpg	1993.426	1970.110	izrez0.8+rot-10	D92	613192	B-H AV	Qn1.5mm	199342	ELSTER	ELSTERMesstechnik	HRZ-141016	Tmax+30C	X0.0001	60700247	2006
+elster-1993426.jpg	1993.426	1970.110	izrez0.8+rot10	B-HAV	D92	Qn1.5mm	613192	ELSTER	ELSTER Messtechni	X0.0001	HAZ-141016	Tmax+30C	60700247	2006
+elster-1993426.jpg	1993.426	1970.110	izrez0.6	92	B-H A-V	Qn1.5mm	13192	ELSTER	ELSTERMesstechni	HAZ-141016	X0.0001	Tmax+30C	60700247	2006
+elster-1970.jpg	1970	1964	orig	1391710197	ELSTER	EuSTER Messtecmcik	Tmax+soc	60700247	2008
+elster-1970.jpg	1970	1964	izrez0.8	ELSTER	EuSTER Messtecmnik	Tmax+5oc	80700247	2008
+elster-1970.jpg	1970	1964	izrez0.8+kontrast	ELSTER	EaSTER Messtecmnik	Tmaxso.c	60700247	2008
+elster-1970.jpg	1970	1964	izrez0.8+rot-10	139701	ELSTER	ELSTER Messtecmnik	Tmax+soc	X00001	60700247	2006
+elster-1970.jpg	1970	1964	izrez0.8+rot10	13971019	ELSTER	ELSTER Messtecmnik	x00001	Tmax+so'c	80700247	2006
+elster-1970.jpg	1970	1964	izrez0.6	197014	ELSTER	EuSTERMesstecmik	Tmaxsoe	80700247	2008
+unimag-2473273.jpg	2473.273	2467.273	orig	Unimag	ACTARIS	TUA	00001元	HRZ-14-109830COn1516baBH-A	02473273	05/240734
+unimag-2473273.jpg	2473.273	2467.273	izrez0.8	Unimag	ACTARIS	TUA	00001元	HRZ-14-109830COn1516baB-A	02473273	05/240734
+unimag-2473273.jpg	2473.273	2467.273	izrez0.8+kontrast	Unimag	ACTARIS	TUA	200001	HRZ-14-109830COn1515baBH-A	02473273	05/240734
+unimag-2473273.jpg	2473.273	2467.273	izrez0.8+rot-10	Unimag	ACTARIS	TUA	HRZ-14-109830°COn1516baB-A	200001元	02473273	05/240734
+unimag-2473273.jpg	2473.273	2467.273	izrez0.8+rot10	Unimag	00001元	ACTARIS	TUA	HRZ-14-109830°COn1516baBH-A	02473273	05/240734
+unimag-2473273.jpg	2473.273	2467.273	izrez0.6	Unimag	ACTARIS	TUA	00001元	HRZ-14-109830COn1516baBH-A	02473273	05/240734
+siemens-497139.jpg	497.139	491.139	orig	CE	M140102	14004945	09497139	m3	Q32,5DE-08-MI001.PTB018	SIEMENS
+siemens-497139.jpg	497.139	491.139	izrez0.8	CE	M140102	14004945	00497139	m3	Q32,5DE-08-M1001.PTB018	SIEMENS
+siemens-497139.jpg	497.139	491.139	izrez0.8+kontrast	CE	M140102	14004945	09497139	m3	Q,2.5DE-08-MI001.PTB018	SIEMENS
+siemens-497139.jpg	497.139	491.139	izrez0.8+rot-10	CE	M140102	6546760	14004945	Q32,5DE-08-MI001.PTB018	m3	SIEMENS
+siemens-497139.jpg	497.139	491.139	izrez0.8+rot10	CE	M140102	14004945	65146760	m3	Q2.5DE-08-MI001.PTB018	SIEMENS
+siemens-497139.jpg	497.139	491.139	izrez0.6	CE	M140102	14004945	09497139	Q32,5DE-08-MI001.PTB018	SIEMENS
+abb-595604.jpg	595.604	589.604	orig	C92	BHAV	6.131.92	Qn2.5m/h	095650	ABB	ABBKentMesstechnik	2-14-1016	X0,000	nax	30403515	2003
+abb-595604.jpg	595.604	589.604	izrez0.8	D92	B'HAV	6.131.92	Qn2.5m/h	095650	ABB	ABBKentMesstechnik	4-1016	X0,0	30403515	2003
+abb-595604.jpg	595.604	589.604	izrez0.8+kontrast	D92	BHA·V	6.131.92	Qn2.5m/h	ABB	ABBKentMesstechniki	4-1016	X0,0	30403515	2003
+abb-595604.jpg	595.604	589.604	izrez0.8+rot-10	6.131.92	B'H AV	Qn2,5m	ABB	ABBKentMesstechnik	4-1016	X0,0	30403515	2003
+abb-595604.jpg	595.604	589.604	izrez0.8+rot10	B'H A'	92	Qn2.5m/h	131.92	59:5604	ABB	ABBKentMesstechnik	X0,0	4-1016	30403515	2003
+abb-595604.jpg	595.604	589.604	izrez0.6	BKentMesstechnik	016	30403515	2003
+mutna-887084.jpg	887.084	881.084	orig	CE	M150102	15959824	8088708	130R50HR3
+mutna-887084.jpg	887.084	881.084	izrez0.8	CE	M150102	15959824	00887086	RSHRS
+mutna-887084.jpg	887.084	881.084	izrez0.8+kontrast	CEM150102	15959824	CDBBZRBE	RSOHRS
+mutna-887084.jpg	887.084	881.084	izrez0.8+rot-10	CE	M150102	15959824	8088708
+mutna-887084.jpg	887.084	881.084	izrez0.8+rot10	CE	M150102	15959824	0088708E	R0HR
+mutna-887084.jpg	887.084	881.084	izrez0.6	M150102	15959824	188
+unimag-1301391.jpg	1301.391	1295.391	orig	Unimag	ACTARIS	TU4	HRZ-14-109830C Qn1,5 16barBH-A	x0.0001m3	T30T39	05/468527
+unimag-1301391.jpg	1301.391	1295.391	izrez0.8	Unimag	ACTARIS	TU4	x0.0001m3	HRZ-14-109830°CQn15 16bar	BH-A	OT30T391	05/468527
+unimag-1301391.jpg	1301.391	1295.391	izrez0.8+kontrast	Unimag	ACTARIS	TU4	x0.0001m	HRZ-14-109830CQn1516barBH-A	OT3OT39	05/468527
+unimag-1301391.jpg	1301.391	1295.391	izrez0.8+rot-10	Unimag	ACTARIS	TU4	HRZ-14-109830°C Qn15 16barBH-A	T30T399	x0.0001m3	05/468527
+unimag-1301391.jpg	1301.391	1295.391	izrez0.8+rot10	Unimag	ACTARIS	x0.0001m3	TU4	BH-A	HRZ-14-109830°C Qn15 16bar	OT30T39	05/468527
+unimag-1301391.jpg	1301.391	1295.391	izrez0.6	Unimag	LRIS	x0.0001m	109830CQn1516barBH-A	OT30T391	05/468527
+unimag-novine-1666930.jpg	1666.930	1660.930	orig	Nove Opel Cors	Unimag	ACTARIS	TUO	7Z-10-1090 30°CQn1515bal	0.0001m	BM-A	01666930	05/240433	G2program	tebljenihvozila	PRODAJAUHRVATST	Opelvladatrzistem	ve godine su se na hrvat.	skom trzistu automobila	anplitude prodoje milie-	ryaieosepadealiko	bila na drugom mie	jejedn-Opeljeidalenojprodon	aliJoje	vgnijamarkouHrvatsko.	prodaja u ocekyanju Ukuore	Cd pocetka 2006.godinekod	dlucilo 374Hrvata,azaVectru	nas je prodano 54.988 vozilo.U	321 kupac.Opel u Hrvatskoj cvr-	sto grabi naprijed ina najboliem	prvommiestuprodo	Bstalimodeli.	Dobro se prodajui	je putudalovu godinu okoncana	hvaljujucisvojim ci	maipoklonicima	kolovoskim
+unimag-novine-1666930.jpg	1666.930	1660.930	izrez0.8	Opel Cos	Unimag	vatakaj	Z-10-109030'C Qn1515bar	xo.0001m	BM-A	01666930	05/240433	am	pozila	PRODAJAUHRVAT	Opelvladatrzistem	skom trzistu automobila	anplitude prodoje mije.	ryaie,rosleipadale,alikonstana	ejednu-Ope jeidalienaiprodon	vgnijamarkoutirvatsko.	nerocje.nestoopala	Cd poetka 2006.godine kod	odlucilo 374 Hrvata,a za Vectru	nas je prodano 54988 vzilo.U	321 kupac.Opel u Hrvatskoj cvr-	sto grabi naprijied ina najboliem	prvo	hva	je putu da lovu godinu okoncana	Opelobuhvaca	me	kolovoskim
+unimag-novine-1666930.jpg	1666.930	1660.930	izrez0.8+kontrast	Opel Cos	Unimag	votake	ACTARIS	Z-16-109030CQn1515barBH-A	sD.0001m	01666939	05/240433	Opelvladatrzistem	godinesu se ra hrvat.	skom tzistu automobila	anplitude prodoje mije-	ryaie,roslepadale,alikonstana	blla na drugom m	kejedna-Ope jeidalienaiprodon	vnijamorkouHrvatsko.	prodajaocekvany	nerocjenestoopala	Cd pocetka 2006.godinekod	dlucilo 374 Hrvata,aza Vectnu	nas je prodane 54988 vozilaU	321 kupac.OpeluHrvatskoj cvr	sto grabi naprijedi na najboliem	prvo	ostall modeli.	je putu da lovu godinu okoncana	Opelobuhvaca
+unimag-novine-1666930.jpg	1666.930	1660.930	izrez0.8+rot-10	OpelCoa	votskaj	Unimag	ACTARIS	TU4	7Z-10-1090 30°C Qn1515bar	61666930	BH-A	20.0001m	05/240433	PRODAJAUHRVATSR	Opelvladatrzistem	ve godine su se ra hrvat	kom	trzistu automobila	anplitude prodoje mile	ryaie,roslepadale,alikonstona	kejedru-Opejeidalienojprodon	vgnijamarkouHrvatsko.	Cdpotetka 2006.godine kod	nas je prodano 54.988 vozila.U	osam mjeseci zabiljezeno	odlucilo 374 Hrvata, a za Vectru	kolovoskim	321 kupac.Opel u Hrvatskoj cyr-	prvo	hva
+unimag-novine-1666930.jpg	1666.930	1660.930	izrez0.8+rot10	Unimag	ACTARIS	2o.0001m	BM-A	Z-10-109030'C Qn15 15bar	01666930	05/240433	manava	PRODAJAUHRVA	ozila	Opelvladatrzistem	ve godine su se ra hrvat.	aliJje	skom trzistu automobila	bila na drugom mie	anplitude prodoje mije-	odlucilo374Hrvata,a zaVectn	321 kupac.Opel u Hrvaiskoj	ryale,rosieipadale,alikonstanta	sto grabi naprijed ina najbol	lejtdna-Opeljeidalenojprodon	dano,zauspjeh op	jeputu da iovugodinu okone	vqnijamarkoutHirvatskoy.	se	Cdpotetka 2006.godinekod	Dobro se prodaju	Merivu	nas je prodano 54.988vozila.U	Tako je Zafira najproo	imeOpelobuhvato	novolumen(538),za	kolovoskin
+unimag-novine-1666930.jpg	1666.930	1660.930	izrez0.6	Unimag	ACTARIS	7Z-1-1090 30'cQn1515bar	0.0001m	BM-A	05/240433	GO	PRODAJAUHRVATS	Opelvladatrzistem	skom tzistu autonobia	anplitude prodoje mile	ale,osleipadolealikonstonta	ednu-Opejeidalenaiprodon	ljamorkoutirvatsko.	nerocjenestoopala	d pocetka 2006.godine kod	odlucilo 374 Hrvata,a z5	jeprodano54988vozilaU	321 kupac.Opel u Hrva	osammjeseci zabiljezeno	sto grabi naprijed i na	je putu da lovu godi
+kazaljke-2565.jpg	2565	2559	orig	01	2.5	bar	100	1062	14-	HR	100
+kazaljke-2565.jpg	2565	2559	izrez0.8	100	01	bar	bar	PN	01
+kazaljke-2565.jpg	2565	2559	izrez0.8+kontrast	100	01	06	0.6	06	OM	1062	06
+kazaljke-2565.jpg	2565	2559	izrez0.8+rot-10	M100	01	bar	bar	25	0.6t	OM	01	HR.Z-14-1062	001
+kazaljke-2565.jpg	2565	2559	izrez0.8+rot10	01	100	1062
+kazaljke-2565.jpg	2565	2559	izrez0.6	M100	01	0.6	bar	2.5	AP	1062	HR.Z.
+itron-unimag-1039982.jpg	1039.982	1033.982	orig	D11CB014097	01039982	99	m3	G13110	HRZ-14-1098	Unimag	TU4BH-A	30°cQn2.5j6bar	Itron
+itron-unimag-1039982.jpg	1039.982	1033.982	izrez0.8	D11CB014097	28662010	D99	G13110	m3	HRZ-14-1098	Unimag	TU4	BH-A	30℃Qn2516bar	Itron
+itron-unimag-1039982.jpg	1039.982	1033.982	izrez0.8+kontrast	D11CB014097	32866010	m3	HRZ-14-1098	Unimag	TU4BHA	30can25j6bar	Itron
+itron-unimag-1039982.jpg	1039.982	1033.982	izrez0.8+rot-10	D11CB014097	01	039982	m3	99	G13110	HRZ-14-1098	Unimag	TU4	30cQn2.516bar	BH-A	Itron
+itron-unimag-1039982.jpg	1039.982	1033.982	izrez0.8+rot10	D11CB014097	D99	G13110	039982	m3	Unimag	HRZ-14-1098	BH-A	TU4	30℃cQn2.516bar	Itron
+itron-unimag-1039982.jpg	1039.982	1033.982	izrez0.6	D11CB014097	Z8662010	660	m3	613110	HRZ-14-1098	Unimag	TU4BH-A	30℃Qn2516bar
+elster-1577014.jpg	1577.014	1571.014	orig	①92	B-H A-V	@6131.92	Qn2.5m／h	15737014	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1016	Tmax+30c	X0.0001	63602318	2006
+elster-1577014.jpg	1577.014	1571.014	izrez0.8	①92	B-HA·V	6131.92	Qn2.5m/h	15737014	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1016	Tmax+30c	X0.0001	63602318	2006
+elster-1577014.jpg	1577.014	1571.014	izrez0.8+kontrast	①92	B·HA·V	613192	Qn2.5m/h	1577014	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1016	Tmaxf30C	X0.0001	63602318	2006
+elster-1577014.jpg	1577.014	1571.014	izrez0.8+rot-10	92	@131.92	B·H A·V	15737014	Qn2.5m/h	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1016	Tmax+30c	X0.0001	63602318	2006
+elster-1577014.jpg	1577.014	1571.014	izrez0.8+rot10	B·HA·V	①92	Qn2.5m/h	6131.92	1577014	ELSTER	ELSTERMesstechnik	EV-K	X0.0001	HRZ-14-1016	Tmax+30C	63602318	2006
+elster-1577014.jpg	1577.014	1571.014	izrez0.6	92	B·HAV	131.92	Qn2.5m/h	15737014	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1016	Tmax+30C	X0.0001	63602318
+elster-mutna-1524218.jpg	1524.218	1510.133	orig	931	15124218	STER	0.0001	Aesstechni	53700912	2005
+elster-mutna-1524218.jpg	1524.218	1510.133	izrez0.8	6m	0,000	esstechnik	ELSTER	53700912	2005
+elster-mutna-1524218.jpg	1524.218	1510.133	izrez0.8+kontrast	chnik	X00001	sst	53700912	2005
+elster-mutna-1524218.jpg	1524.218	1510.133	izrez0.8+rot-10	151214218	ELSTER	Messtechnik	400001	TERN	ELOT	53700912	2005
+elster-mutna-1524218.jpg	1524.218	1510.133	izrez0.8+rot10	0.0001	15123421	2005	53700912
+elster-mutna-1524218.jpg	1524.218	1510.133	izrez0.6	82421	8700912
+elster-1510133.jpg	1510.133	1504.133	orig	AH AV	33131	Qn1.5m/h	1510133	ELSTER	ELSTERMesstechnik	EV-W	HRZ-14-1016	Tmax+90C	x0.0001	53700912	2005
+elster-1510133.jpg	1510.133	1504.133	izrez0.8	A'H A-V	33131	Qn1.5mlh	1510133	ELSTER	ELSTERMesstechnik	EV-W	HRZ-14-1016	Tmax +90 c	x0.0001	53700912	2005
+elster-1510133.jpg	1510.133	1504.133	izrez0.8+kontrast	02	A'H A-V	6331.31	Qn1.5m /h	ELSTER	ELTERMesstechnik	EV-W..	HR Z-14-1016	Tmax+90c	x0.0001	53700912	2005
+elster-1510133.jpg	1510.133	1504.133	izrez0.8+rot-10	331.31	A'H A-V	GELOFLESN	Qn1.5m/h	ELSTER	ELSTERMesstechnik	EV-W	HRZ-14-1016	Tmax +90C	53700912	X0.0001	2005
+elster-1510133.jpg	1510.133	1504.133	izrez0.8+rot10	AH A-V	Qn1.5m/h	331.31	1510133	ELSTER	ELSTEP Messtechnik	EV-W	HRZ-14-1016	x0.0001	Tmax +90C	53700912	2005
+elster-1510133.jpg	1510.133	1504.133	izrez0.6	Qn15m/h	1510133	ELSTER	ELSTEPMesstechnik	Z-14-1016	nax+90C	x0.0001	0370
+wehrle-319137.jpg	319.137	314.704	orig	2018	ETK-EAX	23617248	EHRL	6MPa	2.5DE-08-MI001-PTB018	R80HR50M
+wehrle-319137.jpg	319.137	314.704	izrez0.8	2018	ETK-EAX	23617248	EHRL	16MPa	Q,2.5DE-08-MI001-PTB018	20R80HR50
+wehrle-319137.jpg	319.137	314.704	izrez0.8+kontrast	2018	ETK-EAX	23617248	EHRL	6MPa	Q,25DE-08-MI001-PTB018
+wehrle-319137.jpg	319.137	314.704	izrez0.8+rot-10	CEm18 0102	2018	23617248	ETK-EAX	EHRL	Q,2.5DE-08-MI001-PTB018	T30R80H/R50N-16MPa
+wehrle-319137.jpg	319.137	314.704	izrez0.8+rot10	2018	ETK-EAX	CEM180102	VEHRILE	23617248	6MPa	2.5DE-08-MI001-PTB018
+wehrle-319137.jpg	319.137	314.704	izrez0.6	2018	ETK-E	23617248	.6MPa	Q,2.5DE-08-MI001-PTB018	20R80HR51
+wehrle-314704.jpg	314.704	308.704	orig	EWehrleGmbH	M180102	23617248	2018	0031430	ETK-EAX	Q:25DE-08-MI091-PTB018	R50V16MPa
+wehrle-314704.jpg	314.704	308.704	izrez0.8	M180102	CE	2018	ETK-EAX	Q:25DE-08-MI091-PTB018	OH/R50V16MPa
+wehrle-314704.jpg	314.704	308.704	izrez0.8+kontrast	EWehrleGmbH	EM180102	2018	Q:25DE-08-MI091-PTB018	30R80H/R50V16MPa
+wehrle-314704.jpg	314.704	308.704	izrez0.8+rot-10	CE	M180102	m3	2018	ETK-EAX	80H/R50V16MPa
+wehrle-314704.jpg	314.704	308.704	izrez0.8+rot10	EM180102	2018	ETK-EAX	70	16MPa	Q:25DE-08-MI001-PTB018
+wehrle-314704.jpg	314.704	308.704	izrez0.6	E.WehrleGmbHTOo	M180102	470	R5016MPa	Q:25DE-08-MI001-PTB018
+elster-89222.jpg	89.222	84.230	orig	D92	B·H A·V	6.131.92	Qn1.5m/m	0:0.	9222	ELSTER	ELSTERMesstechnik	1-K	Z-14-1016	nax+30℃	X0,0001	61800358
+elster-89222.jpg	89.222	84.230	izrez0.8	D92	B·HA·V	6.131.92	Qn1.5m/m	0:0.	9222	LSTER	STERMesstechnik	-1016	30℃
+elster-89222.jpg	89.222	84.230	izrez0.8+kontrast	D92	B·H A·V	6.131.92	Qn1.5m/h	0:0:	222	19	LSTER	STERMesstechnik	-1016	30℃
+elster-89222.jpg	89.222	84.230	izrez0.8+rot-10	D92	BH AV	6.131.92	Qn1.5m/h	0:0	22	LSTER	TERMesstechnik	16
+elster-89222.jpg	89.222	84.230	izrez0.8+rot10	B·HA·V	92	Qn1.5m/h	131.92	9222	0:0:8.	LSTER	STERMesstechnik	1016	30℃
+elster-89222.jpg	89.222	84.230	izrez0.6	B·H A·V	31.92	2Qn1.5m／m	22	ST	RMesstechnik
+elster-84230.jpg	84.230	79.079	orig	D92	B-HA-V	6.131.92	Qn1.5mm	30	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1016	Tmax+30℃	61800358	X0.0001	2006
+elster-84230.jpg	84.230	79.079	izrez0.8	D92	B-HA-V	6.131.92	Qn1.5mm	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1016	Tmax+30c	61800358	X0.0001	2006
+elster-84230.jpg	84.230	79.079	izrez0.8+kontrast	92	B-H A-V	6.131.92	Qn1.5mm	2330	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1016	Tmax+30℃	61800358	X0.0001	2006
+elster-84230.jpg	84.230	79.079	izrez0.8+rot-10	D92	6.131.92	B-HA-V	Qn1.5mm	ELSTER	ELSTER Messtechnik	EV-K	HRZ-14-1016	Tmax+30c	61800358	X0.0001	2006
+elster-84230.jpg	84.230	79.079	izrez0.8+rot10	B-H A-V	D92	Qn1.5mm	6.131.92	230	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1016	Tmax+30C	X0.0001	61800358	2006
+elster-84230.jpg	84.230	79.079	izrez0.6	760	B-H A-V	6.131.92	Qn1.5mm	LSTER	STERMesstechnik	4-1016	+30℃	61800358	X0.0001
+elster-79079.jpg	79.079	73.079	orig	@13192On15mm	BHAV	ELSTER	ELSTER Messtechnik	EV-K	HRZ-141015	61800358	X0.0001	2008
+elster-79079.jpg	79.079	73.079	izrez0.8	BHAV	@13192On15mm	ELSTER	ELSTERMesstechnik	EN-K	HRZ-14-1015	61800358	0.0001	2008
+elster-79079.jpg	79.079	73.079	izrez0.8+kontrast	BHAV	C13192On15mm	ELSTER	ELSTERMesstechnik	1018	61800358	X0.0001	2008
+elster-79079.jpg	79.079	73.079	izrez0.8+rot-10	613192	BHAV	On15mm	ELSTER	ELSTERMesstechnik	61800358	X0.0001	200
+elster-79079.jpg	79.079	73.079	izrez0.8+rot10	BHAV	613192On15mm	ELSTER	ELSTERMesstechnik	EN-K	HRZ141015	61800358	X0.0001	2008
+elster-79079.jpg	79.079	73.079	izrez0.6	B-HAV	@13192On15mm	ELSTER	ELSTERMesstechnik	EV-K	HRZ-14-1015	61800358	X0.0001	2008
