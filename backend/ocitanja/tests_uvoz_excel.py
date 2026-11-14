@@ -46,7 +46,7 @@ class UvozIzExcelaTest(TestCase):
         self.assertEqual((v.pocetno_stanje, v.serijski_broj, v.oznaka), (Decimal("1574.25"), "ZR-2019-00433", "kuhinja"))
         self.assertEqual(Stan.objects.get(broj_stana="04").napomena, "Ključ kod susjeda u stanu 03")
 
-        sanja = Korisnik.objects.get(email="sanja.njiric@primjer.hr")
+        sanja = Korisnik.objects.get(email="sanja.kljukic@primjer.hr")
         self.assertEqual(sorted(s.broj_stana for s in sanja.stanovi.all()), ["03", "05"])
         self.assertEqual(str(sanja.vlasnistva.get(stan__broj_stana="03").od_datuma), "2015-03-01")
         self.assertTrue(ZamjenskiOcitavac.objects.filter(korisnik=sanja, stan__broj_stana="04").exists())
@@ -61,10 +61,10 @@ class UvozIzExcelaTest(TestCase):
         self.assertTrue(Zapisnik.objects.filter(zgrada=zgrada, opis__startswith="Uvoz iz Excela").exists())
 
         r = self.client.get("/zgrade/uvoz/gotovo/")
-        self.assertContains(r, "njiric.sanja")
+        self.assertContains(r, "kljukic.sanja")
         r = self.client.get("/zgrade/uvoz/gotovo/?preuzmi=1")
         redovi = list(load_workbook(BytesIO(r.content)).active.iter_rows(min_row=5, values_only=True))
-        self.assertEqual(len(redovi), 6)  # Ivana, Marko, Grad, Sanja, Petar, Nataša
+        self.assertEqual(len(redovi), 6)  # Ivana, Marko, Grad, Sanja, Petar, Željko
         self.assertEqual(redovi[0][1], "Ivana Horvat")
         marko = next(red for red in redovi if red[2] == "kovacevic.marko")
         self.assertEqual(marko[0], "01")
@@ -122,11 +122,11 @@ class UvozIzExcelaTest(TestCase):
         self.assertContains(self.client.get("/zgrade/uvoz/gotovo/"), "postojeći račun")
 
     def test_isto_ime_u_drugoj_zgradi_je_upozorenje(self):
-        Korisnik.objects.create_user("nnatasa", first_name="Nataša", last_name="Prelić Gerdević")
+        Korisnik.objects.create_user("zhustek", first_name="Željko", last_name="Hustek")
         r = self.ucitaj(napravi_predlozak(primjer=True))
         self.assertContains(r, "isto ime već postoji u aplikaciji")
         self.potvrdi()
-        self.assertEqual(Korisnik.objects.filter(last_name="Prelić Gerdević").count(), 2)
+        self.assertEqual(Korisnik.objects.filter(last_name="Hustek").count(), 2)
 
     def test_postojeca_zgrada_dobiva_nove_stanove(self):
         zgrada = Zgrada.objects.create(oznaka="RI-ALB-2", ulica="Moše Albaharija", kucni_broj="2",
