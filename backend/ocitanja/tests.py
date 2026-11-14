@@ -121,6 +121,20 @@ class PredajaTest(Osnova):
         o = predaj_ocitanje(self.ana, self.v3, "105", ocr_vrijednost=Decimal("185"), datum_ocitanja=trenutak(2026, 9))
         self.assertTrue(o.rucno_ispravljeno)
 
+    def test_rucni_upis_suvlasnika_se_oznacava(self):
+        # Aplikacija nije pročitala broj s fotografije: administrator treba pogledati fotografiju.
+        o = predaj_ocitanje(self.ana, self.v3, "105", fotografija=slika(), samo_vlasnik=True)
+        self.assertTrue(o.rucno_ispravljeno)
+        self.assertTrue(o.fotografija)
+
+    def test_decimale_uz_procitani_cijeli_broj_nisu_ispravak(self):
+        o = predaj_ocitanje(self.ana, self.v3, "105.806", ocr_vrijednost=Decimal("105"), samo_vlasnik=True)
+        self.assertFalse(o.rucno_ispravljeno)
+
+    def test_unos_administratora_nije_rucni_upis(self):
+        o = predaj_ocitanje(self.ana, self.v3, "105")
+        self.assertFalse(o.rucno_ispravljeno)
+
     def test_tudji_vodomjer_zabranjen(self):
         with self.assertRaises(GreskaOcitanja) as g:
             predaj_ocitanje(self.ana, self.v4, "60")
@@ -224,6 +238,13 @@ class UpravljanjeTest(Osnova):
         self.assertContains(r, "1 / 2")
         self.assertContains(r, "Ana Horvat")
         self.assertContains(r, "Nije predano")
+
+    def test_pregled_oznacava_rucni_upis(self):
+        predaj_ocitanje(self.ivo, self.v4, "55", fotografija=slika(), samo_vlasnik=True)
+        self.client.login(username="dean", password="lozinka-123")
+        r = self.client.get("/")
+        self.assertContains(r, "ručno upisano", count=1)
+        self.assertContains(r, "upisano ručno, provjerite fotografiju")
 
     def test_potvrda_i_ispravak(self):
         self.client.login(username="dean", password="lozinka-123")

@@ -69,7 +69,7 @@ fun EkranPotvrde(potvrda: Ekran.Potvrda, vm: GlavniViewModel) {
         vm.poruka?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         Text(
             if (potvrda.kandidati.isEmpty()) "Upišite stanje sa slike."
-            else "Usporedite broj sa slikom. Ako nije točan, ispravite ga.",
+            else "Usporedite broj sa slikom (cijeli m³, crne znamenke). Ako nije točan, ispravite ga.",
         )
         OutlinedTextField(
             value = unos,

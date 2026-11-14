@@ -186,6 +186,7 @@ def pregled(request):
         "broj_predanih": len(predana),
         "broj_stanova": len(redovi),
         "za_provjeru": sum(1 for o in predana if o.za_provjeru),
+        "rucno": sum(1 for o in predana if o.rucno_ispravljeno),
         "nepotvrdena": sum(1 for o in predana if o.status == Ocitanje.Status.PREDANO),
         "ukupna_razlika": sum((o.razlika for o in vazeca), Decimal(0)),
     })

@@ -188,7 +188,7 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
             Prepoznavanje.procitaj(slika, prethodno, izrezi = !izGalerije)
         }.getOrElse { emptyList() }
         if (kandidati.isEmpty()) {
-            poruka = "Broj nije prepoznat. Upišite ga ručno ili snimite ponovno."
+            poruka = "Fotografija treba biti jasna. Upišite broj ručno ili skenirajte ponovo."
         }
         ekran = Ekran.Potvrda(vodomjer, slika, kandidati, izGalerije)
     }

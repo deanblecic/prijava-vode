@@ -19,7 +19,7 @@
         <tr><th>Prethodno stanje</th><td class="broj">{{ o.prethodno_stanje }} m³</td></tr>
         <tr><th>Novo stanje</th><td class="broj">{{ o.novo_stanje }} m³</td></tr>
         <tr><th>Razlika</th><td class="broj"><b>{{ o.razlika }} m³</b></td></tr>
-        <tr><th>OCR je pročitao</th><td class="broj">{{ o.ocr_vrijednost|default:"–" }}{% if o.rucno_ispravljeno %} (suvlasnik ispravio){% endif %}</td></tr>
+        <tr><th>Aplikacija je pročitala</th><td class="broj">{{ o.ocr_vrijednost|default:"–" }}{% if o.rucno_ispravljeno %} <span class="oznaka provjera">upisano ručno, usporedite s fotografijom</span>{% endif %}</td></tr>
         {% if o.napomena %}<tr><th>Napomena</th><td>{{ o.napomena }}</td></tr>{% endif %}
       </table>
     </div>
