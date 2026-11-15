@@ -28,9 +28,9 @@ object Prepoznavanje {
      * kontrastom i izrez zakrenut za ±10°. Na 20 testnih fotografija to daje točan broj na 11
      * umjesto 9 (vidi test/resources/vodomjeri/README.md).
      */
-    suspend fun procitaj(slika: Bitmap, prethodno: BigDecimal?, izrezi: Boolean = true): List<BigDecimal> {
+    suspend fun procitaj(slika: Bitmap, prethodno: BigDecimal?, izrezi: Boolean = true): CitacBrojila.Ocitano {
         val citanja = inacice(slika, izrezi).map { linije(it) }
-        return CitacBrojila.glasaj(citanja, prethodno)
+        return CitacBrojila.ocitaj(citanja, prethodno)
     }
 
     private fun inacice(slika: Bitmap, izrezi: Boolean): List<Bitmap> {
