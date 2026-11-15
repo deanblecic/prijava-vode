@@ -43,7 +43,7 @@ bez „pročitane vrijednosti”, pa je očitanje u pregledu označeno za provje
 | broj ponuđen | 13 od 20 |
 | točan broj | 11 od 20 |
 | siguran (bez upozorenja) | 7, od toga 1 krivo (elster-mutna-1524218: 1512) |
-| s upozorenjem | 6 broja ponuđeno, 7 praznih polja |
+| s upozorenjem | 6 ponuđenih brojeva, 7 praznih polja |
 
 Na 7 fotografija desktopski OCR uopće ne vidi kotačiće, pa polje ostaje prazno s porukom
 „Fotografija treba biti jasna…”. Krivi brojevi s natpisa (oznaka odobrenja 6.131.92, „D92”,
