@@ -83,11 +83,17 @@ object Prepoznavanje {
     }
 
     /** Okvir na zaslonu pokriva sredinu slike; izrez je malo veći da brojilo sigurno stane. */
+    /**
+     * Koliko je okvir na kameri podignut iznad sredine, kao dio visine slike (oko 1 cm na
+     * uobičajenom mobitelu). Isti pomak koristi okvir na ekranu i izrez fotografije.
+     */
+    const val POMAK_OKVIRA_GORE = 0.065f
+
     fun izrezSredine(slika: Bitmap): Bitmap {
         val sirina = (slika.width * 0.96f).toInt()
         val visina = minOf((sirina * 0.8f).toInt(), slika.height)
         val x = (slika.width - sirina) / 2
-        val y = (slika.height - visina) / 2
+        val y = ((slika.height - visina) / 2 - (slika.height * POMAK_OKVIRA_GORE).toInt()).coerceIn(0, slika.height - visina)
         return Bitmap.createBitmap(slika, x, y, sirina, visina)
     }
 

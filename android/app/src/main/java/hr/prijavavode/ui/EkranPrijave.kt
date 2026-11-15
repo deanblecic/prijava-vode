@@ -33,8 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import hr.prijavavode.GlavniViewModel
@@ -69,12 +67,7 @@ fun EkranPrijave(vm: GlavniViewModel) {
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
         )
         Spacer(Modifier.height(12.dp))
-        OutlinedTextField(
-            value = lozinka, onValueChange = { lozinka = it }, label = { Text("Lozinka") },
-            singleLine = true, modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-        )
+        PoljeLozinke(lozinka, { lozinka = it }, "Lozinka", ImeAction.Done, Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = zapamti, onCheckedChange = { zapamti = it })

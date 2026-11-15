@@ -149,7 +149,8 @@ fun EkranKamere(
         Canvas(Modifier.fillMaxSize()) {
             val sirina = size.width * 0.92f
             val visina = sirina * 0.75f
-            val vrh = Offset((size.width - sirina) / 2, (size.height - visina) / 2)
+            val gore = (size.height - visina) / 2 - size.height * Prepoznavanje.POMAK_OKVIRA_GORE
+            val vrh = Offset((size.width - sirina) / 2, gore.coerceAtLeast(0f))
             drawRect(Color.Black.copy(alpha = 0.45f), size = Size(size.width, vrh.y))
             drawRect(Color.Black.copy(alpha = 0.45f), topLeft = Offset(0f, vrh.y + visina),
                 size = Size(size.width, size.height - vrh.y - visina))
