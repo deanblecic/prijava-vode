@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import hr.prijavavode.ocr.CitacBrojila
 import hr.prijavavode.ocr.Prepoznavanje
 import hr.prijavavode.podaci.Ja
 import hr.prijavavode.podaci.Nadogradnja
@@ -33,6 +34,8 @@ sealed interface Ekran {
         val kandidati: List<BigDecimal>,
         /** Slika iz galerije: brojilo ne mora biti u sredini, pa se ne izrezuje. */
         val izGalerije: Boolean = false,
+        /** Aplikacija je sigurna u prvi broj; inače se očitanje označi za provjeru fotografije. */
+        val siguran: Boolean = false,
     ) : Ekran
     data object Povijest : Ekran
     /** Lozinku je postavio ovlašteni predstavnik suvlasnika, pa korisnik upisuje svoju. */
@@ -184,13 +187,16 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
 
     fun snimljeno(vodomjer: Vodomjer, slika: Bitmap, izGalerije: Boolean) = posao {
         val prethodno = vodomjer.prethodnoStanje.toBigDecimalOrNull()
-        val kandidati = runCatching {
+        val ocitano = runCatching {
             Prepoznavanje.procitaj(slika, prethodno, izrezi = !izGalerije)
-        }.getOrElse { emptyList() }
-        if (kandidati.isEmpty()) {
+        }.getOrElse { CitacBrojila.Ocitano(emptyList(), false) }
+        if (ocitano.brojevi.isEmpty()) {
             poruka = "Fotografija treba biti jasna. Upišite broj ručno ili skenirajte ponovo."
+        } else if (!ocitano.siguran) {
+            poruka = "Broj sa vodomjera možda nije ispravno prepoznat jer fotografija nije jasna. " +
+                "Provjerite očitani broj, pa ako nije točan, upišite ga ručno ili ponovite očitanje."
         }
-        ekran = Ekran.Potvrda(vodomjer, slika, kandidati, izGalerije)
+        ekran = Ekran.Potvrda(vodomjer, slika, ocitano.brojevi, izGalerije, ocitano.siguran)
     }
 
     fun posalji(potvrda: Ekran.Potvrda, novoStanje: BigDecimal, potvrdiManje: Boolean = false) = posao {
@@ -199,7 +205,8 @@ class GlavniViewModel(private val app: Application) : AndroidViewModel(app) {
         val r = repo.predaj(
             vodomjerId = potvrda.vodomjer.id,
             novoStanje = novoStanje,
-            ocrVrijednost = potvrda.kandidati.firstOrNull(),
+            // Nesiguran broj ne šalje se kao pročitani, pa poslužitelj očitanje označi za provjeru fotografije.
+            ocrVrijednost = if (potvrda.siguran) potvrda.kandidati.firstOrNull() else null,
             fotografijaJpeg = jpeg,
             potvrdiManje = potvrdiManje,
         )

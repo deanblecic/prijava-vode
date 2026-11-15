@@ -46,6 +46,8 @@ object CitacBrojila {
     private val ZNAMENKE = Regex("""\d{5,}""")
     private val GODINA = Regex("""(19[5-9]\d|20[0-3]\d)""")
     private val SAMO_ZNAMENKE = Regex("""\d+""")
+    /** Oznaka odobrenja tipa na Elster vodomjerima ("6.131.92", "@13192On15mm"), a ne stanje. */
+    private val OZNAKA_ODOBRENJA = Regex("""(?<![0-9])\S?\.?131[.,]?92(?![0-9])""")
 
     /** Toliko znamenki ima cijelo brojilo (5 crnih + 3 crvene, ponekad 4 + 4 ili 6 + 2). */
     private const val CIJELO_BROJILO = 7
@@ -82,9 +84,54 @@ object CitacBrojila {
         return (pobjednici + poCitanju.flatten()).distinct()
     }
 
+    /** Ponuđeni cijeli brojevi (prvi se upisuje u polje) i je li aplikacija sigurna u prvi. */
+    data class Ocitano(val brojevi: List<BigDecimal>, val siguran: Boolean)
+
+    /**
+     * Cijeli broj m³ s više čitanja iste fotografije; nudi broj uvijek kad je pročitana ijedna
+     * znamenka. Siguran je samo broj cijelog brojila koji su ponudila barem dva čitanja; inače
+     * se nudi najbolja procjena iz bilo kojih pročitanih znamenki, koju suvlasnik provjeri.
+     */
+    fun ocitaj(citanja: List<List<String>>, prethodno: BigDecimal?): Ocitano {
+        val strogo = glasaj(citanja, prethodno)
+        if (strogo.isNotEmpty()) {
+            val glasovi = citanja.mapNotNull { cijeliBrojevi(it, prethodno).firstOrNull() }
+                .groupingBy { it }.eachCount()
+            // Siguran: barem dva čitanja daju isti broj, a nijedan drugi broj nema dva glasa.
+            val suparnik = glasovi.any { (broj, n) -> broj != strogo.first() && n >= 2 }
+            return Ocitano(strogo, (glasovi[strogo.first()] ?: 0) >= 2 && !suparnik)
+        }
+        return Ocitano(procjena(citanja.flatten(), prethodno), false)
+    }
+
+    /**
+     * Kad brojilo nije jasno pročitano: svaki niz znamenki (i kraći, i s natpisa) tumači se kao
+     * cijeli broj ili kao broj s 1 do 4 decimale, a prednost ima broj najbliži prethodnom stanju.
+     * Broj manji od prethodnog ili više od 100 m³ iznad njega sigurno je kriv, pa se ne nudi.
+     */
+    private fun procjena(linije: List<String>, prethodno: BigDecimal?): List<BigDecimal> {
+        // Samo riječi od znamenki: "HRZ-14-1015" i "Qn1.5" su natpisi s kućišta.
+        val nizovi = linije.map { popraviZnakove(it.replace(OZNAKA_ODOBRENJA, " ")) }
+            .map { it.replace(Regex("""(?<=\d)[\s:]+(?=\d)"""), "") }
+            .flatMap { it.split(Regex("""\s+""")) }
+            .filter { Regex("""[\d.,:]*\d{2,}[\d.,:]*""").matches(it) }
+            // Dvoznamenkasti niz ("D92") je natpis s kućišta.
+            .flatMap { Regex("""\d{3,}""").findAll(it).map { m -> m.value }.toList() }
+        val brojevi = nizovi.flatMap { niz ->
+            // Odbacuju se 1 do 4 decimalna kotačića samo s dugog niza (5+ znamenki).
+            (0..4).filter { it == 0 || (niz.length >= 5 && niz.length - it >= 1) }.map { BigDecimal(niz.dropLast(it)) }
+                // "D92" → 092 je natpis; mali broj vjerujemo samo s vodećim nulama kotačića ("00089").
+                .filter { niz.length >= 5 || it.precision() >= 3 }
+        }.distinct().filter { it.signum() > 0 && it < NAJVECE_STANJE }
+        if (prethodno == null || prethodno.signum() == 0) return brojevi.sortedByDescending { it.precision() }
+        val dolje = prethodno.setScale(0, RoundingMode.DOWN)
+        return brojevi.filter { it >= dolje && it - dolje <= NAJVECA_RAZLIKA }
+            .sortedBy { it - dolje }
+    }
+
     fun kandidati(linije: List<String>, prethodno: BigDecimal?): List<BigDecimal> {
         val svi = mutableListOf<Kandidat>()
-        val ocisceneLinije = linije.map(::popraviZnakove)
+        val ocisceneLinije = linije.map { popraviZnakove(it.replace(OZNAKA_ODOBRENJA, " ")) }
         for (ocisceno in ocisceneLinije) {
             // "6.131.92" (oznaka odobrenja) nije broj sa zarezom.
             DECIMALNI.findAll(ocisceno).filterNot { dioOznake(ocisceno, it.range) || ocisceno.getOrNull(it.range.last + 1) in listOf('.', ',') }.forEach { m ->

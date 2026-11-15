@@ -376,4 +376,61 @@ class CitacBrojilaTest {
         assertTrue("Točno samo $tocno", tocno >= 11)
         assertTrue("Krivo ponuđeno: $krivo", krivo.size <= 4)
     }
+
+    @Test
+    fun zbirkaUvijekNudiBroj() {
+        val redovi = javaClass.getResource("/vodomjeri/ocr-inacice.tsv")!!.readText().lines()
+            .filter { it.isNotBlank() }.map { it.split("\t") }
+        var ponudeno = 0
+        var tocno = 0
+        var sigurnih = 0
+        val sigurnoKrivo = mutableListOf<String>()
+        val izvjestaj = StringBuilder()
+        for ((datoteka, inacice) in redovi.groupBy { it[0] }) {
+            val stanje = BigDecimal(inacice[0][1]).setScale(0, java.math.RoundingMode.DOWN)
+            val o = CitacBrojila.ocitaj(inacice.map { it.drop(4) }, BigDecimal(inacice[0][2]))
+            val prvi = o.brojevi.firstOrNull()
+            if (prvi != null) ponudeno++
+            val dobro = prvi != null && prvi.compareTo(stanje) == 0
+            if (dobro) tocno++
+            if (o.siguran) { sigurnih++; if (!dobro) sigurnoKrivo += "$datoteka: $prvi" }
+            izvjestaj.append("$datoteka\t$stanje\t$prvi\t${if (o.siguran) "siguran" else "nesiguran"}\n")
+        }
+        println(izvjestaj)
+        println("ponuđeno $ponudeno, točno $tocno, sigurnih $sigurnih, sigurno a krivo ${sigurnoKrivo.size}")
+        assertTrue("Ponuđeno samo $ponudeno", ponudeno >= 13)
+        assertTrue("Točno samo $tocno", tocno >= 11)
+        assertTrue("Sigurno a krivo: $sigurnoKrivo", sigurnoKrivo.size <= 1)
+    }
+
+    @Test
+    fun nesigurnoKadaNemaJasnogBroja() {
+        val o = CitacBrojila.ocitaj(listOf(listOf("m3", "0784 8"), listOf("Siemens")), BigDecimal("780"))
+        assertEquals(false, o.siguran)
+        assertEquals(BigDecimal("784"), o.brojevi.first())
+        assertTrue(CitacBrojila.ocitaj(listOf(listOf("m3")), null).brojevi.isEmpty())
+    }
+
+    @Test
+    fun procjenaIzKomadicaBrojila() {
+        // Crne znamenke pročitane same, bez crvenih: broj se ponudi, ali uz upozorenje.
+        val o = CitacBrojila.ocitaj(listOf(listOf("SIEMENS", "784"), listOf("m3")), BigDecimal("781.885"))
+        assertEquals(BigDecimal("784"), o.brojevi.first())
+        assertEquals(false, o.siguran)
+        // Natpisi s kućišta i brojevi daleko od prethodnog stanja ne nude se.
+        assertTrue(CitacBrojila.ocitaj(listOf(listOf("D92", "6.131.92", "HRZ-14-1015", "1018")), BigDecimal("84.230")).brojevi.isEmpty())
+        assertTrue(CitacBrojila.ocitaj(listOf(listOf("15686132", "1501")), BigDecimal("781.885")).brojevi.isEmpty())
+    }
+
+    @Test
+    fun suparnickaCitanjaNisuSigurna() {
+        val o = CitacBrojila.ocitaj(
+            listOf(listOf("15737014"), listOf("15737014"), listOf("1577014"), listOf("1577014")),
+            BigDecimal("1571.014"),
+        )
+        assertEquals(false, o.siguran)
+        val s = CitacBrojila.ocitaj(listOf(listOf("01510133"), listOf("01510133"), listOf("m3")), BigDecimal("1504.133"))
+        assertEquals(true, s.siguran)
+        assertEquals(BigDecimal("1510"), s.brojevi.first())
+    }
 }

@@ -30,3 +30,21 @@ inačicu su u `ocr-inacice.tsv`; test `zbirkaCijeliBrojGlasanjem`.
 | jedno čitanje | 9 | 1 | 10 |
 | glasanje 6 inačica | 11 | 4 | 5 |
 
+
+## Broj u polju i kad aplikacija nije sigurna (test `zbirkaUvijekNudiBroj`)
+
+Aplikacija sada upisuje prepoznati broj u polje i kad nije sigurna, uz upozorenje
+„Broj sa vodomjera možda nije ispravno prepoznat…”. Sigurna je kad barem dva od šest
+čitanja daju isti broj, a nijedan drugi broj nema dva glasa. Nesiguran broj šalje se
+bez „pročitane vrijednosti”, pa je očitanje u pregledu označeno za provjeru fotografije.
+
+| | fotografija |
+|---|---|
+| broj ponuđen | 13 od 20 |
+| točan broj | 11 od 20 |
+| siguran (bez upozorenja) | 7, od toga 1 krivo (elster-mutna-1524218: 1512) |
+| s upozorenjem | 6 ponuđenih brojeva, 7 praznih polja |
+
+Na 7 fotografija desktopski OCR uopće ne vidi kotačiće, pa polje ostaje prazno s porukom
+„Fotografija treba biti jasna…”. Krivi brojevi s natpisa (oznaka odobrenja 6.131.92, „D92”,
+serijski broj) ili daleko od prethodnog stanja (više od 100 m³) ne nude se.
