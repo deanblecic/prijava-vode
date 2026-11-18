@@ -451,6 +451,7 @@ class Zapisnik(models.Model):
         ZABORAVLJENA_LOZINKA = "zaboravljena_lozinka", "Zaboravljena lozinka"
         EMAIL = "email", "Promjena e-maila"
         POSTAVKE = "postavke", "Rokovi i podsjetnici"
+        KORISNIK = "korisnik", "Podaci korisnika"
 
     vrijeme = models.DateTimeField(default=timezone.now, db_index=True)
     korisnik = models.ForeignKey(Korisnik, null=True, blank=True, on_delete=models.SET_NULL, related_name="+")

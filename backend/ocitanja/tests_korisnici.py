@@ -182,3 +182,82 @@ class ZapisnikTest(DvijeZgrade):
         self.prijava("admin_b")
         self.assertNotContains(self.client.get("/zapisnik/"), "potvrđeno")
         self.assertEqual(Ocitanje.objects.get(pk=self.o_a.pk).status, "potvrdeno")
+
+
+class UredivanjeKorisnikaTest(DvijeZgrade):
+    def podaci(self, korisnik, **izmjene):
+        osnova = {
+            "first_name": korisnik.first_name, "last_name": korisnik.last_name, "username": korisnik.username,
+            "email": korisnik.email, "telefon": korisnik.telefon,
+        }
+        for polje in ("is_active", "mora_promijeniti_lozinku", "is_superuser"):
+            if getattr(korisnik, polje):
+                osnova[polje] = "on"
+        if korisnik.uloge_u_zgradama.filter(zgrada=self.zgrada).exists():
+            osnova["administrator_zgrade"] = "on"
+        osnova.update(izmjene)
+        return {k: v for k, v in osnova.items() if v is not None}
+
+    def test_popis_vodi_na_uredivanje(self):
+        self.prijava("admin_a")
+        r = self.client.get("/korisnici/")
+        self.assertContains(r, f'href="/korisnici/{self.ana.pk}/"')
+        r = self.client.get(f"/korisnici/{self.ana.pk}/")
+        self.assertContains(r, "Osobni podaci")
+        self.assertContains(r, "Administrator ove zgrade")
+        self.assertNotContains(r, "Superadministrator")
+
+    def test_administrator_mijenja_podatke_i_ovlasti(self):
+        Token.objects.create(user=self.ana)
+        self.prijava("admin_a")
+        r = self.client.post(f"/korisnici/{self.ana.pk}/", self.podaci(
+            self.ana, email="ana@primjer.hr", telefon="091 111", first_name="Anica", administrator_zgrade="on"))
+        self.assertRedirects(r, f"/korisnici/{self.ana.pk}/")
+        self.ana.refresh_from_db()
+        self.assertEqual((self.ana.email, self.ana.telefon, self.ana.first_name), ("ana@primjer.hr", "091 111", "Anica"))
+        self.assertTrue(self.zgrada.administratori.filter(pk=self.ana.pk).exists())
+        self.assertTrue(Token.objects.filter(user=self.ana).exists())
+        zapis = Zapisnik.objects.get(radnja=Zapisnik.Radnja.KORISNIK)
+        self.assertIn("e-mail", zapis.opis)
+        self.assertIn("administrator zgrade", zapis.opis)
+
+        # Isključivanje računa odjavljuje aplikaciju.
+        self.client.post(f"/korisnici/{self.ana.pk}/", self.podaci(self.ana, is_active=None, administrator_zgrade=None))
+        self.ana.refresh_from_db()
+        self.assertFalse(self.ana.is_active)
+        self.assertFalse(self.zgrada.administratori.filter(pk=self.ana.pk).exists())
+        self.assertFalse(Token.objects.filter(user=self.ana).exists())
+
+    def test_administrator_ne_daje_superadministratora(self):
+        self.prijava("admin_a")
+        self.client.post(f"/korisnici/{self.ana.pk}/", self.podaci(self.ana, is_superuser="on"))
+        self.ana.refresh_from_db()
+        self.assertFalse(self.ana.is_superuser)
+
+    def test_zauzeto_korisnicko_ime(self):
+        self.prijava("admin_a")
+        r = self.client.post(f"/korisnici/{self.ana.pk}/", self.podaci(self.ana, username="ADMIN_A"))
+        self.assertContains(r, "To korisničko ime već postoji.")
+
+    def test_ne_moze_ukloniti_zadnjeg_administratora_ni_iskljuciti_sebe(self):
+        self.prijava("admin_a")
+        r = self.client.post(f"/korisnici/{self.admin_a.pk}/", self.podaci(self.admin_a, administrator_zgrade=None))
+        self.assertContains(r, "barem jednog aktivnog administratora")
+        r = self.client.post(f"/korisnici/{self.admin_a.pk}/", self.podaci(self.admin_a, is_active=None))
+        self.assertContains(r, "Ne možete isključiti vlastiti račun.")
+        self.assertTrue(self.zgrada.administratori.filter(pk=self.admin_a.pk).exists())
+
+    def test_tudja_zgrada_i_racun_s_drugom_zgradom(self):
+        self.prijava("admin_a")
+        self.assertEqual(self.client.get(f"/korisnici/{self.marija.pk}/").status_code, 404)
+        KorisnikStan.objects.create(korisnik=self.ana, stan=self.b3, od_datuma=datetime.date(2020, 1, 1))
+        self.assertEqual(self.client.get(f"/korisnici/{self.ana.pk}/").status_code, 403)
+
+    def test_superadministrator_dodjeljuje_superadministratora(self):
+        Korisnik.objects.create_superuser("dean", password="lozinka-123")
+        self.prijava("dean")
+        self.client.post("/zgrade/odaberi/", {"zgrada": self.zgrada.pk})
+        self.assertContains(self.client.get(f"/korisnici/{self.ana.pk}/"), "Superadministrator")
+        self.client.post(f"/korisnici/{self.ana.pk}/", self.podaci(self.ana, is_superuser="on"))
+        self.ana.refresh_from_db()
+        self.assertTrue(self.ana.is_superuser and self.ana.is_staff)

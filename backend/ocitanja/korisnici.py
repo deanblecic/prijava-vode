@@ -7,9 +7,10 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from rest_framework.authtoken.models import Token
 from django.utils import timezone
 
-from .forms import NoviAdministratorForm, NoviStanForm, ZamjenaVodomjeraForm, ZgradaForm
+from .forms import NoviAdministratorForm, NoviStanForm, UrediKorisnikaForm, ZamjenaVodomjeraForm, ZgradaForm
 from .models import Korisnik, Postavke, Stan, Vodomjer, Zapisnik, Zgrada
 from .predlozak_uvoza import napravi_predlozak
 from .racuni import (
@@ -75,6 +76,61 @@ def korisnici(request):
         for k in skupina:
             k.oznake_zgrada = ", ".join(sorted({v.stan.oznaka for v in k.vlasnistva.select_related("stan__zgrada")}))
     return render(request, "upravljanje/korisnici.html", {"redovi": redovi, "skupine": skupine})
+
+
+OPISI_POLJA = {
+    "first_name": "ime", "last_name": "prezime", "username": "korisničko ime", "email": "e-mail",
+    "telefon": "telefon", "is_active": "aktivan", "mora_promijeniti_lozinku": "mora promijeniti lozinku",
+    "is_superuser": "superadministrator", "administrator_zgrade": "administrator zgrade",
+}
+
+
+@za_zgradu
+def uredi_korisnika(request, pk):
+    """Sve što Sustav nudi za korisnika, u izgledu aplikacije: podaci, e-mail, aktivnost i ovlasti."""
+    zgrada = request.zgrada
+    korisnik = korisnik_zgrade(request, pk)
+    if not smije_upravljati(request.user, korisnik, zgrada):
+        raise PermissionDenied
+    forma = UrediKorisnikaForm(request.POST or None, instance=korisnik, zgrada=zgrada, urednik=request.user)
+    if request.method == "POST" and forma.is_valid():
+        promjene = [p for p in forma.changed_data if p in OPISI_POLJA]
+        d = forma.cleaned_data
+        with transaction.atomic():
+            korisnik = forma.save()
+            if "administrator_zgrade" in promjene:
+                if d["administrator_zgrade"]:
+                    dodaj_administratora(korisnik, zgrada)
+                else:
+                    ukloni_administratora(korisnik, zgrada)
+        if not korisnik.is_active or "username" in promjene:
+            # Isključen račun ili novo korisničko ime: aplikacija se mora ponovno prijaviti.
+            Token.objects.filter(user=korisnik).delete()
+        if promjene:
+            Zapisnik.upisi(
+                Zapisnik.Radnja.KORISNIK,
+                f"Izmijenjeni podaci za {opis(korisnik)}: {', '.join(OPISI_POLJA[p] for p in promjene)}",
+                request=request, zgrada=zgrada, korisnik_id=korisnik.pk, polja=promjene,
+            )
+            messages.success(request, f"Podaci za {korisnik} su spremljeni.")
+        else:
+            messages.info(request, "Ništa nije promijenjeno.")
+        if korisnik == request.user and not request.user.je_administrator:
+            logout(request)
+            return redirect("prijava")
+        if korisnik == request.user and not request.user.zgrade_za_upravljanje().filter(pk=zgrada.pk).exists():
+            return redirect("zgrade")
+        return redirect("uredi_korisnika", pk=korisnik.pk)
+    danas = timezone.localdate()
+    vlasnistva = [
+        {"v": v, "trenutno": v.od_datuma <= danas and (v.do_datuma is None or v.do_datuma >= danas)}
+        for v in korisnik.vlasnistva.select_related("stan__zgrada").order_by("-od_datuma")
+    ]
+    return render(request, "upravljanje/uredi_korisnika.html", {
+        "korisnik": korisnik, "forma": forma, "vlasnistva": vlasnistva,
+        "zamjene": korisnik.zamjenska_ocitanja.select_related("stan__zgrada").order_by("stan__broj_stana"),
+        "zgrade_administrator": korisnik.administrirane_zgrade.order_by("oznaka"),
+    })
 
 
 @za_zgradu
