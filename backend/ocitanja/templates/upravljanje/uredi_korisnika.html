@@ -1,0 +1,76 @@
+{% extends "upravljanje/base.html" %}
+{% block naslov %}{{ korisnik.get_full_name|default:korisnik.username }}{% endblock %}
+{% block sadrzaj %}
+<p><a href="{% url 'korisnici' %}">&larr; Korisnici</a></p>
+<div class="alati">
+  <h1 style="margin:0">{{ korisnik.get_full_name|default:korisnik.username }}</h1>
+  {% if not korisnik.is_active %}<span class="oznaka odbijeno">isključen</span>{% endif %}
+  {% if korisnik.is_superuser %}<span class="oznaka predano">superadministrator</span>{% endif %}
+  <span style="flex:1"></span>
+  {% if korisnik.is_active and korisnik != user %}
+  <form method="post" action="{% url 'nova_lozinka' korisnik.pk %}" style="margin:0"
+        onsubmit="return confirm('Postaviti novu lozinku za {{ korisnik.get_full_name|default:korisnik.username|escapejs }}? Stara prestaje vrijediti i aplikacija se odjavljuje.')">{% csrf_token %}
+    <button class="gumb">Nova lozinka</button>
+  </form>
+  {% endif %}
+</div>
+<p class="tiho">Zadnja prijava: {{ korisnik.last_login|date:"d.m.Y. H:i"|default:"još se nije prijavio" }}
+  · Račun otvoren: {{ korisnik.date_joined|date:"d.m.Y." }}
+  {% if zgrade_administrator or korisnik.is_superuser %}· Google Authenticator: {% if korisnik.totp_tajna %}postavljen{% else %}postavlja kod prve prijave{% endif %}{% endif %}</p>
+
+<form method="post" class="kartica" style="max-width:720px">{% csrf_token %}
+  {{ forma.non_field_errors }}
+  <h2 style="margin-top:0">Osobni podaci</h2>
+  <div class="dvije">
+    <p>{{ forma.first_name.label_tag }}{{ forma.first_name }}{{ forma.first_name.errors }}</p>
+    <p>{{ forma.last_name.label_tag }}{{ forma.last_name }}{{ forma.last_name.errors }}</p>
+    <p>{{ forma.username.label_tag }}{{ forma.username }}{{ forma.username.errors }}
+      <br><span class="tiho" style="font-size:13px">{{ forma.username.help_text }}</span></p>
+    <p>{{ forma.email.label_tag }}{{ forma.email }}{{ forma.email.errors }}
+      <br><span class="tiho" style="font-size:13px">{{ forma.email.help_text }}</span></p>
+    <p>{{ forma.telefon.label_tag }}{{ forma.telefon }}{{ forma.telefon.errors }}</p>
+  </div>
+
+  <h2>Račun i ovlasti</h2>
+  {% for polje in forma %}{% if polje.widget_type == "checkbox" %}
+  <p style="display:flex;gap:10px;align-items:flex-start">
+    {{ polje }}
+    <span><label for="{{ polje.id_for_label }}" style="display:inline;font-size:15px;color:var(--tekst)">{{ polje.label }}</label>
+      {% if polje.help_text %}<br><span class="tiho" style="font-size:13px">{{ polje.help_text }}</span>{% endif %}
+      {{ polje.errors }}</span>
+  </p>
+  {% endif %}{% endfor %}
+  {% if zgrade_administrator %}
+  <p class="tiho">Sada administrator zgrada: {% for z in zgrade_administrator %}{{ z.oznaka }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+    Ulogu u drugoj zgradi mijenjate kad odaberete tu zgradu.</p>
+  {% endif %}
+  <button class="gumb glavni">Spremi</button>
+</form>
+
+<h2>Stanovi</h2>
+<table style="max-width:720px">
+  <thead><tr><th>Stan</th><th>Od</th><th>Do</th><th></th></tr></thead>
+  <tbody>
+  {% for r in vlasnistva %}
+    <tr{% if not r.trenutno %} class="nedostaje"{% endif %}>
+      <td>{% if r.v.stan.zgrada_id == zgrada.pk %}<a href="{% url 'stan' r.v.stan.pk %}">{{ r.v.stan.oznaka }}</a>{% else %}{{ r.v.stan.oznaka }}{% endif %}</td>
+      <td>{{ r.v.od_datuma|date:"d.m.Y." }}</td><td>{{ r.v.do_datuma|date:"d.m.Y."|default:"danas" }}</td>
+      <td>{% if not r.trenutno %}<span class="tiho">bivši vlasnik</span>{% endif %}</td></tr>
+  {% empty %}<tr><td colspan="4">Nije vlasnik nijednog stana.</td></tr>{% endfor %}
+  </tbody>
+</table>
+<p class="tiho">Vlasnika stana mijenjate na stranici stana, preko Promjena vlasnika, da očitanja ostanu ispravno raspoređena.</p>
+
+{% if zamjene %}
+<h2>Očitava umjesto vlasnika</h2>
+<table style="max-width:720px">
+  <thead><tr><th>Stan</th><th>Dodano</th></tr></thead>
+  <tbody>
+  {% for z in zamjene %}
+    <tr><td>{% if z.stan.zgrada_id == zgrada.pk %}<a href="{% url 'stan' z.stan.pk %}#zamjenski">{{ z.stan.oznaka }}</a>{% else %}{{ z.stan.oznaka }}{% endif %}</td>
+      <td>{{ z.od|date:"d.m.Y." }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
+{% endblock %}

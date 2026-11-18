@@ -15,25 +15,27 @@
 </div>
 {% endif %}
 <table>
-  <thead><tr><th>Ime i prezime</th><th>Korisničko ime</th><th>Stanovi</th><th>Uloga</th><th></th></tr></thead>
+  <thead><tr><th>Ime i prezime</th><th>Korisničko ime</th><th>E-mail</th><th>Stanovi</th><th>Uloga</th><th></th></tr></thead>
   <tbody>
   {% for r in redovi %}
     <tr{% if not r.k.is_active %} class="nedostaje"{% endif %}>
-      <td>{{ r.k.get_full_name|default:"–" }}</td>
+      <td>{% if r.upravlja %}<a href="{% url 'uredi_korisnika' r.k.pk %}">{{ r.k.get_full_name|default:"–" }}</a>{% else %}{{ r.k.get_full_name|default:"–" }}{% endif %}</td>
       <td>{{ r.k.username }}{% if not r.k.is_active %} <span class="tiho">(isključen)</span>{% endif %}</td>
+      <td>{{ r.k.email|default:"–" }}</td>
       <td>{{ r.stanovi|default:"–" }}{% if r.zamjene %} <span class="tiho" title="Očitava vodomjer umjesto vlasnika">očitava i: {{ r.zamjene }}</span>{% endif %}{% if r.drugdje %} <span class="tiho" title="Lozinku mu mijenja superadministrator">+ druga zgrada</span>{% endif %}</td>
       <td>{% if r.administrator %}administrator{% elif r.stanovi %}suvlasnik{% elif r.zamjene %}zamjenski očitavač{% else %}suvlasnik{% endif %}</td>
-      <td>
+      <td style="white-space:nowrap">
+        {% if r.upravlja %}<a class="gumb" href="{% url 'uredi_korisnika' r.k.pk %}">Uredi</a>{% endif %}
         {% if r.upravlja and r.k.is_active and r.k != user %}
-        <form method="post" action="{% url 'nova_lozinka' r.k.pk %}" style="margin:0"
+        <form method="post" action="{% url 'nova_lozinka' r.k.pk %}" style="display:inline;margin:0"
               onsubmit="return confirm('Postaviti novu lozinku za {{ r.k.get_full_name|default:r.k.username|escapejs }}? Stara prestaje vrijediti i aplikacija se odjavljuje.')">{% csrf_token %}
           <button class="gumb">Nova lozinka</button>
         </form>
         {% endif %}
       </td>
     </tr>
-  {% empty %}<tr><td colspan="5">U zgradi još nema korisnika.</td></tr>{% endfor %}
+  {% empty %}<tr><td colspan="6">U zgradi još nema korisnika.</td></tr>{% endfor %}
   </tbody>
 </table>
-<p class="tiho">Novog suvlasnika upisujete na stranici stana, preko Promjena vlasnika. Računi s istim imenom i prezimenom pojavljuju se gore, s gumbom za spajanje.</p>
+<p class="tiho">Ime, e-mail, aktivnost računa i ovlasti mijenjate preko Uredi. Novog suvlasnika upisujete na stranici stana, preko Promjena vlasnika. Računi s istim imenom i prezimenom pojavljuju se gore, s gumbom za spajanje.</p>
 {% endblock %}

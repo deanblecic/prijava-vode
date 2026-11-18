@@ -236,3 +236,59 @@ class ZgradaForm(forms.ModelForm):
     class Meta:
         model = Zgrada
         fields = ["ulica", "kucni_broj", "postanski_broj", "grad", "oznaka"]
+
+
+class UrediKorisnikaForm(forms.ModelForm):
+    """Podaci računa koje inače nudi Sustav (Django administracija), na stranici korisnika."""
+
+    administrator_zgrade = forms.BooleanField(label="Administrator ove zgrade", required=False)
+
+    class Meta:
+        model = Korisnik
+        fields = ["first_name", "last_name", "username", "email", "telefon",
+                  "is_active", "mora_promijeniti_lozinku", "is_superuser"]
+        labels = {
+            "first_name": "Ime", "last_name": "Prezime", "username": "Korisničko ime", "email": "E-mail",
+            "telefon": "Telefon", "is_active": "Račun je aktivan",
+            "mora_promijeniti_lozinku": "Mora promijeniti lozinku kod sljedeće prijave",
+            "is_superuser": "Superadministrator",
+        }
+        help_texts = {
+            "username": "Njime se prijavljuje u aplikaciju i na web.",
+            "email": "Za samostalno postavljanje nove lozinke i obavijesti.",
+            "is_active": "Isključen račun se ne može prijaviti; podaci i očitanja ostaju.",
+            "mora_promijeniti_lozinku": "",
+            "is_superuser": "Upravlja svim zgradama i Sustavom.",
+        }
+
+    def __init__(self, *args, zgrada, urednik, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.zgrada, self.urednik = zgrada, urednik
+        self.bio_administrator = self.instance.uloge_u_zgradama.filter(zgrada=zgrada).exists()
+        self.fields["administrator_zgrade"].initial = self.bio_administrator
+        self.fields["administrator_zgrade"].help_text = "Upravlja ovom zgradom na webu (uz Google Authenticator)."
+        if not urednik.is_superuser:
+            del self.fields["is_superuser"]
+
+    def clean_username(self):
+        ime = self.cleaned_data["username"].strip()
+        if Korisnik.objects.filter(username__iexact=ime).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("To korisničko ime već postoji.")
+        return ime
+
+    def clean_email(self):
+        return self.cleaned_data["email"].strip()
+
+    def clean(self):
+        podaci = super().clean()
+        sam = self.instance.pk == self.urednik.pk
+        if sam and not podaci.get("is_active", True):
+            self.add_error("is_active", "Ne možete isključiti vlastiti račun.")
+        if sam and "is_superuser" in self.fields and not podaci.get("is_superuser"):
+            self.add_error("is_superuser", "Ne možete sami sebi ukloniti ovlast superadministratora.")
+        if self.bio_administrator and "administrator_zgrade" in podaci:
+            ostaje = podaci.get("administrator_zgrade") and podaci.get("is_active", True)
+            if not ostaje and not self.zgrada.uloge_administratora.exclude(korisnik=self.instance).exists():
+                raise forms.ValidationError(
+                    "Zgrada mora imati barem jednog aktivnog administratora. Prvo dodajte drugog.")
+        return podaci

@@ -20,6 +20,7 @@ urlpatterns = [
     path("zgrade/uvoz/predlozak/", korisnici.uvoz_predlozak, name="uvoz_predlozak"),
     path("zgrade/uvoz/gotovo/", korisnici.uvoz_gotovo, name="uvoz_gotovo"),
     path("korisnici/", korisnici.korisnici, name="korisnici"),
+    path("korisnici/<int:pk>/", korisnici.uredi_korisnika, name="uredi_korisnika"),
     path("korisnici/<int:pk>/nova-lozinka/", korisnici.nova_lozinka, name="nova_lozinka"),
     path("korisnici/spoji/", korisnici.spajanje, name="spajanje"),
     path("administratori/", korisnici.administratori, name="administratori"),
